@@ -1,0 +1,37 @@
+workflows:
+  react-native-build:
+    name: "React Native Android Build"
+    max_build_duration: 60
+    environment:
+      vars:
+        NODE_VERSION: "18.19.0"
+        JAVA_HOME: "/usr/lib/jvm/java-17-openjdk"
+      flutter: none
+      cocoapods: default
+      xcode: none
+      android:
+        sdk: "34.0.0"
+    scripts:
+      - name: Install Node Modules
+        script: |
+          npm install
+      - name: Clean Android Build
+        script: |
+          cd android
+          ./gradlew clean
+          cd ..
+      - name: Run React Native Bundle
+        script: |
+          npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res
+      - name: Build APK
+        script: |
+          cd android
+          ./gradlew assembleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.apk
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        on_build_success: true
+        on_build_failure: true
