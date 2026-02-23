@@ -1,7 +1,8 @@
 workflows:
-  android-workflow: # Nom aligné avec votre manifest.json
+  android-workflow:
     name: U-Auben Tracker Android Build
     max_build_duration: 60
+    instance_type: mac_mini_m1
     environment:
       node: 18.19.0
       java: openjdk17
@@ -13,17 +14,14 @@ workflows:
       - name: Install dependencies
         script: |
           npm install
-          # Installation des modules Expo nécessaires (pour expo-sqlite utilisé dans App.js)
           npx install-expo-modules@latest
 
       - name: Clean Android build
         script: |
-          # Utilisation du script défini dans votre package.json
           npm run clean
 
       - name: Bundle React Native assets
         script: |
-          # Création du répertoire d'assets si manquant
           mkdir -p android/app/src/main/assets
           npx react-native bundle \
             --platform android \
@@ -35,7 +33,6 @@ workflows:
       - name: Build APK (Release)
         script: |
           cd android
-          # Génération de l'APK de production
           ./gradlew assembleRelease
 
     artifacts:
