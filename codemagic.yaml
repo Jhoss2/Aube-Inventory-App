@@ -1,37 +1,52 @@
+# Configuration Codemagic pour U-Auben-App
 workflows:
-  react-native-android:
-    name: React Native Android Build
+  android-workflow: # Nom correspondant à votre manifest.json
+    name: U-Auben Tracker Android Build
     max_build_duration: 60
+    instance_type: mac_mini_m1 # Recommandé pour la rapidité, ou linux_small
     environment:
       node: 18.19.0
       java: openjdk17
       android:
         build_tools: 34.0.0
         ndk: 25.2.9519653
-        components:
-          - platform-tools
-          - build-tools-34.0.0
-          - android-34
+      vars:
+        PACKAGE_NAME: "com.uauben.inventory"
+    
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: |
+          npm install
+          # Installation des modules Expo nécessaires détectés dans App.js
+          npx install-expo-modules@latest
+
       - name: Clean Android build
         script: |
-          cd android
-          ./gradlew clean
-          cd ..
+          npm run clean
+
       - name: Bundle React Native assets
         script: |
+          mkdir -p android/app/src/main/assets
           npx react-native bundle \
             --platform android \
             --dev false \
             --entry-file index.js \
             --bundle-output android/app/src/main/assets/index.android.bundle \
             --assets-dest android/app/src/main/res
-      - name: Build APK
+
+      - name: Build APK (Release)
         script: |
           cd android
           ./gradlew assembleRelease
-          cd ..
+
     artifacts:
-      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/apk/release/*.apk
+      - android/app/build/outputs/logs/**/*.log
+
+    publishing:
+      email:
+        recipients:
+          - votre-email@exemple.com # À modifier
+        notify:
+          success: true
+          failure: true
