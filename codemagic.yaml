@@ -2,7 +2,6 @@ workflows:
   android-workflow:
     name: U-Auben Tracker Build
     max_build_duration: 60
-    instance_type: mac_mini_m2
     environment:
       node: 20.11.0
       java: 17
@@ -13,15 +12,13 @@ workflows:
       - name: Generate Native Android Folder
         script: |
           rm -rf android
-          # Commande corrigée sans l'option --clear
           CI=1 npx expo prebuild --platform android
       - name: Build APK
         script: |
           cd android
           chmod +x gradlew
           ./gradlew clean
-          # On garde --info pour voir la source exacte du problème AAPT2 si ça échoue
-          ./gradlew assembleRelease --no-daemon --no-build-cache --info --stacktrace
+          ./gradlew assembleRelease --no-daemon --no-build-cache
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
       
