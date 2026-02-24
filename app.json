@@ -1,15 +1,11 @@
 {
   "expo": {
-    "name": "U-Auben Tracker",
-    "slug": "u-auben-app",
+    "name": "UAubenTracker",
+    "slug": "uaubentracker",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "platforms": ["android"],
     "android": {
-      "package": "com.j_hoss2.uaubentracker",
+      "package": "com.uauben.tracker",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       }
