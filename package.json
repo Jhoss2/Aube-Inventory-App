@@ -23,8 +23,7 @@
     "@babel/runtime": "^7.23.0",
     "@react-native/babel-preset": "0.73.6",
     "@react-native/eslint-config": "0.73.2",
-    "@react-native/metro-config": "0.73.3",
-    "metrobundle": "^0.80.0"
+    "@react-native/metro-config": "0.73.3"
   },
   "engines": {
     "node": ">=18"
