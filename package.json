@@ -6,9 +6,11 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "clean": "cd android && ./gradlew clean"
+    "clean": "cd android && ./gradlew clean",
+    "prebuild": "expo prebuild"
   },
   "dependencies": {
+    "expo": "~50.0.14",
     "react": "18.2.0",
     "react-native": "0.73.6",
     "expo-modules-core": "~1.11.12",
@@ -26,6 +28,6 @@
     "@react-native/metro-config": "0.73.3"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }
