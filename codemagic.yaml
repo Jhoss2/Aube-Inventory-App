@@ -2,16 +2,21 @@ workflows:
   android-workflow:
     name: U-Auben Tracker Build
     max_build_duration: 60
-    instance_type: mac_mini_m2 # Plus stable pour les builds hybrides
     environment:
       node: 18.19.0
-      java: 17 # Utilise '17' au lieu de 'openjdk17' sur Codemagic
-      xcode: latest
+      java: 17
     scripts:
-      - name: Install dependencies
+      - name: Fix and Install dependencies
         script: |
-          npm install
-          npx install-expo-modules@latest
+          # Supprime le mauvais package s'il existe dans le package.json
+          sed -i '' 's/"metrobundle"/"metro-runtime"/g' package.json || true
+          
+          # Installation propre
+          npm install --legacy-peer-deps
+      - name: Prebuild Expo (Si nécessaire)
+        script: |
+          # Cette étape génère le dossier /android s'il est manquant ou incomplet
+          npx expo prebuild --platform android
       - name: Build APK
         script: |
           cd android
