@@ -84,31 +84,31 @@ const defaultData = {
 // --- SQLite Helpers ---
 const initDB = () => {
   db.transaction(tx => {
-    tx.executeSql('CREATE TABLE IF NOT EXISTS GeneralSettings (key TEXT PRIMARY KEY NOT NULL, value TEXT);', [], () => {}, (_, error) => console.error('Error creating GeneralSettings table', error));
-    tx.executeSql('CREATE TABLE IF NOT EXISTS Blocs (id TEXT PRIMARY KEY NOT NULL, mainImage TEXT, subBlocs TEXT);', [], () => {}, (_, error) => console.error('Error creating Blocs table', error));
-    tx.executeSql('CREATE TABLE IF NOT EXISTS Salles (id TEXT PRIMARY KEY NOT NULL, nom TEXT, emplacement TEXT, niveau TEXT, capacity INTEGER, area INTEGER, photoId TEXT, plan3dId TEXT);', [], () => {}, (_, error) => console.error('Error creating Salles table', error));
-    tx.executeSql('CREATE TABLE IF NOT EXISTS Categories (name TEXT PRIMARY KEY NOT NULL, type TEXT);', [], () => {}, (_, error) => console.error('Error creating Categories table', error));
-    tx.executeSql('CREATE TABLE IF NOT EXISTS Materiel (id TEXT PRIMARY KEY NOT NULL, nom TEXT, categorie TEXT, salleId TEXT, dateAchat TEXT, dateRen TEXT, photoId TEXT, description TEXT);', [], () => {}, (_, error) => console.error('Error creating Materiel table', error));
-    tx.executeSql('CREATE TABLE IF NOT EXISTS Notes (id TEXT PRIMARY KEY NOT NULL, title TEXT, content TEXT, date TEXT);', [], () => {}, (_, error) => console.error('Error creating Notes table', error));
-    tx.executeSql('CREATE TABLE IF NOT EXISTS Alerts (id TEXT PRIMARY KEY NOT NULL, materielId TEXT, type TEXT, message TEXT, date TEXT, read INTEGER);', [], () => {}, (_, error) => console.error('Error creating Alerts table', error));
-    tx.executeSql('CREATE TABLE IF NOT EXISTS Aube (key TEXT PRIMARY KEY NOT NULL, value TEXT);', [], () => {}, (_, error) => console.error('Error creating Aube table', error));
-    tx.executeSql('CREATE TABLE IF NOT EXISTS Files (id TEXT PRIMARY KEY NOT NULL, data TEXT);', [], () => {}, (_, error) => console.error('Error creating Files table', error));
+    tx.executeSql('CREATE TABLE IF NOT EXISTS GeneralSettings (key TEXT PRIMARY KEY NOT NULL, value TEXT);');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS Blocs (id TEXT PRIMARY KEY NOT NULL, mainImage TEXT, subBlocs TEXT);');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS Salles (id TEXT PRIMARY KEY NOT NULL, nom TEXT, emplacement TEXT, niveau TEXT, capacity INTEGER, area INTEGER, photoId TEXT, plan3dId TEXT);');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS Categories (name TEXT PRIMARY KEY NOT NULL, type TEXT);');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS Materiel (id TEXT PRIMARY KEY NOT NULL, nom TEXT, categorie TEXT, salleId TEXT, dateAchat TEXT, dateRen TEXT, photoId TEXT, description TEXT);');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS Notes (id TEXT PRIMARY KEY NOT NULL, title TEXT, content TEXT, date TEXT);');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS Alerts (id TEXT PRIMARY KEY NOT NULL, materielId TEXT, type TEXT, message TEXT, date TEXT, read INTEGER);');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS Aube (key TEXT PRIMARY KEY NOT NULL, value TEXT);');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS Files (id TEXT PRIMARY KEY NOT NULL, data TEXT);');
   });
 };
 
 const insertDefaultData = () => {
   db.transaction(tx => {
     Object.entries(defaultData.general).forEach(([key, value]) => {
-      tx.executeSql('INSERT OR IGNORE INTO GeneralSettings (key, value) VALUES (?, ?);', [key, JSON.stringify(value)], () => {}, (_, error) => console.error(`Error inserting default general setting ${key}`, error));
+      tx.executeSql('INSERT OR IGNORE INTO GeneralSettings (key, value) VALUES (?, ?);', [key, JSON.stringify(value)]);
     });
     Object.entries(defaultData.blocs).forEach(([id, bloc]) => {
-      tx.executeSql('INSERT OR IGNORE INTO Blocs (id, mainImage, subBlocs) VALUES (?, ?, ?);', [id, bloc.mainImage, JSON.stringify(bloc.subBlocs)], () => {}, (_, error) => console.error(`Error inserting default bloc ${id}`, error));
+      tx.executeSql('INSERT OR IGNORE INTO Blocs (id, mainImage, subBlocs) VALUES (?, ?, ?);', [id, bloc.mainImage, JSON.stringify(bloc.subBlocs)]);
     });
     defaultData.defaultCategories.forEach(category => {
-      tx.executeSql('INSERT OR IGNORE INTO Categories (name, type) VALUES (?, ?);', [category, 'default'], () => {}, (_, error) => console.error(`Error inserting default category ${category}`, error));
+      tx.executeSql('INSERT OR IGNORE INTO Categories (name, type) VALUES (?, ?);', [category, 'default']);
     });
     Object.entries(defaultData.aube).forEach(([key, value]) => {
-      tx.executeSql('INSERT OR IGNORE INTO Aube (key, value) VALUES (?, ?);', [key, JSON.stringify(value)], () => {}, (_, error) => console.error(`Error inserting default aube setting ${key}`, error));
+      tx.executeSql('INSERT OR IGNORE INTO Aube (key, value) VALUES (?, ?);', [key, JSON.stringify(value)]);
     });
   });
 };
@@ -192,6 +192,8 @@ const deleteFileFromDB = async (id) => {
 
 // --- Main App Component ---
 export default function App() {
+  const [dbState, setDbState] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [appData, setAppData] = useState(defaultData);
   const [currentScreen, setCurrentScreen] = useState('screen-blocA');
   const navigationHistory = useRef(['screen-blocA']);
@@ -226,9 +228,20 @@ export default function App() {
   const [noteContent, setNoteContent] = useState('');
 
   useEffect(() => {
-    initDB();
-    insertDefaultData();
-    loadAppData();
+    async function setup() {
+      try {
+        // Initialisation séquentielle de la base de données
+        initDB();
+        insertDefaultData();
+        await loadAppData();
+      } catch (error) {
+        console.error("Erreur d'initialisation:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    setup();
 
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsOnline(state.isConnected);
@@ -254,22 +267,6 @@ export default function App() {
 
       generalSettings.forEach(setting => {
         loadedData.general[setting.key] = JSON.parse(setting.value);
-      });
-
-      loadedData.blocs = blocs.reduce((acc, bloc) => {
-        acc[bloc.id] = { ...bloc, subBlocs: JSON.parse(bloc.subBlocs) };
-        return acc;
-      }, {});
-
-      loadedData.salles = salles;
-      loadedData.materiel = materiel;
-      loadedData.notes = notes;
-      loadedData.alerts = alerts.map(alert => ({ ...alert, read: Boolean(alert.read) }));
-      loadedData.customCategories = categories.filter(cat => cat.type === 'custom').map(cat => cat.name);
-      loadedData.defaultCategories = categories.filter(cat => cat.type === 'default').map(cat => cat.name);
-
-      aubeSettings.forEach(setting => {
-        loadedData.aube[setting.key] = JSON.parse(setting.value);
       });
       setAubeKb(loadedData.aube.kb);
 
