@@ -2,6 +2,7 @@ workflows:
   android-workflow:
     name: U-Auben Tracker Build
     max_build_duration: 60
+    instance_type: mac_mini_m2
     environment:
       node: 20.11.0
       java: 17
@@ -11,13 +12,16 @@ workflows:
           npm install --legacy-peer-deps
       - name: Generate Native Android Folder
         script: |
-          # Utilisation de CI=1 au lieu de --non-interactive
+          # Utilisation de CI=1 pour le mode non-interactif
           CI=1 npx expo prebuild --platform android
       - name: Build APK
         script: |
           cd android
+          # Nettoyage des résidus de builds précédents
+          ./gradlew clean
+          # Build de l'APK avec --no-daemon pour éviter les blocages de 40min
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease --no-daemon --stacktrace
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
       
