@@ -1,5 +1,6 @@
-import { AppRegistry } from 'react-native';
+import { registerRootComponent } from 'expo';
 import App from './App';
-import { name as appName } from './app.json';
 
-AppRegistry.registerComponent(appName, () => App);
+// Cela garantit que l'application est correctement enregistrée, 
+// peu importe si vous êtes sur Expo Go ou en APK natif.
+registerRootComponent(App);
