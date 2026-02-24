@@ -3,9 +3,14 @@
     "name": "UAubenTracker",
     "slug": "uaubentracker",
     "version": "1.0.0",
-    "platforms": ["android"],
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "com.uauben.tracker",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       }
