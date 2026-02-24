@@ -2,39 +2,20 @@ workflows:
   android-workflow:
     name: U-Auben Tracker Android Build
     max_build_duration: 60
-    instance_type: mac_mini_m1
     environment:
       node: 18.19.0
       java: openjdk17
       android:
         build_tools: 34.0.0
-        ndk: 25.2.9519653
-    
     scripts:
       - name: Install dependencies
         script: |
           npm install
           npx install-expo-modules@latest
-
-      - name: Clean Android build
-        script: |
-          npm run clean
-
-      - name: Bundle React Native assets
-        script: |
-          mkdir -p android/app/src/main/assets
-          npx react-native bundle \
-            --platform android \
-            --dev false \
-            --entry-file index.js \
-            --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res
-
-      - name: Build APK (Release)
+      - name: Build APK
         script: |
           cd android
           ./gradlew assembleRelease
-
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
       
