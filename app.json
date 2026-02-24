@@ -9,7 +9,10 @@
       "**/*"
     ],
     "android": {
-      "package": "com.j_hoss2.uaubentracker"
+      "package": "com.j_hoss2.uaubentracker",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
     }
   }
 }
