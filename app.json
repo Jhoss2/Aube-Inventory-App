@@ -1,19 +1,10 @@
 {
   "expo": {
-    "name": "UAubenTracker",
-    "slug": "uauben-tracker",
+    "name": "uaubentracker",
+    "slug": "uaubentracker",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "android": {
-      "package": "com.uauben.tracker",
-      "versionCode": 1,
-      "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
-      }
+      "package": "com.uauben.tracker"
     }
   }
 }
