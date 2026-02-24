@@ -9,9 +9,10 @@ workflows:
       - name: Install dependencies
         script: |
           npm install --legacy-peer-deps
-      - name: Install Expo Modules
+      - name: Generate Native Android Folder
         script: |
-          npx install-expo-modules@latest
+          # Cette commande crée le dossier /android manquant
+          npx expo prebuild --platform android
       - name: Build APK
         script: |
           cd android
