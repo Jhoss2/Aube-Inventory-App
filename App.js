@@ -559,42 +559,47 @@ export default function App() {
     setAubeLoading(false);
   };
 
+      // 1. La fonction de logique (celle que tu m'as montrée)
   const handleAubeOfflineResponse = (message) => {
-    let response = 'Je suis Aube, l\'assistant logistique. ';
+    let response = "";
     const lowerMessage = message.toLowerCase();
 
     if (lowerMessage.includes('bonjour') || lowerMessage.includes('salut')) {
       response = 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?';
     } else if (lowerMessage.includes('salles')) {
-      if (appData.salles.length > 0) {
-        response = `Il y a ${appData.salles.length} salles enregistrées. Les voici : ${appData.salles.map(s => s.nom).join(', ')}.`;
-      } else {
-        response = 'Il n\'y a aucune salle enregistrée localement.';
-      }
+      response = appData.salles.length > 0 
+        ? `Il y a ${appData.salles.length} salles enregistrées : ${appData.salles.map(s => s.nom).join(', ')}.`
+        : 'Il n\'y a aucune salle enregistrée localement.';
     } else if (lowerMessage.includes('matériel') || lowerMessage.includes('inventaire')) {
-      if (appData.materiel.length > 0) {
-        response = `Il y a ${appData.materiel.length} éléments de matériel enregistrés. Par exemple : ${appData.materiel.slice(0, 3).map(m => m.nom).join(', ')}.`;
-      } else {
-        response = 'Il n\'y a aucun matériel enregistré localement.';
-      }
-    } else if (lowerMessage.includes('notes')) {
-      if (appData.notes.length > 0) {
-        response = `Vous avez ${appData.notes.length} notes. Les titres sont : ${appData.notes.map(n => n.title || 'Sans titre').join(', ')}.`;
-      } else {
-        response = 'Vous n\'avez aucune note enregistrée localement.';
-      }
-    } else if (lowerMessage.includes('alertes')) {
-      if (appData.alerts.length > 0) {
-        response = `Vous avez ${appData.alerts.length} alertes. La dernière est : ${appData.alerts[0].message}.`;
-      } else {
-        response = 'Vous n\'avez aucune alerte enregistrée localement.';
-      }
+      response = appData.materiel.length > 0
+        ? `Il y a ${appData.materiel.length} éléments. Exemple : ${appData.materiel.slice(0, 3).map(m => m.nom).join(', ')}.`
+        : 'L\'inventaire est vide.';
     } else if (lowerMessage.includes('qui es-tu') || lowerMessage.includes('ton rôle')) {
       response = aubeKb;
     } else {
-      response = 'Je n\'ai pas d\'informations spécifiques à ce sujet dans ma base de connaissances locale. Veuillez reformuler votre question ou vérifier votre connexion Internet pour une recherche plus approfondie.';
+      response = 'Je n\'ai pas d\'infos précises. Essayez de me demander le nombre de salles ou l\'inventaire.';
     }
-    setAubeResponse(response);
+
+    // On ajoute la réponse à l'historique et on arrête le chargement
+    setAubeResponse(prev => prev + `\n\n[Aube]: ${response}`);
+    setAubeLoading(false);
+  };
+
+  // 2. La fonction d'envoi (Celle qui est liée à ton bouton "Envoyer")
+  const handleAubeChat = () => {
+    if (!aubeInput.trim()) return;
+
+    setAubeLoading(true);
+    const userMsg = aubeInput;
+    
+    // On affiche immédiatement le message de l'utilisateur
+    setAubeResponse(prev => prev + `\n\nVous: ${userMsg}`);
+    setAubeInput(''); // On vide le champ
+
+    // On déclenche la réponse après un court délai pour faire "humain"
+    setTimeout(() => {
+      handleAubeOfflineResponse(userMsg);
+    }, 600);
   };
 
   const renderScreen = () => {
