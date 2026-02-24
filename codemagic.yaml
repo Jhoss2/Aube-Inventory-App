@@ -8,6 +8,8 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
+          # Supprime le cache pour éviter l'erreur de module non trouvé
+          rm -rf node_modules package-lock.json
           npm install --legacy-peer-deps
       - name: Generate Native Android Folder
         script: |
@@ -17,7 +19,6 @@ workflows:
         script: |
           cd android
           chmod +x gradlew
-          # On s'assure que le bundle JS est généré
           ./gradlew assembleRelease --no-daemon
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
