@@ -6,17 +6,12 @@ workflows:
       node: 18.19.0
       java: 17
     scripts:
-      - name: Fix and Install dependencies
+      - name: Install dependencies
         script: |
-          # Supprime le mauvais package s'il existe dans le package.json
-          sed -i '' 's/"metrobundle"/"metro-runtime"/g' package.json || true
-          
-          # Installation propre
           npm install --legacy-peer-deps
-      - name: Prebuild Expo (Si nécessaire)
+      - name: Install Expo Modules
         script: |
-          # Cette étape génère le dossier /android s'il est manquant ou incomplet
-          npx expo prebuild --platform android
+          npx install-expo-modules@latest
       - name: Build APK
         script: |
           cd android
