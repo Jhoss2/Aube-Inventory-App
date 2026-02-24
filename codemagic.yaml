@@ -17,8 +17,8 @@ workflows:
         script: |
           cd android
           chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleRelease --no-daemon --no-build-cache
+          # On s'assure que le bundle JS est généré
+          ./gradlew assembleRelease --no-daemon
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
       
