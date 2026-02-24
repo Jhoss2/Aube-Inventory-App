@@ -3,7 +3,7 @@ workflows:
     name: U-Auben Tracker Build
     max_build_duration: 60
     environment:
-      node: 20.11.0  # Mise à jour de la version Node
+      node: 20.11.0
       java: 17
     scripts:
       - name: Install dependencies
@@ -11,8 +11,8 @@ workflows:
           npm install --legacy-peer-deps
       - name: Generate Native Android Folder
         script: |
-          # Installation forcée d'expo si manquant et génération du dossier
-          npx expo prebuild --platform android --non-interactive
+          # Utilisation de CI=1 au lieu de --non-interactive
+          CI=1 npx expo prebuild --platform android
       - name: Build APK
         script: |
           cd android
