@@ -1,12 +1,12 @@
 workflows:
   android-workflow:
-    name: U-Auben Tracker Android Build
+    name: U-Auben Tracker Build
     max_build_duration: 60
     environment:
       node: 18.19.0
       java: openjdk17
-      android:
-        build_tools: 34.0.0
+      groups:
+        - sdk_config # Optionnel, si tu as des variables d'env
     scripts:
       - name: Install dependencies
         script: |
@@ -15,6 +15,7 @@ workflows:
       - name: Build APK
         script: |
           cd android
+          chmod +x gradlew
           ./gradlew assembleRelease
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
