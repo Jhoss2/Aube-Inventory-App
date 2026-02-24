@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "expo": "~50.0.14",
+    "expo-splash-screen": "~0.26.4",
+    "expo-status-bar": "~1.11.1",
     "react": "18.2.0",
     "react-native": "0.73.6",
     "expo-modules-core": "~1.11.12",
