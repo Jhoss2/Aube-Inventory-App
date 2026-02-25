@@ -23,7 +23,15 @@ const config: ExpoConfig = {
   plugins: [
     "expo-router",
     "expo-sqlite",
-    "expo-font"
+    "expo-font",
+    [
+      "expo-build-properties",
+      {
+        "android": {
+          "kotlinVersion": "1.9.25"
+        }
+      }
+    ]
   ],
   experiments: {
     typedRoutes: true
