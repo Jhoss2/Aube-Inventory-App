@@ -23,7 +23,15 @@ const config: ExpoConfig = {
   plugins: [
     "expo-router",
     "expo-sqlite",
-    "expo-font",
+    [
+      "expo-font",
+      {
+        "fonts": [
+          "./assets/fonts/Algerian.ttf",
+          "./assets/fonts/MonotypeCorsiva.ttf"
+        ]
+      }
+    ],
     [
       "expo-build-properties",
       {
