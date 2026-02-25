@@ -8,13 +8,10 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          # Supprime le cache pour éviter l'erreur de module non trouvé
-          rm -rf node_modules package-lock.json
           npm install --legacy-peer-deps
       - name: Generate Native Android Folder
         script: |
-          rm -rf android
-          CI=1 npx expo prebuild --platform android
+          npx expo prebuild --platform android
       - name: Build APK
         script: |
           cd android
@@ -22,4 +19,3 @@ workflows:
           ./gradlew assembleRelease --no-daemon
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
-      
