@@ -1,17 +1,28 @@
-import { Stack } from 'expo-router';
-import { useEffect } from 'react';
+import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import '../global.css';
+import { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import { AppProvider } from '@/lib/app-context';
+
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    'Algerian': require('../assets/fonts/Algerian.ttf'),
+    'Monotype-Corsiva': require('../assets/fonts/MonotypeCorsiva.ttf'),
+  });
+
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(screens)" options={{ presentation: 'modal' }} />
-    </Stack>
+    <AppProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </AppProvider>
   );
 }
