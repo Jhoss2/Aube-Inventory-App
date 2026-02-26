@@ -1,126 +1,84 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, FlatList, Alert } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ScreenContainer } from '@/components/screen-container';
-import { useAppContext } from '@/lib/app-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppContext } from '@/lib/app-context'; // Connexion SQLite
 
 export default function RoomProfilesScreen() {
   const router = useRouter();
   const { subBlocId, blocId } = useLocalSearchParams<{ subBlocId: string; blocId: string }>();
-  const { appData, deleteSalle } = useAppContext();
-  const [longPressedRoomId, setLongPressedRoomId] = useState<string | null>(null);
+  const { appData } = useAppContext();
 
-  // Filter rooms by sub-bloc (emplacement)
+  // Filtrage des salles appartenant à ce sous-bloc (ex: "Sous-sol" ou "Bloc A")
   const filteredRooms = useMemo(() => {
     return appData.salles.filter((salle) => salle.emplacement === subBlocId);
   }, [appData.salles, subBlocId]);
 
-  // Group rooms by niveau
-  const groupedRooms = useMemo(() => {
-    const groups: Record<string, typeof filteredRooms> = {};
-    filteredRooms.forEach((room) => {
-      if (!groups[room.niveau]) {
-        groups[room.niveau] = [];
-      }
-      groups[room.niveau].push(room);
-    });
-    return groups;
-  }, [filteredRooms]);
-
-  const handleRoomPress = (salleId: string) => {
-    router.push({
-      pathname: '/screens/room-details',
-      params: { salleId: salleId },
-    });
-  };
-
-  const handleDeleteRoom = async (salleId: string) => {
-    Alert.alert(
-      'Supprimer la salle',
-      'Êtes-vous sûr de vouloir supprimer cette salle ?',
-      [
-        { text: 'Annuler', onPress: () => setLongPressedRoomId(null) },
-        {
-          text: 'Supprimer',
-          onPress: async () => {
-            await deleteSalle(salleId);
-            setLongPressedRoomId(null);
-          },
-          style: 'destructive',
-        },
-      ]
-    );
-  };
-
-  const handleAddRoom = () => {
-    router.push({
-      pathname: '/screens/add-room',
-      params: { subBlocId, blocId },
-    });
-  };
-
   return (
-    <ScreenContainer className="bg-[#fde7f3]">
-      {/* Header */}
-      <View className="flex-row justify-between items-center mb-4 pb-3 border-b border-gray-200">
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+      
+      {/* Header avec bouton retour */}
+      <View className="px-6 pt-4 flex-row items-center border-b border-gray-100 pb-2">
         <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <Ionicons name="arrow-back" size={24} color="#4b5563" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-gray-700 font-semibold">Profils des salles</Text>
-        <TouchableOpacity onPress={handleAddRoom} className="p-2">
-          <Ionicons name="add-circle" size={28} color="#3b82f6" />
+          <Ionicons name="chevron-back" size={28} color="#4b5563" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-        {Object.entries(groupedRooms).length === 0 ? (
-          <View className="items-center justify-center py-12">
-            <Ionicons name="folder-open" size={48} color="#d1d5db" />
-            <Text className="text-gray-500 mt-4">Aucune salle trouvée</Text>
-          </View>
-        ) : (
-          Object.entries(groupedRooms).map(([niveau, rooms]) => (
-            <View key={niveau} className="mb-6">
-              <Text className="text-gray-600 font-semibold text-sm mb-3 px-2">Niveau: {niveau}</Text>
+      <ScrollView className="flex-1 px-6 pt-6">
+        
+        {/* Badge Rouge central - Titre du Niveau (Dynamique via SQLite) */}
+        <View className="bg-[#B21F18] py-4 rounded-[25px] shadow-lg mb-8 items-center">
+          <Text 
+            style={{ fontFamily: 'serif' }} 
+            className="text-white font-black text-lg uppercase tracking-widest"
+          >
+            {subBlocId || "SOUS-SOL"}
+          </Text>
+        </View>
 
-              <View className="gap-2">
-                {rooms.map((room) => (
-                  <TouchableOpacity
-                    key={room.id}
-                    onPress={() => handleRoomPress(room.id)}
-                    onLongPress={() => setLongPressedRoomId(room.id)}
-                    className={`bg-white rounded-xl p-4 shadow-sm border-l-4 ${
-                      longPressedRoomId === room.id ? 'border-red-500 bg-red-50' : 'border-yellow-400'
-                    }`}
-                  >
-                    <View className="flex-row justify-between items-start">
-                      <View className="flex-1">
-                        <Text className="text-gray-800 font-bold text-base">{room.nom}</Text>
-                        <Text className="text-gray-600 text-xs mt-1">
-                          Emplacement: {room.emplacement}
-                        </Text>
-                        {room.capacity && (
-                          <Text className="text-gray-500 text-xs mt-1">Capacité: {room.capacity}</Text>
-                        )}
-                      </View>
+        {/* Titre de la section */}
+        <Text className="text-[#1D3583] font-bold text-lg mb-4 ml-1">
+          Profils des salles
+        </Text>
 
-                      {longPressedRoomId === room.id && (
-                        <TouchableOpacity
-                          onPress={() => handleDeleteRoom(room.id)}
-                          className="ml-2 p-2 bg-red-500 rounded-lg"
-                        >
-                          <Ionicons name="trash" size={16} color="white" />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+        {/* Grille des salles */}
+        <View className="flex-row flex-wrap gap-4 justify-start">
+          {filteredRooms.length === 0 ? (
+            /* Carré gris "Aucune salle ajoutée" */
+            <View className="w-[30%] aspect-square bg-[#E8EBF2] rounded-3xl items-center justify-center p-4 border border-gray-100">
+              <Text className="text-gray-400 text-[10px] text-center font-medium leading-tight">
+                Aucune salle ajoutée
+              </Text>
             </View>
-          ))
-        )}
+          ) : (
+            /* Affichage des salles réelles de la base de données */
+            filteredRooms.map((salle) => (
+              <TouchableOpacity 
+                key={salle.id} 
+                onPress={() => router.push({ pathname: '/screens/room-details', params: { salleId: salle.id } })}
+                className="w-[30%] aspect-square bg-white rounded-3xl items-center justify-center p-2 shadow-md border border-gray-100"
+              >
+                <Text className="text-[#1D3583] font-bold text-xs text-center mb-1">
+                  {salle.nom}
+                </Text>
+                <Text className="text-gray-400 text-[8px] uppercase font-bold text-center">
+                  {salle.niveau}
+                </Text>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
       </ScrollView>
-    </ScreenContainer>
+
+      {/* Bouton d'action flottant (+) en bas à droite */}
+      <TouchableOpacity 
+        onPress={() => router.push({ pathname: '/screens/add-room', params: { subBlocId } })}
+        className="absolute bottom-10 right-6 w-16 h-16 bg-[#F44336] rounded-full items-center justify-center shadow-2xl active:scale-90"
+      >
+        <Ionicons name="add" size={32} color="white" />
+      </TouchableOpacity>
+      
+    </SafeAreaView>
   );
 }
