@@ -1,83 +1,75 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppContext } from '@/lib/app-context'; // Connexion SQLite
+import { useAppContext } from '@/lib/app-context'; // Pour la cohérence des données
 
-export default function RoomProfilesScreen() {
+export default function SubdivisionScreen() {
   const router = useRouter();
-  const { subBlocId, blocId } = useLocalSearchParams<{ subBlocId: string; blocId: string }>();
-  const { appData } = useAppContext();
-
-  // Filtrage des salles appartenant à ce sous-bloc (ex: "Sous-sol" ou "Bloc A")
-  const filteredRooms = useMemo(() => {
-    return appData.salles.filter((salle) => salle.emplacement === subBlocId);
-  }, [appData.salles, subBlocId]);
+  const { blocId } = useLocalSearchParams<{ blocId: string }>();
+  
+  // Liste des niveaux (Tu peux aussi les rendre dynamiques via SQLite si besoin)
+  const niveaux = [
+    "Sous-sol",
+    "Rez-de-chaussée",
+    "Premier Niveau",
+    "Deuxième Niveau",
+    "Troisième Niveau",
+    "Quatrième Niveau"
+  ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       
       {/* Header avec bouton retour */}
-      <View className="px-6 pt-4 flex-row items-center border-b border-gray-100 pb-2">
+      <View className="px-4 pt-4 flex-row items-center border-b border-gray-50 pb-2">
         <TouchableOpacity onPress={() => router.back()} className="p-2">
           <Ionicons name="chevron-back" size={28} color="#4b5563" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1 px-6 pt-6">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 32, paddingTop: 24, paddingBottom: 40 }}>
         
-        {/* Badge Rouge central - Titre du Niveau (Dynamique via SQLite) */}
-        <View className="bg-[#B21F18] py-4 rounded-[25px] shadow-lg mb-8 items-center">
+        {/* Badge Rouge "BLOC X" - Dynamique */}
+        <View className="w-full bg-[#B21F18] py-5 rounded-[30px] shadow-lg items-center">
           <Text 
             style={{ fontFamily: 'serif' }} 
-            className="text-white font-black text-lg uppercase tracking-widest"
+            className="text-white font-black text-xl uppercase tracking-[4px]"
           >
-            {subBlocId || "SOUS-SOL"}
+            BLOC {blocId || 'A1'}
           </Text>
         </View>
 
-        {/* Titre de la section */}
-        <Text className="text-[#1D3583] font-bold text-lg mb-4 ml-1">
-          Profils des salles
-        </Text>
+        {/* Sous-titre "NIVEAUX DE SUBDIVISION" */}
+        <View className="w-full border border-gray-100 py-4 rounded-full shadow-sm bg-white items-center justify-center mt-8 relative">
+          {/* Petit cercle décoratif au centre */}
+          <View className="absolute -top-4 bg-white border border-gray-100 w-8 h-8 rounded-full items-center justify-center shadow-sm">
+             <View className="w-4 h-4 border-2 border-blue-100 rounded-full" />
+          </View>
+          <Text className="text-[#1D3583] font-bold text-[12px] tracking-[2px] uppercase">
+            · Niveaux de Subdivision ·
+          </Text>
+        </View>
 
-        {/* Grille des salles */}
-        <View className="flex-row flex-wrap gap-4 justify-start">
-          {filteredRooms.length === 0 ? (
-            /* Carré gris "Aucune salle ajoutée" */
-            <View className="w-[30%] aspect-square bg-[#E8EBF2] rounded-3xl items-center justify-center p-4 border border-gray-100">
-              <Text className="text-gray-400 text-[10px] text-center font-medium leading-tight">
-                Aucune salle ajoutée
+        {/* Liste des boutons de niveaux */}
+        <View className="w-full mt-6 gap-y-4">
+          {niveaux.map((niveau, index) => (
+            <TouchableOpacity 
+              key={index}
+              onPress={() => router.push({
+                pathname: '/screens/room-profiles',
+                params: { subBlocId: niveau, blocId: blocId }
+              })}
+              className="w-full bg-[#1D3583] py-5 rounded-full shadow-md active:opacity-90"
+            >
+              <Text className="text-white text-center font-bold text-sm tracking-widest">
+                · {niveau.toUpperCase()} ·
               </Text>
-            </View>
-          ) : (
-            /* Affichage des salles réelles de la base de données */
-            filteredRooms.map((salle) => (
-              <TouchableOpacity 
-                key={salle.id} 
-                onPress={() => router.push({ pathname: '/screens/room-details', params: { salleId: salle.id } })}
-                className="w-[30%] aspect-square bg-white rounded-3xl items-center justify-center p-2 shadow-md border border-gray-100"
-              >
-                <Text className="text-[#1D3583] font-bold text-xs text-center mb-1">
-                  {salle.nom}
-                </Text>
-                <Text className="text-gray-400 text-[8px] uppercase font-bold text-center">
-                  {salle.niveau}
-                </Text>
-              </TouchableOpacity>
-            ))
-          )}
+            </TouchableOpacity>
+          ))}
         </View>
       </ScrollView>
-
-      {/* Bouton d'action flottant (+) en bas à droite */}
-      <TouchableOpacity 
-        onPress={() => router.push({ pathname: '/screens/add-room', params: { subBlocId } })}
-        className="absolute bottom-10 right-6 w-16 h-16 bg-[#F44336] rounded-full items-center justify-center shadow-2xl active:scale-90"
-      >
-        <Ionicons name="add" size={32} color="white" />
-      </TouchableOpacity>
       
     </SafeAreaView>
   );
