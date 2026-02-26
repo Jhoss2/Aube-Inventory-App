@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ImageBackground, StyleSheet, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppContext } from '@/lib/app-context'; // Pour l'image dynamique
+import { useAppContext } from '@/lib/app-context';
 
 const { width } = Dimensions.get('window');
 
@@ -27,25 +27,24 @@ export default function SidebarMenu({ onClose }: SidebarMenuProps) {
         source={{ uri: appData.general.menuBgUrl || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1000&auto=format&fit=crop' }}
         style={StyleSheet.absoluteFillObject}
       >
-        {/* Overlay bleuté / flou */}
         <View style={styles.overlay} />
       </ImageBackground>
 
-      {/* 2. Menu Rouge (Sidebar) */}
+      {/* 2. Menu Rouge (Sidebar) - Largeur fixée à 50% */}
       <View style={styles.sidebar}>
         
         {/* Header du Menu */}
-        <View className="p-6 pt-12 border-b border-white/20 flex-row justify-between items-start">
-          <Text style={{ fontFamily: 'serif' }} className="text-white font-black text-lg leading-tight uppercase tracking-tighter">
-            U-AUBEN SUPPLIES{"\n"}TRACKER
+        <View className="p-5 pt-12 border-b border-white/20 flex-row justify-between items-start">
+          <Text style={{ fontFamily: 'serif' }} className="text-white font-black text-[14px] leading-tight uppercase tracking-tighter">
+            U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER
           </Text>
-          <TouchableOpacity onPress={onClose} className="pt-1">
-            <Ionicons name="close" size={28} color="white" />
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="close" size={24} color="white" />
           </TouchableOpacity>
         </View>
 
         {/* Options de Navigation */}
-        <View className="flex-1 items-center pt-12 px-4 gap-y-12">
+        <View className="flex-1 items-center pt-16 px-2 gap-y-12">
           {menuOptions.map((option, index) => (
             <TouchableOpacity 
               key={index}
@@ -55,7 +54,7 @@ export default function SidebarMenu({ onClose }: SidebarMenuProps) {
               }}
               className="active:scale-95"
             >
-              <Text className="text-white font-bold text-sm tracking-widest text-center">
+              <Text className="text-white font-bold text-[11px] tracking-widest text-center leading-5">
                 · {option.label.toUpperCase()} ·
               </Text>
             </TouchableOpacity>
@@ -63,24 +62,22 @@ export default function SidebarMenu({ onClose }: SidebarMenuProps) {
         </View>
 
         {/* Pied de Page du Menu */}
-        <View className="p-10 items-center">
-          <Text className="text-white/80 font-bold text-[10px] tracking-widest uppercase mb-6">
-            · Version 1.1.1 ·
+        <View className="p-8 items-center">
+          <Text className="text-white/70 font-bold text-[9px] tracking-[2px] uppercase mb-4">
+            Version 1.1.1
           </Text>
           
-          {/* Logo Circulaire avec flou (Glassmorphism) */}
           <View style={styles.logoContainer}>
             <View style={styles.logoInner}>
-               {/* Ici, ton logo d'université stocké dans appData */}
-               <View className="w-12 h-12 bg-white/30 rounded-full items-center justify-center">
-                 <Text className="text-[10px] font-bold text-white">LOGO</Text>
+               <View className="w-10 h-10 bg-white/20 rounded-full items-center justify-center">
+                 <Text className="text-[8px] font-bold text-white">LOGO</Text>
                </View>
             </View>
           </View>
         </View>
       </View>
 
-      {/* Zone cliquable à droite pour fermer le menu */}
+      {/* Zone vide à droite (50%) cliquable pour fermer */}
       <TouchableOpacity 
         activeOpacity={1} 
         onPress={onClose} 
@@ -98,35 +95,18 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(30, 58, 138, 0.4)', // Ton effet bleu foncé transparent
+    backgroundColor: 'rgba(15, 23, 42, 0.5)', // Bleu-noir profond pour faire ressortir le rouge
   },
   sidebar: {
-    width: width * 0.7, // 70% de la largeur de l'écran
+    width: width * 0.5, // Exactement 50% de l'écran
     height: '100%',
-    backgroundColor: '#8B1A1A', // Ton rouge brique
-    elevation: 20,
+    backgroundColor: '#8B1A1A',
+    elevation: 25,
     shadowColor: '#000',
-    shadowOffset: { width: 5, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
+    shadowOffset: { width: 10, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 15,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  }
-});
+    width: 70,
+    height: 7
