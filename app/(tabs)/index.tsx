@@ -1,66 +1,53 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { ScreenContainer } from '@/components/screen-container';
+import { useAppContext } from '@/lib/app-context';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const blocs = ['Bloc A', 'Bloc B', 'Bloc C', 'Bloc D', 'Bloc E', 'Bloc F'];
+  const { appData } = useAppContext();
+  const blocs = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header Rouge avec arrondis bas 40px */}
-      <View className="bg-[#b91c1c] p-6 rounded-b-[40px] shadow-xl">
-        <View className="flex-row justify-between items-center mb-6">
-          <TouchableOpacity onPress={() => {/* Action Menu */}}>
-            <Ionicons name="menu" size={30} color="white" />
-          </TouchableOpacity>
-          <Text className="text-white font-bold text-xl font-algerian tracking-widest">U-AUBEN TRACKER</Text>
-          <TouchableOpacity onPress={() => router.push('/(screens)/settings')}>
-            <Ionicons name="settings-sharp" size={26} color="white" />
-          </TouchableOpacity>
-        </View>
-        
-        {/* Barre de recherche arrondie */}
-        <View className="bg-white rounded-full flex-row items-center px-5 py-3 shadow-inner">
-          <Ionicons name="search" size={20} color="#b91c1c" />
-          <TextInput 
-            placeholder="Que cherchez vous aujourd'hui ?" 
-            className="ml-3 flex-1 text-slate-800"
-            placeholderTextColor="gray"
-          />
-        </View>
+    <ScreenContainer className="bg-[#fde7f3]">
+      {/* Header Rouge Arrondi Original */}
+      <View className="bg-[#b91c1c] px-4 py-3 flex-row justify-between items-center rounded-full shadow-md mb-4 mt-2">
+        <TouchableOpacity onPress={() => {}}>
+          <Ionicons name="menu" size={28} color="white" />
+        </TouchableOpacity>
+        <Text style={{ fontFamily: 'Algerian' }} className="text-white text-lg font-bold">U-AUBEN TRACKER</Text>
+        <TouchableOpacity onPress={() => router.push('/screens/settings')}>
+          <Ionicons name="settings" size={24} color="white" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Sélecteur de Blocs stylisé */}
-        <View className="mt-8">
-          <Text className="text-[#1e3a8a] font-bold text-lg mb-4 ml-2">Secteurs & Blocs</Text>
-          <View className="flex-row flex-wrap justify-between">
-            {blocs.map((bloc) => (
-              <TouchableOpacity 
-                key={bloc}
-                onPress={() => router.push({ pathname: '/(screens)/bloc-details', params: { id: bloc } })}
-                className="w-[47%] bg-slate-50 p-8 rounded-[35px] mb-5 items-center border border-slate-100 shadow-sm"
-              >
-                <View className="bg-[#1e3a8a] p-4 rounded-full mb-3 shadow-md">
-                  <Ionicons name="business" size={28} color="white" />
-                </View>
-                <Text className="font-bold text-[#1e3a8a] text-base">{bloc}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Grille des blocs */}
+        <View className="flex-row flex-wrap justify-between px-2">
+          {blocs.map((id) => (
+            <TouchableOpacity 
+              key={id}
+              onPress={() => router.push({ pathname: '/screens/bloc-details', params: { blocId: id } })}
+              className="w-[48%] bg-white rounded-[30px] p-6 mb-4 items-center shadow-sm border border-gray-100"
+            >
+              <View className="bg-[#1e3a8a] p-3 rounded-full mb-2">
+                <Ionicons name="business" size={24} color="white" />
+              </View>
+              <Text className="font-bold text-[#1e3a8a]">Bloc {id}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        {/* Bouton Aube Nouvelle */}
+        {/* Bouton Université Aube Nouvelle */}
         <TouchableOpacity 
-          className="bg-[#1e3a8a] p-5 rounded-[25px] mt-2 mb-6 items-center shadow-lg"
-          onPress={() => router.push('/(screens)/aube-info')}
+          onPress={() => router.push('/screens/aube-chat')}
+          className="bg-[#1e3a8a] mx-2 py-4 rounded-[20px] items-center shadow-md mt-2"
         >
-          <Text className="text-white font-bold font-algerian text-lg uppercase">Université Aube Nouvelle</Text>
+          <Text style={{ fontFamily: 'Algerian' }} className="text-white text-base font-bold">UNIVERSITE AUBE NOUVELLE</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
