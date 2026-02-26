@@ -1,99 +1,129 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ScreenContainer } from '@/components/screen-container';
-import { useAppContext } from '@/lib/app-context';
-import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAppContext } from '@/lib/app-context'; // Connexion SQLite
 
 export default function AddRoomScreen() {
   const router = useRouter();
-  const { subBlocId, blocId } = useLocalSearchParams<{ subBlocId: string; blocId: string }>();
+  const { subBlocId } = useLocalSearchParams<{ subBlocId: string }>();
   const { addSalle } = useAppContext();
-
+  
+  // États du formulaire
   const [nom, setNom] = useState('');
+  const [emplacement, setEmplacement] = useState(subBlocId || '');
   const [niveau, setNiveau] = useState('');
   const [capacity, setCapacity] = useState('');
   const [area, setArea] = useState('');
 
   const handleSaveRoom = async () => {
-    if (!nom.trim() || !niveau.trim()) {
-      Alert.alert('Erreur', 'Le nom et le niveau sont obligatoires');
+    if (!nom.trim()) {
+      Alert.alert('Erreur', 'Le nom de la salle est obligatoire');
       return;
     }
 
     const newRoom = {
       id: `salle-${new Date().getTime()}`,
       nom: nom.trim(),
-      emplacement: subBlocId || '',
+      emplacement: emplacement.trim(),
       niveau: niveau.trim(),
       capacity: capacity.trim(),
       area: area.trim(),
-      photoId: undefined,
-      plan3dId: undefined,
     };
 
-    await addSalle(newRoom);
-    Alert.alert('Succès', 'Salle créée');
-    router.back();
+    try {
+      await addSalle(newRoom); // Sauvegarde réelle dans SQLite
+      Alert.alert('Succès', 'Salle enregistrée !', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    } catch (err) {
+      Alert.alert('Erreur', "Impossible d'enregistrer la salle");
+    }
   };
 
   return (
-    <ScreenContainer className="bg-[#fde7f3]">
-      <View className="flex-row justify-between items-center mb-4 pb-3 border-b border-gray-200">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <Ionicons name="arrow-back" size={24} color="#4b5563" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
+      {/* Header avec bouton retour */}
+      <View className="px-6 pt-4">
+        <TouchableOpacity onPress={() => router.back()} className="p-2 w-10">
+          <Ionicons name="chevron-back" size={28} color="#4b5563" />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-gray-700 font-semibold">Nouvelle salle</Text>
-        <View className="w-10"></View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-        <View className="bg-white rounded-xl p-4 shadow-sm gap-4">
-          <View>
-            <Text className="text-gray-800 font-semibold mb-2">Nom de la salle *</Text>
-            <TextInput
-              value={nom}
-              onChangeText={setNom}
-              placeholder="Ex: Salle 101"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-gray-800"
-            />
-          </View>
+      <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 120 }}>
+        
+        {/* 1. Titre Rouge Style Header */}
+        <View className="bg-[#B21F18] py-4 rounded-full shadow-lg mt-2 items-center">
+          <Text className="text-white font-bold text-lg uppercase tracking-widest">
+            Ajouter une salle
+          </Text>
+        </View>
 
-          <View>
-            <Text className="text-gray-800 font-semibold mb-2">Niveau *</Text>
-            <TextInput
-              value={niveau}
-              onChangeText={setNiveau}
-              placeholder="Ex: RDC, 1er étage"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-gray-800"
-            />
-          </View>
+        {/* 2. Zone Photo (Rectangle Bleu) */}
+        <TouchableOpacity className="bg-[#1D3583] rounded-[40px] aspect-[1.8/1] mt-6 items-center justify-center shadow-md">
+          <Ionicons name="camera" size={48} color="white" />
+          <Text className="text-white font-bold text-base mt-2">Photo de la salle</Text>
+        </TouchableOpacity>
 
-          <View>
-            <Text className="text-gray-800 font-semibold mb-2">Capacité</Text>
+        {/* 3. Formulaire */}
+        <View className="mt-6 gap-y-4">
+          <TextInput
+            value={nom}
+            onChangeText={setNom}
+            placeholder="Nom"
+            className="w-full bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
+          />
+
+          <TextInput
+            value={emplacement}
+            onChangeText={setEmplacement}
+            placeholder="Emplacement (ex: Bloc A)"
+            className="w-full bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
+          />
+
+          <TextInput
+            value={niveau}
+            onChangeText={setNiveau}
+            placeholder="Niveau"
+            className="w-full bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
+          />
+
+          <View className="flex-row gap-4">
             <TextInput
               value={capacity}
               onChangeText={setCapacity}
-              placeholder="Ex: 30 personnes"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-gray-800"
+              placeholder="Capacité"
+              keyboardType="numeric"
+              className="flex-1 bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
             />
-          </View>
-
-          <View>
-            <Text className="text-gray-800 font-semibold mb-2">Surface</Text>
             <TextInput
               value={area}
               onChangeText={setArea}
-              placeholder="Ex: 50 m²"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-gray-800"
+              placeholder="Superficie (m²)"
+              className="flex-1 bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
             />
           </View>
-
-          <TouchableOpacity onPress={handleSaveRoom} className="bg-blue-600 rounded-lg py-3 items-center mt-4">
-            <Text className="text-white font-semibold">Créer la salle</Text>
-          </TouchableOpacity>
         </View>
+
+        {/* 4. Zone Plan 3D (Pointillés) */}
+        <TouchableOpacity className="mt-6 border-2 border-dashed border-gray-300 rounded-[40px] py-10 items-center justify-center bg-white/40">
+          <MaterialCommunityIcons name="cube-outline" size={42} color="#9ca3af" />
+          <Text className="text-gray-400 font-bold mt-2">Ajouter Plan 3D</Text>
+        </TouchableOpacity>
       </ScrollView>
-    </ScreenContainer>
+
+      {/* 5. Bouton Enregistrer (Fixé en bas) */}
+      <View className="absolute bottom-6 left-6 right-6">
+        <TouchableOpacity 
+          onPress={handleSaveRoom}
+          className="w-full bg-[#1D3583] py-5 rounded-full shadow-2xl items-center"
+        >
+          <Text className="text-white font-bold text-lg uppercase tracking-wider">
+            Enregistrer
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
