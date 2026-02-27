@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, StatusBar, Image, ImageBackground } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, StatusBar, Image, ImageBackground, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -12,6 +12,11 @@ export default function HomeScreen() {
   // Récupération des images depuis les paramètres SQLite
   const univImage = appData.settings?.univImage;
   const backgroundImage = appData.settings?.bgImage;
+
+  // Fonction pour gérer les actions des boutons
+  const handleButtonPress = (buttonName: string) => {
+    Alert.alert("Action", `Vous avez cliqué sur le bouton : ${buttonName}`);
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -40,24 +45,25 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Contenu défilable */}
+        {/* Contenu défilable de l'application */}
         <ScrollView 
           style={{ flex: 1 }} 
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 150 }}
           showsVerticalScrollIndicator={false}
         >
           
-          {/* Header Rouge (Boutons Menu et Paramètres) */}
+          {/* Header Rouge (Forme Gélule) */}
           <View style={styles.headerRed}>
-            <TouchableOpacity onPress={() => console.log('Ouvrir Side-bar')}>
-              <Feather name="menu" size={24} color="white" />
+            <TouchableOpacity onPress={() => handleButtonPress('Menu')}>
+              <Feather name="menu" size={24} color="white" style={styles.headerIcon} />
             </TouchableOpacity>
+            {/* L'icône de paramètres correcte (sliders-horizontal) */}
             <TouchableOpacity onPress={() => router.push('/screens/settings')}>
-              <Ionicons name="sliders-outline" size={22} color="white" />
+              <MaterialCommunityIcons name="sliders-horizontal" size={24} color="white" style={styles.headerIcon} />
             </TouchableOpacity>
           </View>
 
-          {/* Barre de Recherche (Bouton Aube) */}
+          {/* Barre de Recherche */}
           <View style={styles.searchContainer}>
             <Ionicons name="search-outline" size={20} color="#9ca3af" style={styles.searchIcon} />
             <TextInput 
@@ -65,6 +71,7 @@ export default function HomeScreen() {
               placeholderTextColor="#9ca3af"
               style={styles.searchInput}
             />
+            {/* Bouton Aube */}
             <TouchableOpacity 
               style={styles.botButton}
               onPress={() => router.push('/screens/chat-aube')}
@@ -73,14 +80,14 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Sélecteur de Blocs (Boutons Blocs A à F) */}
+          {/* Sélecteur de Blocs (Boutons A à F) */}
           <View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blockSelector}>
               {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
                 <TouchableOpacity 
                   key={block} 
                   style={styles.blockButton}
-                  onPress={() => router.push({ pathname: '/screens/room-contents', params: { blockId: block } })}
+                  onPress={() => handleButtonPress(`Bloc ${block}`)}
                 >
                   <Text style={styles.blockButtonText}>Bloc {block}</Text>
                 </TouchableOpacity>
@@ -88,30 +95,34 @@ export default function HomeScreen() {
             </ScrollView>
           </View>
 
-          {/* Carte Principale (Image Université) et Badge décoratif */}
-          <View style={styles.mainCardContainer}>
-            <View style={styles.blueCard}>
+          {/* Section Université Responsive */}
+          <View style={styles.universitySectionContainer}>
+            {/* 1. Carte de l'Université (Image Responsive) */}
+            <View style={styles.universityCard}>
               {univImage ? (
-                <Image source={{ uri: univImage }} style={styles.fullImage} resizeMode="cover" />
+                <Image source={{ uri: univImage }} style={styles.universityImage} resizeMode="contain" />
               ) : (
-                <Text style={styles.cardTitle}>Université</Text>
+                <View style={styles.placeholderCard}>
+                   {/* Design alternatif si pas d'image définie */}
+                   <Text className="text-gray-400 font-bold">Image de l'Université</Text>
+                </View>
               )}
             </View>
             
-            {/* Badge non-cliquable (Simple texte décoratif) */}
-            <View style={styles.overlapBadge}>
-              <Text style={styles.overlapBadgeText}>UNIVERSITE AUBE NOUVELLE</Text>
+            {/* 2. Titre de l'Université (Responsive et en dessous) */}
+            <View style={styles.titleBadge}>
+              <Text style={styles.titleText}>UNIVERSITE AUBE NOUVELLE</Text>
             </View>
           </View>
 
         </ScrollView>
 
-        {/* Barre de Navigation Flottante (Boutons Alertes, Accueil, Notes) */}
+        {/* Barre de Navigation Flottante au bas */}
         <View style={styles.bottomNav}>
-          <TouchableOpacity onPress={() => console.log('Alertes')}>
+          <TouchableOpacity onPress={() => handleButtonPress('Alertes')}>
             <Feather name="bell" size={22} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.replace('/')}>
+          <TouchableOpacity onPress={() => handleButtonPress('Accueil')}>
             <Feather name="home" size={22} color="white" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push('/screens/guide-viewer')}>
@@ -125,31 +136,41 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  statusBarMock: { height: 24, backgroundColor: 'black', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 8 },
+  // Simulation de la barre d'état système
+  statusBarMock: { height: 24, backgroundColor: 'black', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 8, zIndex: 100 },
   statusTime: { color: 'white', fontSize: 10, fontWeight: 'bold' },
   statusBattery: { color: 'white', fontSize: 10, fontWeight: 'bold', marginLeft: 4 },
   flexRowCenter: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   batteryIcon: { width: 18, height: 9, borderWidth: 1, borderColor: 'white', borderRadius: 2, padding: 1, marginLeft: 4, justifyContent: 'center' },
   batteryLevel: { backgroundColor: 'white', height: '100%', width: '38%' },
   
+  // Header rouge
   headerRed: { marginHorizontal: 12, marginTop: 12, height: 48, backgroundColor: '#c0262b', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, elevation: 2 },
+  headerIcon: { strokeWidth: 2.5 }, // Pour correspondre au style lucide
   
-  searchContainer: { marginHorizontal: 12, marginTop: 12, flexDirection: 'row', alignItems: 'center' },
-  searchInput: { flex: 1, height: 44, backgroundColor: 'white', borderRadius: 22, paddingLeft: 44, paddingRight: 48, fontSize: 13, fontWeight: '500', elevation: 1 },
+  // Zone de recherche
+  searchContainer: { marginHorizontal: 12, marginTop: 12, flexDirection: 'row', alignItems: 'center', zIndex: 50 },
+  searchInput: { flex: 1, height: 44, backgroundColor: 'white', borderRadius: 22, paddingLeft: 44, paddingRight: 48, fontSize: 13, fontWeight: '500', elevation: 1, color: '#6b7280' },
   searchIcon: { position: 'absolute', left: 16, zIndex: 1 },
   botButton: { position: 'absolute', right: 12, zIndex: 1 },
 
-  blockSelector: { marginHorizontal: 12, marginTop: 12, backgroundColor: '#263d7e', borderRadius: 10, padding: 6 },
+  // Sélecteur de blocs
+  blockSelector: { marginHorizontal: 12, marginTop: 12, backgroundColor: '#263d7e', borderRadius: 10, padding: 6, zIndex: 10 },
   blockButton: { backgroundColor: '#385598', paddingHorizontal: 16, paddingVertical: 7, borderRadius: 6, marginRight: 6 },
   blockButtonText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
 
-  mainCardContainer: { marginHorizontal: 12, marginTop: 16, alignItems: 'center', paddingBottom: 24 },
-  blueCard: { width: '100%', backgroundColor: '#4184f4', height: 330, borderRadius: 24, alignItems: 'center', justifyContent: 'center', elevation: 3, overflow: 'hidden' },
-  fullImage: { width: '100%', height: '100%' },
-  cardTitle: { color: 'white', fontSize: 52, fontWeight: 'bold', letterSpacing: -1 },
+  // Conteneur Université Responsive
+  universitySectionContainer: { marginHorizontal: 12, marginTop: 16, alignItems: 'center' },
+  // Carte de l'Université (Image Responsive)
+  universityCard: { width: '100%', backgroundColor: '#4184f4', borderRadius: 24, elevation: 3, overflow: 'hidden', marginBottom: -25, zIndex: 5 }, // Marges négatives pour que le badge chevauche
+  universityImage: { width: '100%', aspectRatio: 16 / 9 }, // Aspect Ratio pour le côté responsive
+  // Si pas d'image définie
+  placeholderCard: { width: '100%', height: 330, backgroundColor: '#4184f4', borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   
-  overlapBadge: { position: 'absolute', bottom: 0, backgroundColor: '#263d7e', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 12, elevation: 5 },
-  overlapBadgeText: { color: 'white', fontSize: 11, fontWeight: 'bold', letterSpacing: 1 },
+  // Badge de titre (Responsive et en dessous)
+  titleBadge: { backgroundColor: '#263d7e', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 12, elevation: 5, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 2, zIndex: 10 }, // zIndex supérieur pour chevauchement
+  titleText: { color: 'white', fontSize: 11, fontWeight: '700', letterSpacing: 1, fontFamily: 'Times New Roman', textAlign: 'center' }, // Times New Roman simulé
 
-  bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 56, elevation: 10 }
+  // Barre de navigation du bas
+  bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 56, elevation: 10, zIndex: 100 }
 });
