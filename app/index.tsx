@@ -1,121 +1,128 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Image, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAppContext } from '@/lib/app-context'; // Connexion à la logique de Manus
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { appData, isLoading } = useAppContext(); // Récupération des données SQLite
-  const [activeBloc, setActiveBloc] = useState('Bloc A');
-  const blocs = ['Bloc A', 'Bloc B', 'Bloc C', 'Bloc D', 'Bloc E', 'Bloc F'];
 
-  // Si la base de données charge, on affiche un petit indicateur pour éviter le crash
-  if (isLoading) {
-    return (
-      <View className="flex-1 bg-[#FDF2F7] items-center justify-center">
-        <ActivityIndicator size="large" color="#C62828" />
-      </View>
-    );
-  }
+  // Liste des Blocs de l'Université
+  const blocks = [
+    { id: 'A', name: 'Bloc A', desc: 'Administration & Bureaux', icon: 'business' },
+    { id: 'B', name: 'Bloc B', desc: 'Amphithéâtres & Cours', icon: 'school' },
+    { id: 'C', name: 'Bloc C', desc: 'Laboratoires & TP', icon: 'flask' },
+    { id: 'E', name: 'Bloc E', desc: 'Salles de cours', icon: 'book' },
+  ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FDF2F7' }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 110 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
+      
+      {/* Header Accueil Stabilisé */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.universityName}>U-AUBEN TRACKER</Text>
+          <Text style={styles.subtitle}>Gestionnaire de Matériel</Text>
+        </View>
+        <TouchableOpacity 
+          onPress={() => router.push('/screens/chat-aube')}
+          style={styles.chatButton}
+        >
+          <Ionicons name="chatbubble-ellipses" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.container}>
         
-        {/* 1. Header Rouge - Arrondi (mx-3 mt-4) */}
-        <View className="bg-[#C62828] mx-3 mt-4 px-6 py-4 flex-row items-center justify-between rounded-[40px] shadow-lg">
-          <TouchableOpacity>
-            <Ionicons name="menu" size={28} color="white" />
-          </TouchableOpacity>
-          <Text style={{ fontFamily: 'Algerian', color: 'white', fontSize: 18 }}>U-AUBEN TRACKER</Text>
-          <TouchableOpacity onPress={() => router.push('/screens/settings')}>
-            <Ionicons name="settings-outline" size={28} color="white" />
-          </TouchableOpacity>
+        {/* Résumé Statistique (Optionnel) */}
+        <View style={styles.statsCard}>
+          <Text style={styles.statsTitle}>ÉTAT GLOBAL</Text>
+          <View className="flex-row justify-between mt-2">
+             <Text className="text-white font-bold">128 Salles</Text>
+             <Text className="text-white font-bold">1,450 Articles</Text>
+          </View>
         </View>
 
-        {/* 2. Barre de Recherche + Bouton Robot Interactif */}
-        <View className="px-8 mt-5">
-          <View className="relative flex-row items-center bg-white rounded-full px-4 py-3 shadow-sm border border-gray-100">
-            <Ionicons name="search" size={20} color="#9ca3af" />
-            <TextInput 
-              placeholder="Que cherchez vous aujourd'hui ?" 
-              className="flex-1 ml-3 text-gray-600"
-              placeholderTextColor="#9ca3af"
-            />
+        <Text style={styles.sectionTitle}>PARCOURIR PAR BLOC</Text>
+
+        {/* Grille des Blocs */}
+        <View style={styles.grid}>
+          {blocks.map((block) => (
             <TouchableOpacity 
-              onPress={() => router.push('/screens/aube-chat')}
-              className="bg-white rounded-lg p-1 shadow-sm active:scale-95"
+              key={block.id}
+              style={styles.blockCard}
+              onPress={() => router.push({ pathname: '/screens/room-contents', params: { blockId: block.id } })}
             >
-              <MaterialCommunityIcons name="robot-outline" size={24} color="#3B82F6" />
+              <View style={styles.iconContainer}>
+                <Ionicons name={block.icon as any} size={30} color="#1D3583" />
+              </View>
+              <Text style={styles.blockName}>{block.name}</Text>
+              <Text style={styles.blockDesc}>{block.desc}</Text>
             </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 3. Bandeau Bleu Marine - Sélecteur de Blocs (A à F) */}
-        <View className="px-6 mt-5">
-          <View className="bg-[#1E3A8A] rounded-2xl p-2 flex-row justify-between items-center">
-            {blocs.map((bloc) => (
-              <TouchableOpacity
-                key={bloc}
-                onPress={() => {
-                  setActiveBloc(bloc);
-                  // On navigue vers les détails du bloc en extrayant la lettre (A, B, C...)
-                  router.push({ pathname: '/screens/bloc-details', params: { blocId: bloc.split(' ')[1] } });
-                }}
-                className={`flex-1 py-2 rounded-xl items-center ${activeBloc === bloc ? 'bg-[#3B82F6]' : ''}`}
-              >
-                <Text className={`text-[10px] font-bold ${activeBloc === bloc ? 'text-white' : 'text-gray-400'}`}>
-                  {bloc}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* 4. Zone Centrale - Carte Université (Connectée à SQLite) */}
-        <View className="px-6 mt-8 items-center">
-          <View className="w-full bg-white rounded-[60px] aspect-[1.2/1] items-center justify-center shadow-2xl overflow-hidden border-4 border-[#3B82F6]">
-            {/* On utilise l'image stockée dans la base de données */}
-            <Image 
-              source={{ uri: appData?.general?.mainBuildingImage }} 
-              style={{ width: '100%', height: '100%', position: 'absolute' }}
-              resizeMode="cover"
-            />
-            <View className="bg-black/20 absolute inset-0 items-center justify-center">
-               <Text className="text-white text-5xl font-bold tracking-tighter shadow-black">Université</Text>
-            </View>
-          </View>
-
-          {/* Bouton Titre Université Aube Nouvelle */}
-          <TouchableOpacity 
-            onPress={() => router.push('/screens/aube-chat')}
-            className="mt-10 bg-[#1E3A8A] px-10 py-5 rounded-2xl shadow-xl active:scale-95"
-          >
-            <Text style={{ fontFamily: 'Algerian' }} className="text-white text-[12px] font-bold tracking-[0.15em] uppercase text-center">
-              Universite Aube Nouvelle
-            </Text>
-          </TouchableOpacity>
+          ))}
         </View>
 
       </ScrollView>
 
-      {/* 5. Ta Barre de Navigation Personnalisée (Fixée en bas) */}
-      <View className="absolute bottom-6 left-8 right-8">
-        <View className="bg-[#1E3A8A] rounded-[45px] py-5 flex-row items-center justify-around shadow-2xl border-2 border-white/10">
-          <TouchableOpacity onPress={() => router.push('/screens/alerts')}>
-            <Ionicons name="notifications-outline" size={30} color="#d1d5db" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setActiveBloc('Bloc A')}>
-            <Ionicons name="home" size={32} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/screens/notes')}>
-            <Ionicons name="document-text-outline" size={30} color="#d1d5db" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      
+      {/* Bouton Flottant d'Ajout (Fixe en bas) */}
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => router.push('/screens/add-room')}
+      >
+        <Ionicons name="add" size={30} color="white" />
+        <Text style={styles.fabText}>NOUVELLE SALLE</Text>
+      </TouchableOpacity>
+
     </SafeAreaView>
   );
-          }
+}
+
+const styles = StyleSheet.create({
+  header: {
+    backgroundColor: '#B21F18',
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  universityName: { color: 'white', fontWeight: '900', fontSize: 20 },
+  subtitle: { color: 'rgba(255,255,255,0.7)', fontWeight: 'bold', fontSize: 12 },
+  chatButton: { backgroundColor: '#1D3583', p: 10, borderRadius: 15, padding: 10 },
+  container: { padding: 20, paddingBottom: 100 },
+  statsCard: { backgroundColor: '#1D3583', padding: 20, borderRadius: 20, marginBottom: 25 },
+  statsTitle: { color: 'white', opacity: 0.6, fontSize: 10, fontWeight: '900' },
+  sectionTitle: { color: '#1D3583', fontWeight: '900', fontSize: 14, marginBottom: 15, letterSpacing: 1 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  blockCard: {
+    backgroundColor: 'white',
+    width: '48%',
+    padding: 20,
+    borderRadius: 20,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  iconContainer: { backgroundColor: '#F1F5F9', width: 50, height: 50, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  blockName: { fontWeight: '900', fontSize: 16, color: '#1D3583' },
+  blockDesc: { fontSize: 10, color: '#64748B', marginTop: 4, fontWeight: 'bold' },
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    alignSelf: 'center',
+    backgroundColor: '#1D3583',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 25,
+    paddingVertical: 15,
+    borderRadius: 50,
+    elevation: 10,
+    shadowColor: '#1D3583',
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+  },
+  fabText: { color: 'white', fontWeight: '900', marginLeft: 10, fontSize: 14 }
+});
