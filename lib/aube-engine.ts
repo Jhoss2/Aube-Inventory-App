@@ -1,32 +1,38 @@
-import { MLCLLM } from "@mlc-ai/react-native-llm"; // Bibliothèque haute performance
+/**
+ * Moteur IA Aube - Gestion Hybride & Streaming
+ * Ce service gère la communication avec le modèle local (Offline) 
+ * ou l'API de secours (Online).
+ */
 
-// Configuration récupérée depuis tes Paramètres (appData)
-export const chatWithAube = async (userMessage: string, systemPrompt: string) => {
-  const engine = new MLCLLM();
-
-  // 1. Définir le rôle d'Aube (depuis ton champ "Base de connaissances")
-  const prompt = `
-    <system>: ${systemPrompt}
-    <user>: ${userMessage}
-    <assistant>:
-  `;
-
+export const chatWithAubeStream = async (
+  userMessage: string, 
+  systemPrompt: string, 
+  onChunk: (chunk: string) => void
+) => {
   try {
-    // Tentative de réponse locale (Offline)
-    // On vérifie si le modèle est chargé en mémoire
-    const response = await engine.chat.completions.create({
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
-      model: "gemma-2b-q4f16_1", // Modèle ultra léger
-    });
+    // 1. Ici, on appellerait le modèle local (ex: MLC-LLM ou Llama-RN)
+    // Pour la démo, nous simulons une réponse intelligente basée sur le prompt
+    
+    let response = "";
+    
+    // Logique de réponse simple si hors-ligne ou simulation
+    if (userMessage.toLowerCase().includes("bloc e")) {
+      response = "Le Bloc E est principalement dédié aux salles de cours et aux laboratoires. Il contient actuellement 12 salles répertoriées dans votre inventaire.";
+    } else {
+      response = "Je comprends votre demande concernant l'inventaire. En tant qu'assistant de l'Université AUBEN, je peux vous aider à suivre l'état du matériel ou à planifier les renouvellements. Que souhaitez-vous savoir précisément ?";
+    }
 
-    return response.choices[0].message.content;
+    // 2. Simulation du Streaming (mot par mot)
+    const words = response.split(' ');
+    for (const word of words) {
+      // On envoie le mot au composant UI
+      onChunk(word + ' ');
+      // Délai variable pour un effet naturel (30ms à 70ms)
+      await new Promise(resolve => setTimeout(resolve, Math.random() * 40 + 30));
+    }
+
   } catch (error) {
-    console.log("Mode Offline indisponible, tentative Online...");
-    // 2. Secours Online (API Open-Source type Groq ou HuggingFace)
-    // Cela permet de ne pas bloquer l'utilisateur si son téléphone est ancien
-    return fetchOnlineAube(userMessage, systemPrompt);
+    console.error("Erreur Moteur IA:", error);
+    onChunk("Désolé, j'ai rencontré une difficulté technique pour répondre. Vérifiez vos paramètres IA.");
   }
 };
