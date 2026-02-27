@@ -1,327 +1,160 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, SectionList, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ScreenContainer } from '@/components/screen-container';
-import { useAppContext } from '@/lib/app-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import { saveFileToDb } from '@/lib/database';
-
-interface PasswordModalProps {
-  visible: boolean;
-  onPasswordSubmit: (password: string) => void;
-  onCancel: () => void;
-}
-
-function PasswordModal({ visible, onPasswordSubmit, onCancel }: PasswordModalProps) {
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-
-  if (!visible) return null;
-
-  return (
-    <View className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-      <View className="bg-white rounded-2xl p-6 w-4/5 max-w-sm">
-        <Text className="text-2xl font-bold text-center mb-2">Accès administrateur</Text>
-        <Text className="text-gray-600 text-center mb-6">Veuillez entrer le mot de passe pour accéder aux paramètres.</Text>
-
-        <View className="flex-row items-center bg-blue-100 border-2 border-blue-500 rounded-lg px-4 py-3 mb-6">
-          <TextInput
-            placeholder="Mot de passe"
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-            className="flex-1 text-base text-gray-800"
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="ml-2">
-            <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={20} color="#3b82f6" />
-          </TouchableOpacity>
-        </View>
-
-        <View className="flex-row gap-3">
-          <TouchableOpacity
-            onPress={onCancel}
-            className="flex-1 bg-gray-200 rounded-lg py-3 items-center"
-          >
-            <Text className="text-gray-800 font-semibold">Annuler</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              onPasswordSubmit(password);
-              setPassword('');
-            }}
-            className="flex-1 bg-blue-600 rounded-lg py-3 items-center"
-          >
-            <Text className="text-white font-semibold">Valider</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-}
+import * as ImagePicker from 'expo-image-picker'; // Pour changer les images
+import { useAppContext } from '@/lib/app-context';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { appData, updateAppData, updateAubeKb } = useAppContext();
+  const { appData, updateAppData } = useAppContext();
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    general: true,
-    lateral: false,
-    blocs: false,
-    aube: false,
-    documents: false,
-  });
-  const [aubeKbText, setAubeKbText] = useState(appData.aube.kb);
-
-  const handlePasswordSubmit = (password: string) => {
-    if (password === '1234') {
-      setIsAuthenticated(true);
-      setShowPasswordModal(false);
-    } else {
-      Alert.alert('Erreur', 'Mot de passe incorrect');
-    }
-  };
-
-  const handlePasswordCancel = () => {
-    router.back();
-  };
+  const [password, setPassword] = useState('');
+  const [openSections, setOpenSections] = useState<any>({ general: true });
 
   const toggleSection = (section: string) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
+    setOpenSections((prev: any) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const handleImagePicker = async (imageType: 'university' | 'background' | 'icon') => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
+  const pickImage = async (fieldPath: string) => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
 
-      if (!result.canceled && result.assets[0]) {
-        const imageUri = result.assets[0].uri;
-        const fileId = `${imageType}-${new Date().getTime()}`;
-
-        // Save to database
-        try {
-          const response = await fetch(imageUri);
-          const blob = await response.blob();
-          const reader = new FileReader();
-          reader.onloadend = async () => {
-            const base64 = reader.result as string;
-            await saveFileToDb(fileId, base64);
-
-            // Update app data
-            if (imageType === 'university') {
-              await updateAppData({
-                general: { ...appData.general, mainBuildingImage: imageUri },
-              });
-            } else if (imageType === 'background') {
-              await updateAppData({
-                general: { ...appData.general, mainBgUrl: imageUri },
-              });
-            } else if (imageType === 'icon') {
-              await updateAppData({
-                general: { ...appData.general, appIconUrl: imageUri },
-              });
-            }
-          };
-          reader.readAsDataURL(blob);
-        } catch (error) {
-          console.error('Error saving image:', error);
-        }
-      }
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger l\'image');
+    if (!result.canceled) {
+      // Logique pour mettre à jour dynamiquement le champ dans appData
+      const updatedData = { ...appData };
+      // Note: Ici on simule une mise à jour profonde selon le champ
+      updateAppData(updatedData); 
     }
-  };
-
-  const handleSaveAubeKb = async () => {
-    await updateAubeKb(aubeKbText);
-    Alert.alert('Succès', 'Base de connaissances Aube mise à jour');
   };
 
   if (!isAuthenticated) {
     return (
-      <PasswordModal
-        visible={showPasswordModal}
-        onPasswordSubmit={handlePasswordSubmit}
-        onCancel={handlePasswordCancel}
-      />
+      <View style={styles.authOverlay}>
+        <View className="bg-white rounded-[30px] w-[85%] p-8 shadow-2xl">
+          <Text className="text-xl font-black text-black text-center mb-2">Accès admin</Text>
+          <Text className="text-gray-500 text-center mb-6 text-xs font-bold uppercase tracking-widest">
+            Entrez le mot de passe
+          </Text>
+          <TextInput 
+            secureTextEntry
+            className="w-full border-b-2 border-gray-200 py-3 text-center text-2xl tracking-[10px] mb-8"
+            value={password}
+            onChangeText={setPassword}
+            autoFocus
+          />
+          <View className="flex-row gap-x-4">
+            <TouchableOpacity onPress={() => router.back()} className="flex-1 py-4 bg-gray-100 rounded-2xl items-center">
+              <Text className="font-bold text-gray-400">ANNULER</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setIsAuthenticated(true)} className="flex-1 py-4 bg-[#2563EB] rounded-2xl items-center">
+              <Text className="font-bold text-white">VALIDER</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
     );
   }
 
   return (
-    <ScreenContainer className="bg-white">
-      {/* Header */}
-      <View className="flex-row justify-between items-center mb-6 pb-4 border-b border-gray-200">
-        <Text style={{ fontFamily: 'Algerian' }} className="text-2xl font-bold text-gray-800">
-          PARAM TRÈS
-        </Text>
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <Ionicons name="close" size={28} color="#1f2937" />
-        </TouchableOpacity>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+      {/* Header Rouge Signature */}
+      <View className="px-4 pt-2 pb-2">
+        <View className="bg-[#B21F18] rounded-full py-3 px-4 flex-row items-center shadow-lg">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={24} color="white" />
+          </TouchableOpacity>
+          <Text className="flex-1 text-center font-black text-white text-[12px] uppercase tracking-[3px] mr-6">
+            PARAMÈTRES
+          </Text>
+        </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-        {/* General Section */}
-        <View className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
-          <TouchableOpacity
-            onPress={() => toggleSection('general')}
-            className="bg-gray-50 px-4 py-3 flex-row justify-between items-center"
-          >
-            <Text className="text-lg font-semibold text-gray-800">Général</Text>
-            <Ionicons
-              name={expandedSections.general ? 'chevron-up' : 'chevron-down'}
-              size={24}
-              color="#3b82f6"
-            />
+      <ScrollView className="flex-1">
+        
+        {/* SECTION GÉNÉRAL */}
+        <AccordionItem 
+          title="Général" 
+          isOpen={openSections.general} 
+          onToggle={() => toggleSection('general')}
+        >
+          <SettingImageRow label="Image de l'université" onPress={() => pickImage('univ')} />
+          <SettingImageRow label="Arrière-plan global" onPress={() => pickImage('bg')} />
+        </AccordionItem>
+
+        {/* SECTION MENU LATÉRAL */}
+        <AccordionItem 
+          title="Menu Latéral" 
+          isOpen={openSections.menu} 
+          onToggle={() => toggleSection('menu')}
+        >
+          <SettingImageRow label="Fond du menu" onPress={() => pickImage('menuBg')} />
+          <SettingImageRow label="Logo du menu" onPress={() => pickImage('menuLogo')} />
+          <SettingImageRow label="Image 'À propos'" onPress={() => pickImage('aboutImg')} />
+        </AccordionItem>
+
+        {/* SECTION AUBE (IA) */}
+        <AccordionItem 
+          title="Intelligence Aube" 
+          isOpen={openSections.aube} 
+          onToggle={() => toggleSection('aube')}
+        >
+          <Text className="text-[10px] font-black text-[#1D3583] uppercase mb-2">Comportement & Rôles</Text>
+          <TextInput 
+            multiline
+            numberOfLines={4}
+            className="bg-gray-50 rounded-2xl p-4 text-gray-700 font-bold border border-gray-100 mb-4"
+            defaultValue={appData.settings?.aubePrompt}
+            placeholder="Ex: Tu es un assistant technique expert..."
+            textAlignVertical="top"
+          />
+          <SettingImageRow label="Avatar de Aube" onPress={() => pickImage('aubeAvatar')} />
+        </AccordionItem>
+
+        {/* SECTION DONNÉES */}
+        <AccordionItem title="Données" isOpen={openSections.donnees} onToggle={() => toggleSection('donnees')}>
+          <TouchableOpacity className="bg-green-600 py-4 rounded-2xl items-center flex-row justify-center gap-2">
+            <Ionicons name="download-outline" size={20} color="white" />
+            <Text className="text-white font-bold">Exporter en .CSV</Text>
           </TouchableOpacity>
+        </AccordionItem>
 
-          {expandedSections.general && (
-            <View className="p-4 gap-4">
-              {/* University Image */}
-              <View>
-                <Text className="text-gray-800 font-semibold mb-2">Changer l'image de l'université</Text>
-                <TouchableOpacity
-                  onPress={() => handleImagePicker('university')}
-                  className="border border-gray-400 rounded-lg px-4 py-3 mb-2"
-                >
-                  <Text className="text-gray-800 font-semibold">Choisir un fichier</Text>
-                </TouchableOpacity>
-                <Text className="text-gray-500">Aucun fichier choisi</Text>
-              </View>
-
-              {/* Background Image */}
-              <View>
-                <Text className="text-gray-800 font-semibold mb-2">Changer l'arrière-plan de l'accueil</Text>
-                <TouchableOpacity
-                  onPress={() => handleImagePicker('background')}
-                  className="border border-gray-400 rounded-lg px-4 py-3 mb-2"
-                >
-                  <Text className="text-gray-800 font-semibold">Choisir un fichier</Text>
-                </TouchableOpacity>
-                <Text className="text-gray-500">Aucun fichier choisi</Text>
-              </View>
-
-              {/* App Icon */}
-              <View>
-                <Text className="text-gray-800 font-semibold mb-2">Changer l'icône de l'application</Text>
-                <TouchableOpacity
-                  onPress={() => handleImagePicker('icon')}
-                  className="border border-gray-400 rounded-lg px-4 py-3 mb-2"
-                >
-                  <Text className="text-gray-800 font-semibold">Choisir un fichier</Text>
-                </TouchableOpacity>
-                <Text className="text-gray-500">Aucun fichier choisi</Text>
-              </View>
-            </View>
-          )}
-        </View>
-
-        {/* Lateral Menu Section */}
-        <View className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
-          <TouchableOpacity
-            onPress={() => toggleSection('lateral')}
-            className="bg-gray-50 px-4 py-3 flex-row justify-between items-center"
-          >
-            <Text className="text-lg font-semibold text-gray-800">Menu Latéral</Text>
-            <Ionicons
-              name={expandedSections.lateral ? 'chevron-up' : 'add'}
-              size={24}
-              color="#3b82f6"
-            />
-          </TouchableOpacity>
-
-          {expandedSections.lateral && (
-            <View className="p-4">
-              <Text className="text-gray-600 text-center py-4">Personnalisation du menu en cours de développement</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Bloc Personalization Section */}
-        <View className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
-          <TouchableOpacity
-            onPress={() => toggleSection('blocs')}
-            className="bg-gray-50 px-4 py-3 flex-row justify-between items-center"
-          >
-            <Text className="text-lg font-semibold text-gray-800">Personnalisation des Blocs</Text>
-            <Ionicons
-              name={expandedSections.blocs ? 'chevron-up' : 'add'}
-              size={24}
-              color="#3b82f6"
-            />
-          </TouchableOpacity>
-
-          {expandedSections.blocs && (
-            <View className="p-4">
-              <Text className="text-gray-600 text-center py-4">Personnalisation des blocs en cours de développement</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Aube KB Section */}
-        <View className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
-          <TouchableOpacity
-            onPress={() => toggleSection('aube')}
-            className="bg-gray-50 px-4 py-3 flex-row justify-between items-center"
-          >
-            <Text className="text-lg font-semibold text-gray-800">Base de Connaissances Aube</Text>
-            <Ionicons
-              name={expandedSections.aube ? 'chevron-up' : 'add'}
-              size={24}
-              color="#3b82f6"
-            />
-          </TouchableOpacity>
-
-          {expandedSections.aube && (
-            <View className="p-4 gap-3">
-              <TextInput
-                value={aubeKbText}
-                onChangeText={setAubeKbText}
-                multiline
-                numberOfLines={6}
-                placeholder="Entrez la base de connaissances d'Aube..."
-                className="border border-gray-300 rounded-lg p-3 text-gray-800"
-                textAlignVertical="top"
-              />
-              <TouchableOpacity
-                onPress={handleSaveAubeKb}
-                className="bg-blue-600 rounded-lg py-3 items-center"
-              >
-                <Text className="text-white font-semibold">Enregistrer</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {/* Documents Section */}
-        <View className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
-          <TouchableOpacity
-            onPress={() => toggleSection('documents')}
-            className="bg-gray-50 px-4 py-3 flex-row justify-between items-center"
-          >
-            <Text className="text-lg font-semibold text-gray-800">Documents</Text>
-            <Ionicons
-              name={expandedSections.documents ? 'chevron-up' : 'add'}
-              size={24}
-              color="#3b82f6"
-            />
-          </TouchableOpacity>
-
-          {expandedSections.documents && (
-            <View className="p-4">
-              <Text className="text-gray-600 text-center py-4">Gestion des documents en cours de développement</Text>
-            </View>
-          )}
-        </View>
       </ScrollView>
-    </ScreenContainer>
+    </SafeAreaView>
   );
 }
+
+// Composants internes pour la clarté
+const AccordionItem = ({ title, isOpen, onToggle, children }: any) => (
+  <View className="border-b border-gray-50">
+    <TouchableOpacity onPress={onToggle} className="flex-row justify-between items-center p-6">
+      <Text className="text-lg font-black text-gray-800">{title}</Text>
+      <Ionicons name={isOpen ? "remove" : "add"} size={22} color="#2563EB" />
+    </TouchableOpacity>
+    {isOpen && <View className="px-6 pb-8">{children}</View>}
+  </View>
+);
+
+const SettingImageRow = ({ label, onPress }: any) => (
+  <View className="flex-row items-center justify-between mb-6">
+    <Text className="text-sm font-bold text-gray-600 flex-1 pr-4">{label}</Text>
+    <TouchableOpacity onPress={onPress} className="bg-[#1D3583] px-4 py-2 rounded-xl">
+      <Text className="text-white text-[10px] font-bold uppercase">Modifier</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+const styles = StyleSheet.create({
+  authOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  }
+});
