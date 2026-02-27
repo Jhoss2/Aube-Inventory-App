@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, StyleSheet, Image, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { useAppContext } from '@/lib/app-context';
 
 export default function SettingsScreen() {
@@ -12,59 +13,80 @@ export default function SettingsScreen() {
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [openSections, setOpenSections] = useState<any>({ general: true });
 
-  const toggleSection = (section: string) => {
-    setOpenSections((prev: any) => ({ ...prev, [section]: !prev[section] }));
+  const [openSections, setOpenSections] = useState({
+    general: true,
+    menu: false,
+    blocs: false,
+    base: false,
+    docs: false,
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  // VÉRITABLE LOGIQUE DE MISE À JOUR
-  const pickImage = async (field: string) => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert("Permission requise", "L'accès à la galerie est nécessaire.");
-      return;
+  const handleLogin = () => {
+    if (password === '123') { // Tu peux changer le mot de passe ici
+      setIsAuthenticated(true);
+    } else {
+      Alert.alert("Accès refusé", "Mot de passe incorrect.");
     }
+  };
 
-    let result = await ImagePicker.launchImageLibraryAsync({
+  const pickImage = async (field: string) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.7,
     });
-
     if (!result.canceled) {
-      // Met à jour uniquement le champ concerné dans le contexte global
       updateSettings({ [field]: result.assets[0].uri });
     }
   };
 
-  // Écran de verrouillage Admin
+  const pickDoc = async (field: string) => {
+    const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
+    if (!result.canceled) {
+      updateSettings({ [field]: result.assets[0].uri });
+    }
+  };
+
+  // Petit composant interne pour les lignes de sélection
+  const SettingRow = ({ label, field, type = 'image' }: { label: string, field: string, type?: 'image' | 'pdf' }) => (
+    <View style={styles.row}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <TouchableOpacity 
+        style={[styles.rowButton, appData.settings?.[field as any] && styles.rowButtonActive]} 
+        onPress={() => type === 'image' ? pickImage(field) : pickDoc(field)}
+      >
+        <Feather name={appData.settings?.[field as any] ? "check-circle" : "upload"} size={16} color={appData.settings?.[field as any] ? "white" : "#666"} />
+        <Text style={[styles.rowButtonText, appData.settings?.[field as any] && {color: 'white'}]}>
+          {appData.settings?.[field as any] ? "Modifié" : "Choisir"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   if (!isAuthenticated) {
     return (
-      <View style={styles.authOverlay}>
-        <View style={styles.authCard}>
-          <Text style={styles.authTitle}>ACCÈS ADMINISTRATEUR</Text>
-          <Text style={styles.authSubtitle}>ENTREZ LE MOT DE PASSE</Text>
+      <View style={styles.authContainer}>
+        <View style={styles.authModal}>
+          <MaterialCommunityIcons name="shield-lock" size={48} color="#8B1A1A" style={{alignSelf: 'center', marginBottom: 15}} />
+          <Text style={styles.authTitle}>ADMINISTRATEUR</Text>
           <TextInput 
-            secureTextEntry
-            style={styles.passwordInput}
+            style={styles.authInput} 
+            placeholder="Mot de passe" 
+            secureTextEntry 
             value={password}
             onChangeText={setPassword}
-            placeholder="••••"
-            placeholderTextColor="#DDD"
-            autoFocus
           />
-          <View style={styles.authButtons}>
-            <TouchableOpacity onPress={() => router.back()} style={[styles.btn, styles.btnCancel]}>
-              <Text style={styles.btnTextCancel}>ANNULER</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => password === '1234' ? setIsAuthenticated(true) : Alert.alert("Erreur", "Mot de passe incorrect")} 
-              style={[styles.btn, styles.btnConfirm]}
-            >
-              <Text style={styles.btnTextConfirm}>VALIDER</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.authBtn} onPress={handleLogin}>
+            <Text style={styles.authBtnText}>VALIDER</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()} style={{marginTop: 15}}>
+            <Text style={{color: '#666', textAlign: 'center'}}>Annuler</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -72,111 +94,90 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-      
-      {/* HEADER STABILISÉ */}
-      <View style={styles.headerContainer}>
-        <View style={styles.headerRed}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={24} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>PARAMÈTRES SYSTÈME</Text>
-          <View style={{ width: 24 }} />
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>PARAMÈTRES SYSTÈME</Text>
+        <TouchableOpacity onPress={() => router.back()}><Feather name="x" size={24} color="black" /></TouchableOpacity>
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          
-          {/* SECTION GÉNÉRAL */}
-          <AccordionItem title="GÉNÉRAL" isOpen={openSections.general} onToggle={() => toggleSection('general')}>
-            <SettingImageRow label="Image de l'Université" uri={appData.settings?.univImage} onPress={() => pickImage('univImage')} />
-            <SettingImageRow label="Arrière-plan Global" uri={appData.settings?.bgImage} onPress={() => pickImage('bgImage')} />
-          </AccordionItem>
+      <ScrollView style={{ flex: 1 }}>
+        {/* SECTION GÉNÉRAL */}
+        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('general')}>
+          <Text style={styles.accordionTitle}>Général</Text>
+          <Feather name={openSections.general ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+        </TouchableOpacity>
+        {openSections.general && (
+          <View style={styles.accordionContent}>
+            <SettingRow label="Image de l'Université" field="univImage" />
+            <SettingRow label="Arrière-plan Accueil" field="bgImage" />
+          </View>
+        )}
 
-          {/* SECTION AUBE (IA) */}
-          <AccordionItem title="INTELLIGENCE AUBE" isOpen={openSections.aube} onToggle={() => toggleSection('aube')}>
-            <Text style={styles.inputLabel}>PROMPT SYSTÈME (RÔLE)</Text>
-            <TextInput 
-              multiline
-              numberOfLines={4}
-              style={styles.textArea}
-              defaultValue={appData.settings?.aubePrompt}
-              onChangeText={(text) => updateSettings({ aubePrompt: text })}
-              placeholder="Ex: Tu es Aube, un assistant technique..."
-              textAlignVertical="top"
-            />
-            <SettingImageRow label="Avatar de Aube" uri={appData.settings?.assistantAvatar} onPress={() => pickImage('assistantAvatar')} />
-          </AccordionItem>
+        {/* SECTION MENU */}
+        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('menu')}>
+          <Text style={styles.accordionTitle}>Menu Latéral</Text>
+          <Feather name={openSections.menu ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+        </TouchableOpacity>
+        {openSections.menu && (
+          <View style={styles.accordionContent}>
+            <SettingRow label="Arrière-plan du Menu" field="menuBg" />
+            <SettingRow label="Logo du Menu" field="menuLogo" />
+          </View>
+        )}
 
-          {/* SECTION GUIDES */}
-          <AccordionItem title="GUIDES ET DOCUMENTS" isOpen={openSections.docs} onToggle={() => toggleSection('docs')}>
-            <SettingImageRow label="Image du Guide Utilisateur" uri={appData.settings?.guideImage} onPress={() => pickImage('guideImage')} />
-            <SettingImageRow label="Image Développeur" uri={appData.settings?.devImage} onPress={() => pickImage('devImage')} />
-          </AccordionItem>
+        {/* SECTION BLOCS (A à F) */}
+        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('blocs')}>
+          <Text style={styles.accordionTitle}>Personnalisation des Blocs</Text>
+          <Feather name={openSections.blocs ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+        </TouchableOpacity>
+        {openSections.blocs && (
+          <View style={styles.accordionContent}>
+            {['A', 'B', 'C', 'D', 'E', 'F'].map((b) => (
+              <View key={b} style={{marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#eee', pb: 10}}>
+                <Text style={styles.blockLabel}>BLOC {b}</Text>
+                <SettingRow label={`Vue Aérienne ${b}`} field={`bloc${b}_aerial`} />
+                <SettingRow label={`Image Salles ${b}1`} field={`bloc${b}_sub1`} />
+                <SettingRow label={`Image Bureaux ${b}2`} field={`bloc${b}_sub2`} />
+              </View>
+            ))}
+          </View>
+        )}
 
-          {/* SECTION SÉCURITÉ */}
-          <AccordionItem title="DONNÉES & SÉCURITÉ" isOpen={openSections.donnees} onToggle={() => toggleSection('donnees')}>
-            <TouchableOpacity style={styles.exportBtn}>
-              <Ionicons name="download-outline" size={20} color="white" />
-              <Text style={styles.exportBtnText}>EXPORTER LES DONNÉES (.CSV)</Text>
-            </TouchableOpacity>
-          </AccordionItem>
-
-        </ScrollView>
-      </KeyboardAvoidingView>
+        {/* SECTION DOCUMENTS */}
+        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('docs')}>
+          <Text style={styles.accordionTitle}>Documents (PDF)</Text>
+          <Feather name={openSections.docs ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+        </TouchableOpacity>
+        {openSections.docs && (
+          <View style={styles.accordionContent}>
+            <SettingRow label="Guide d'utilisation" field="guidePdf" type="pdf" />
+            <SettingRow label="À propos du développeur" field="aboutPdf" type="pdf" />
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-// Composants internes stylisés
-const AccordionItem = ({ title, isOpen, onToggle, children }: any) => (
-  <View style={styles.accordionContainer}>
-    <TouchableOpacity onPress={onToggle} style={styles.accordionHeader}>
-      <Text style={styles.accordionTitle}>{title}</Text>
-      <Ionicons name={isOpen ? "remove-circle" : "add-circle"} size={24} color="#1D3583" />
-    </TouchableOpacity>
-    {isOpen && <View style={styles.accordionContent}>{children}</View>}
-  </View>
-);
-
-const SettingImageRow = ({ label, uri, onPress }: any) => (
-  <View style={styles.imageRow}>
-    <View style={{ flex: 1 }}>
-      <Text style={styles.imageLabel}>{label}</Text>
-      {uri && <Text style={styles.uriHint} numberOfLines={1}>{uri.split('/').pop()}</Text>}
-    </View>
-    <TouchableOpacity onPress={onPress} style={styles.modifyBtn}>
-      <Text style={styles.modifyBtnText}>MODIFIER</Text>
-    </TouchableOpacity>
-  </View>
-);
-
 const styles = StyleSheet.create({
-  authOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
-  authCard: { backgroundColor: 'white', width: '85%', borderRadius: 30, padding: 30, alignItems: 'center' },
-  authTitle: { fontSize: 18, fontWeight: '900', color: '#1D3583', marginBottom: 5 },
-  authSubtitle: { fontSize: 10, fontWeight: '900', color: '#94A3B8', letterSpacing: 2, marginBottom: 20 },
-  passwordInput: { width: '100%', borderBottomWidth: 2, borderBottomColor: '#F1F5F9', paddingVertical: 15, textAlign: 'center', fontSize: 24, fontWeight: '900', color: '#1D3583', marginBottom: 30 },
-  authButtons: { flexDirection: 'row', gap: 15 },
-  btn: { flex: 1, paddingVertical: 15, borderRadius: 15, alignItems: 'center' },
-  btnCancel: { backgroundColor: '#F1F5F9' },
-  btnConfirm: { backgroundColor: '#1D3583' },
-  btnTextCancel: { color: '#94A3B8', fontWeight: '900' },
-  btnTextConfirm: { color: 'white', fontWeight: '900' },
-  headerContainer: { padding: 15 },
-  headerRed: { backgroundColor: '#B21F18', borderRadius: 50, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, paddingVertical: 12, elevation: 5 },
-  headerTitle: { flex: 1, textAlign: 'center', color: 'white', fontWeight: '900', fontSize: 12, letterSpacing: 2 },
-  accordionContainer: { borderBottomWidth: 1, borderBottomColor: '#F8FAFC' },
-  accordionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 25 },
-  accordionTitle: { fontSize: 15, fontWeight: '900', color: '#1D3583', letterSpacing: 0.5 },
-  accordionContent: { px: 25, paddingHorizontal: 25, pb: 20, paddingBottom: 30 },
-  imageRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  imageLabel: { fontSize: 13, fontWeight: 'bold', color: '#475569' },
-  uriHint: { fontSize: 9, color: '#94A3B8', marginTop: 2 },
-  modifyBtn: { backgroundColor: '#1D3583', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 10 },
-  modifyBtnText: { color: 'white', fontSize: 10, fontWeight: '900' },
-  inputLabel: { fontSize: 10, fontWeight: '900', color: '#1D3583', marginBottom: 10, letterSpacing: 1 },
-  textArea: { backgroundColor: '#F8FAFC', borderRadius: 15, padding: 15, borderWidth: 1, borderColor: '#F1F5F9', color: '#475569', fontWeight: 'bold', fontSize: 13, marginBottom: 20 },
-  exportBtn: { backgroundColor: '#16A34A', paddingVertical: 18, borderRadius: 15, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
-  exportBtnText: { color: 'white', fontWeight: '900', fontSize: 13 }
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: '#1D3583' },
+  
+  accordionHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#f9f9f9', borderBottomWidth: 1, borderBottomColor: '#eee' },
+  accordionTitle: { fontWeight: 'bold', color: '#333' },
+  accordionContent: { padding: 20, backgroundColor: 'white' },
+  
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+  rowLabel: { fontSize: 14, color: '#444', flex: 1 },
+  rowButton: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#ddd' },
+  rowButtonActive: { backgroundColor: '#16A34A', borderColor: '#16A34A' },
+  rowButtonText: { fontSize: 12, fontWeight: '600' },
+  
+  blockLabel: { fontSize: 14, fontWeight: '900', color: '#8B1A1A', marginBottom: 10 },
+
+  authContainer: { flex: 1, backgroundColor: '#1D3583', justifyContent: 'center', padding: 30 },
+  authModal: { backgroundColor: 'white', borderRadius: 20, padding: 30, elevation: 20 },
+  authTitle: { textAlign: 'center', fontSize: 16, fontWeight: '900', letterSpacing: 2, marginBottom: 20 },
+  authInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 15, marginBottom: 20, textAlign: 'center', fontSize: 18 },
+  authBtn: { backgroundColor: '#8B1A1A', padding: 15, borderRadius: 10, alignItems: 'center' },
+  authBtnText: { color: 'white', fontWeight: 'bold' }
 });
