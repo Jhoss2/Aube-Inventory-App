@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, Dimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,96 +19,179 @@ export default function RoomContentsScreen() {
   }, [appData.salles, salleId]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
-      {/* Header */}
-      <View className="px-4 py-3 flex-row items-center bg-white border-b border-gray-100 shadow-sm">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
+    <SafeAreaView style={styles.safeArea}>
+      
+      {/* HEADER FIXE ET STABILISÉ */}
+      <View style={styles.fixedHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={28} color="#1D3583" />
         </TouchableOpacity>
-        <Text className="flex-1 text-center font-black text-[#1D3583] text-lg uppercase tracking-wider">
-          Matériel de {roomName}
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          MATÉRIEL : {roomName}
         </Text>
+        <View style={{ width: 45 }} />
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
-        {materiels.map((item) => (
-          <View key={item.id} className="bg-white rounded-[30px] shadow-sm border border-gray-100 mb-6 overflow-hidden">
-            
-            {/* 1. Grande Image du Matériel */}
-            <View className="w-full h-48 bg-gray-200">
-              {item.image ? (
-                <Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
-              ) : (
-                <View className="w-full h-full items-center justify-center">
-                  <MaterialCommunityIcons name="image-off" size={48} color="#d1d5db" />
-                  <Text className="text-gray-400 font-bold mt-2">Aucune photo disponible</Text>
-                </View>
-              )}
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {materiels.length > 0 ? (
+          materiels.map((item) => (
+            <View key={item.id} style={styles.card}>
               
-              {/* Badge d'état flottant sur l'image */}
-              <View className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full shadow-sm">
-                <Text className={`font-black text-[10px] uppercase ${item.etat === 'Bon' ? 'text-green-600' : 'text-orange-500'}`}>
-                  {item.etat}
-                </Text>
-              </View>
-            </View>
-
-            {/* 2. Corps de la Carte */}
-            <View className="p-5">
-              <View className="flex-row justify-between items-start mb-2">
-                <View>
-                  <Text className="text-2xl font-black text-[#1D3583] uppercase tracking-tighter">
-                    {item.nom}
-                  </Text>
-                  <Text className="text-gray-400 font-bold text-xs uppercase tracking-widest">
-                    {item.marque || 'Marque non spécifiée'}
+              {/* Image du Matériel */}
+              <View style={styles.imageContainer}>
+                {item.image ? (
+                  <Image source={{ uri: item.image }} style={styles.itemImage} />
+                ) : (
+                  <View style={styles.placeholderImage}>
+                    <MaterialCommunityIcons name="image-off" size={48} color="#CBD5E1" />
+                    <Text style={styles.placeholderText}>Aucune photo</Text>
+                  </View>
+                )}
+                
+                <View style={styles.statusBadge}>
+                  <Text style={[styles.statusText, { color: item.etat === 'Bon' ? '#16A34A' : '#F59E0B' }]}>
+                    {item.etat.toUpperCase()}
                   </Text>
                 </View>
-
-                {/* Boutons Actions (Modifier/Supprimer) */}
-                <View className="flex-row gap-x-2">
-                  <TouchableOpacity 
-                    className="w-10 h-10 bg-blue-50 rounded-full items-center justify-center border border-blue-100"
-                    onPress={() => console.log('Edit', item.id)}
-                  >
-                    <Ionicons name="pencil" size={18} color="#3b82f6" />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    className="w-10 h-10 bg-red-50 rounded-full items-center justify-center border border-red-100"
-                    onPress={() => deleteMateriel(item.id)}
-                  >
-                    <Ionicons name="trash" size={18} color="#ef4444" />
-                  </TouchableOpacity>
-                </View>
               </View>
 
-              {/* 3. Informations détaillées */}
-              <View className="flex-row border-y border-gray-50 py-3 my-3">
-                <View className="flex-1">
-                  <Text className="text-[10px] text-gray-400 font-bold uppercase">Quantité</Text>
-                  <Text className="text-[#1D3583] font-black text-lg">{item.quantite}</Text>
-                </View>
-                <View className="flex-1 border-x border-gray-50 px-4">
-                  <Text className="text-[10px] text-gray-400 font-bold uppercase">Acquisition</Text>
-                  <Text className="text-gray-600 font-bold text-sm">{item.dateAcquisition}</Text>
-                </View>
-                <View className="flex-1 pl-4">
-                  <Text className="text-[10px] text-gray-400 font-bold uppercase">Renouvellement</Text>
-                  <Text className="text-red-500 font-bold text-sm">{item.dateRenouvellement}</Text>
-                </View>
-              </View>
+              {/* Corps de la Carte */}
+              <View style={styles.cardBody}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemName}>{item.nom}</Text>
+                    <Text style={styles.itemBrand}>{item.marque || 'MARQUE NON SPÉCIFIÉE'}</Text>
+                  </View>
 
-              {/* 4. Commentaires / Informations supplémentaires */}
-              <View className="bg-[#F8F9FB] p-4 rounded-2xl">
-                <Text className="text-gray-400 font-bold text-[9px] uppercase mb-1">Commentaires :</Text>
-                <Text className="text-gray-600 text-sm leading-5 italic">
-                  {item.commentaires || "Aucune note supplémentaire pour ce matériel."}
-                </Text>
+                  <View style={styles.actionButtons}>
+                    <TouchableOpacity style={[styles.actionBtn, styles.editBtn]}>
+                      <Ionicons name="pencil" size={18} color="#3B82F6" />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.actionBtn, styles.deleteBtn]}
+                      onPress={() => deleteMateriel(item.id)}
+                    >
+                      <Ionicons name="trash" size={18} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Détails Techniques */}
+                <View style={styles.detailsRow}>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>QUANTITÉ</Text>
+                    <Text style={styles.detailValue}>{item.quantite}</Text>
+                  </View>
+                  <View style={[styles.detailItem, styles.detailBorder]}>
+                    <Text style={styles.detailLabel}>ACQUISITION</Text>
+                    <Text style={styles.detailSmallValue}>{item.dateAcquisition}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>RENOUVELLEMENT</Text>
+                    <Text style={[styles.detailSmallValue, { color: '#EF4444' }]}>{item.dateRenouvellement}</Text>
+                  </View>
+                </View>
+
+                {/* Zone Commentaires */}
+                <View style={styles.commentBox}>
+                  <Text style={styles.commentLabel}>COMMENTAIRES :</Text>
+                  <Text style={styles.commentText}>
+                    {item.commentaires || "Aucune note supplémentaire."}
+                  </Text>
+                </View>
               </View>
             </View>
+          ))
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="cube-outline" size={80} color="#E2E8F0" />
+            <Text style={styles.emptyText}>Aucun matériel enregistré dans cette salle.</Text>
           </View>
-        ))}
+        )}
       </ScrollView>
     </SafeAreaView>
   );
-                    }
+}
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F8F9FB' },
+  fixedHeader: {
+    height: 70,
+    backgroundColor: 'white',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  backButton: { padding: 10 },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    color: '#1D3583',
+    fontWeight: '900',
+    fontSize: 16,
+    letterSpacing: 1,
+  },
+  scrollView: { flex: 1 },
+  scrollContent: { padding: 20, paddingBottom: 60 },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 25,
+    marginBottom: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    elevation: 2,
+  },
+  imageContainer: { width: '100%', height: 200, backgroundColor: '#F1F5F9' },
+  itemImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  placeholderImage: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  placeholderText: { color: '#94A3B8', fontWeight: 'bold', marginTop: 8 },
+  statusBadge: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    backgroundColor: 'white',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    elevation: 3,
+  },
+  statusText: { fontSize: 10, fontWeight: '900' },
+  cardBody: { padding: 20 },
+  cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  itemName: { fontSize: 22, fontWeight: '900', color: '#1D3583', letterSpacing: -0.5 },
+  itemBrand: { fontSize: 11, color: '#94A3B8', fontWeight: '900', marginTop: 2 },
+  actionButtons: { flexDirection: 'row' },
+  actionBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
+  editBtn: { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#DBEAFE' },
+  deleteBtn: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FEE2E2' },
+  detailsRow: { 
+    flexDirection: 'row', 
+    borderTopWidth: 1, 
+    borderBottomWidth: 1, 
+    borderColor: '#F8FAFC', 
+    paddingVertical: 15, 
+    marginVertical: 15 
+  },
+  detailItem: { flex: 1, alignItems: 'center' },
+  detailBorder: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#F1F5F9' },
+  detailLabel: { fontSize: 9, color: '#94A3B8', fontWeight: '900', marginBottom: 5 },
+  detailValue: { fontSize: 18, fontWeight: '900', color: '#1D3583' },
+  detailSmallValue: { fontSize: 12, fontWeight: '900', color: '#475569' },
+  commentBox: { backgroundColor: '#F8F9FB', padding: 15, borderRadius: 15 },
+  commentLabel: { fontSize: 9, color: '#94A3B8', fontWeight: '900', marginBottom: 5 },
+  commentText: { fontSize: 13, color: '#475569', fontStyle: 'italic', lineHeight: 18 },
+  emptyContainer: { alignItems: 'center', marginTop: 100 },
+  emptyText: { color: '#94A3B8', fontWeight: 'bold', marginTop: 20, textAlign: 'center' }
+});
