@@ -2,7 +2,7 @@
   "expo": {
     "name": "U-AUBEN Tracker",
     "slug": "uaubentracker",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -11,10 +11,8 @@
       "bundleIdentifier": "com.uauben.tracker"
     },
     "android": {
-      "package": "com.uauben.tracker"
-    },
-    "web": {
-      "bundler": "metro"
+      "package": "com.uauben.tracker",
+      "versionCode": 2
     },
     "plugins": [
       "expo-router",
@@ -30,11 +28,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "router": {
-        "origin": false
-      }
     }
   }
 }
