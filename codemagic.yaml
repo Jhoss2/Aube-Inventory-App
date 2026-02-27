@@ -8,9 +8,13 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
+          # Installation forcée des dépendances de base
           npm install --legacy-peer-deps
+          # On s'assure que les icônes et expo-router sont présents
+          npm install @expo/vector-icons expo-router
       - name: Generate Native Android Folder
         script: |
+          # Prebuild génère le dossier /android nécessaire au build
           npx expo prebuild --platform android
       - name: Build APK
         script: |
