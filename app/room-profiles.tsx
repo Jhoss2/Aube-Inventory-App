@@ -1,77 +1,52 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useAppContext } from '@/lib/app-context'; // Pour la cohérence des données
+import { Ionicons, Feather } from '@expo/vector-icons';
 
-export default function SubdivisionScreen() {
+export default function RoomProfilesScreen() {
   const router = useRouter();
-  const { blocId } = useLocalSearchParams<{ blocId: string }>();
-  
-  // Liste des niveaux (Tu peux aussi les rendre dynamiques via SQLite si besoin)
-  const niveaux = [
-    "Sous-sol",
-    "Rez-de-chaussée",
-    "Premier Niveau",
-    "Deuxième Niveau",
-    "Troisième Niveau",
-    "Quatrième Niveau"
+  const { categoryTitle, subId } = useLocalSearchParams();
+
+  // Simulation de données (À remplacer par ta future BDD Excel/JSON)
+  const rooms = [
+    { id: '1', name: `Salle ${subId}-01`, items: 12 },
+    { id: '2', name: `Salle ${subId}-02`, items: 8 },
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-      
-      {/* Header avec bouton retour */}
-      <View className="px-4 pt-4 flex-row items-center border-b border-gray-50 pb-2">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <Ionicons name="chevron-back" size={28} color="#4b5563" />
-        </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={24} color="#8B1A1A" /></TouchableOpacity>
+        <Text style={styles.headerTitle}>{categoryTitle}</Text>
+        <TouchableOpacity onPress={() => router.push('/add-room')}><Feather name="plus-circle" size={24} color="#8B1A1A" /></TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 32, paddingTop: 24, paddingBottom: 40 }}>
-        
-        {/* Badge Rouge "BLOC X" - Dynamique */}
-        <View className="w-full bg-[#B21F18] py-5 rounded-[30px] shadow-lg items-center">
-          <Text 
-            style={{ fontFamily: 'serif' }} 
-            className="text-white font-black text-xl uppercase tracking-[4px]"
+      <FlatList 
+        data={rooms}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ padding: 20 }}
+        renderItem={({ item }) => (
+          <TouchableOpacity 
+            style={styles.roomItem}
+            onPress={() => router.push({ pathname: '/room-details', params: { roomName: item.name } })}
           >
-            BLOC {blocId || 'A1'}
-          </Text>
-        </View>
-
-        {/* Sous-titre "NIVEAUX DE SUBDIVISION" */}
-        <View className="w-full border border-gray-100 py-4 rounded-full shadow-sm bg-white items-center justify-center mt-8 relative">
-          {/* Petit cercle décoratif au centre */}
-          <View className="absolute -top-4 bg-white border border-gray-100 w-8 h-8 rounded-full items-center justify-center shadow-sm">
-             <View className="w-4 h-4 border-2 border-blue-100 rounded-full" />
-          </View>
-          <Text className="text-[#1D3583] font-bold text-[12px] tracking-[2px] uppercase">
-            · Niveaux de Subdivision ·
-          </Text>
-        </View>
-
-        {/* Liste des boutons de niveaux */}
-        <View className="w-full mt-6 gap-y-4">
-          {niveaux.map((niveau, index) => (
-            <TouchableOpacity 
-              key={index}
-              onPress={() => router.push({
-                pathname: '/screens/room-profiles',
-                params: { subBlocId: niveau, blocId: blocId }
-              })}
-              className="w-full bg-[#1D3583] py-5 rounded-full shadow-md active:opacity-90"
-            >
-              <Text className="text-white text-center font-bold text-sm tracking-widest">
-                · {niveau.toUpperCase()} ·
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-      
-    </SafeAreaView>
+            <View>
+              <Text style={styles.roomName}>{item.name}</Text>
+              <Text style={styles.roomItems}>{item.items} objets répertoriés</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+        )}
+      />
+    </View>
   );
 }
 
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: 'white' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  headerTitle: { fontSize: 15, fontWeight: 'bold', color: '#333' },
+  roomItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, backgroundColor: '#f9f9f9', borderRadius: 12, marginBottom: 12 },
+  roomName: { fontWeight: 'bold', fontSize: 16 },
+  roomItems: { fontSize: 12, color: '#666', marginTop: 4 }
+});
