@@ -16,7 +16,8 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar barStyle="light-content" backgroundColor="black" />
+      {/* Barre d'état système réelle (transparente) */}
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
       {/* --- MENU LATÉRAL (SIDEBAR ROUGE) --- */}
       <Modal transparent visible={isMenuOpen} animationType="fade">
@@ -30,10 +31,12 @@ export default function HomeScreen() {
 
           <View style={styles.sidebarDrawer}>
             <View style={styles.sidebarHeader}>
-              <Text style={styles.sidebarTitle}>U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER</Text>
-              <TouchableOpacity onPress={() => setIsMenuOpen(false)}>
-                <Feather name="x" size={28} color="white" />
-              </TouchableOpacity>
+              <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '100%'}}>
+                <Text style={styles.sidebarTitle}>U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER</Text>
+                <TouchableOpacity onPress={() => setIsMenuOpen(false)}>
+                  <Feather name="x" size={28} color="white" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.sidebarNav}>
@@ -63,7 +66,7 @@ export default function HomeScreen() {
               </View>
             </View>
           </View>
-          <TouchableOpacity style={{ flex: 1 }} onPress={() => setIsMenuOpen(false)} />
+          <TouchableOpacity style={{ flex: 1 }} onPress={() => setIsMenuOpen(false)} activeOpacity={1} />
         </View>
       </Modal>
 
@@ -73,9 +76,9 @@ export default function HomeScreen() {
         style={[StyleSheet.absoluteFill, { backgroundColor: '#fceef5' }]}
         resizeMode="cover"
       >
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 150 }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 150, paddingTop: 40 }} showsVerticalScrollIndicator={false}>
           
-          {/* Header */}
+          {/* Header Rouge */}
           <View style={styles.headerRed}>
             <TouchableOpacity onPress={() => setIsMenuOpen(true)}>
               <Feather name="menu" size={24} color="white" />
@@ -85,29 +88,35 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Recherche & Robot */}
+          {/* Recherche */}
           <View style={styles.searchContainer}>
             <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
-            <TextInput placeholder="Que cherchez vous aujourd'hui ?" style={styles.searchInput} />
+            <TextInput 
+              placeholder="Que cherchez vous aujourd'hui ?" 
+              placeholderTextColor="#9ca3af"
+              style={styles.searchInput} 
+            />
             <TouchableOpacity style={styles.botButton} onPress={() => router.push('/chat-aube')}>
               <MaterialCommunityIcons name="robot" size={24} color="#3169e6" />
             </TouchableOpacity>
           </View>
 
-          {/* Blocs */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blockSelector}>
-            {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
-              <TouchableOpacity 
-                key={block} 
-                style={styles.blockButton}
-                onPress={() => router.push({ pathname: '/room-contents', params: { blockId: block } })}
-              >
-                <Text style={styles.blockButtonText}>Bloc {block}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {/* Sélecteur de Blocs */}
+          <View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blockSelector}>
+              {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
+                <TouchableOpacity 
+                  key={block} 
+                  style={styles.blockButton}
+                  onPress={() => router.push({ pathname: '/room-contents', params: { blockId: block } })}
+                >
+                  <Text style={styles.blockButtonText}>Bloc {block}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
-          {/* Université Section */}
+          {/* Section Université */}
           <View style={styles.univSection}>
             <View style={styles.imageContainer}>
               {univImage ? (
@@ -122,7 +131,7 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
 
-        {/* Barre de Navigation : Alerte, Accueil, Notes */}
+        {/* Navigation Basse */}
         <View style={styles.bottomNav}>
           <TouchableOpacity onPress={() => router.push('/categories')}><Feather name="bell" size={22} color="white" /></TouchableOpacity>
           <TouchableOpacity onPress={() => router.replace('/')}><Feather name="home" size={22} color="white" /></TouchableOpacity>
@@ -134,15 +143,15 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  // SideBar Styles
+  // SideBar
   sidebarContainer: { flex: 1, flexDirection: 'row' },
   blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
-  sidebarDrawer: { width: '65%', height: '100%', backgroundColor: '#8B1A1A', padding: 24, paddingTop: 50 },
-  sidebarHeader: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)', pb: 20, mb: 40 },
-  sidebarTitle: { color: 'white', fontWeight: '900', fontSize: 16, lineHeight: 18 },
+  sidebarDrawer: { width: '65%', height: '100%', backgroundColor: '#8B1A1A', padding: 24, paddingTop: 60 },
+  sidebarHeader: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)', paddingBottom: 20, marginBottom: 40 },
+  sidebarTitle: { color: 'white', fontWeight: '900', fontSize: 16, lineHeight: 18, fontFamily: 'serif' },
   sidebarNav: { flex: 1, alignItems: 'center' },
   sidebarBtn: { marginBottom: 35 },
-  sidebarBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13 },
+  sidebarBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13, textAlign: 'center' },
   sidebarFooter: { alignItems: 'center', marginBottom: 30 },
   versionText: { color: 'white', fontSize: 10, fontWeight: 'bold', letterSpacing: 2, marginBottom: 15 },
   logoCircle: { width: 70, height: 70, borderRadius: 35, backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, justifyContent: 'center', alignItems: 'center' },
@@ -150,8 +159,8 @@ const styles = StyleSheet.create({
   logoPlaceholder: { width: '100%', height: '100%', borderRadius: 35, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center' },
   logoPText: { fontSize: 8, fontWeight: 'bold', color: '#8B1A1A' },
 
-  // Home Styles
-  headerRed: { marginHorizontal: 12, marginTop: 40, height: 48, backgroundColor: '#c0262b', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
+  // Home
+  headerRed: { marginHorizontal: 12, height: 48, backgroundColor: '#c0262b', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
   searchContainer: { marginHorizontal: 12, marginTop: 12, flexDirection: 'row', alignItems: 'center' },
   searchInput: { flex: 1, height: 44, backgroundColor: 'white', borderRadius: 22, paddingLeft: 44, paddingRight: 48, fontSize: 13 },
   searchIcon: { position: 'absolute', left: 16, zIndex: 1 },
