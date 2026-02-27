@@ -20,7 +20,7 @@ export default function HomeScreen() {
         style={[StyleSheet.absoluteFill, { backgroundColor: '#fceef5' }]}
         resizeMode="cover"
       >
-        {/* Barre d'état système */}
+        {/* Barre d'état système simulée */}
         <View style={styles.statusBarMock}>
           <View style={styles.flexRowCenter}>
             <Text style={styles.statusTime}>12:13</Text>
@@ -43,12 +43,12 @@ export default function HomeScreen() {
         >
           {/* Header Rouge */}
           <View style={styles.headerRed}>
-            <TouchableOpacity onPress={() => console.log('Sidebar')}>
+            <TouchableOpacity>
               <Feather name="menu" size={24} color="white" />
             </TouchableOpacity>
             
-            {/* CORRECTION ICÔNE PARAMÈTRES : 'tune' est l'équivalent de sliders-horizontal */}
-            <TouchableOpacity onPress={() => router.push('/screens/settings')}>
+            {/* ICÔNE PARAMÈTRES RÉTABLIE (Sliders) */}
+            <TouchableOpacity onPress={() => router.push('/settings')}>
               <MaterialCommunityIcons name="tune" size={24} color="white" />
             </TouchableOpacity>
           </View>
@@ -63,20 +63,20 @@ export default function HomeScreen() {
             />
             <TouchableOpacity 
               style={styles.botButton}
-              onPress={() => router.push('/screens/chat-aube')}
+              onPress={() => router.push('/chat-aube')}
             >
               <MaterialCommunityIcons name="robot" size={24} color="#3169e6" />
             </TouchableOpacity>
           </View>
 
-          {/* Boutons Blocs A à F */}
+          {/* Boutons Blocs */}
           <View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blockSelector}>
               {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
                 <TouchableOpacity 
                   key={block} 
                   style={styles.blockButton}
-                  onPress={() => router.push({ pathname: '/screens/room-contents', params: { blockId: block } })}
+                  onPress={() => router.push({ pathname: '/room-contents', params: { blockId: block } })}
                 >
                   <Text style={styles.blockButtonText}>Bloc {block}</Text>
                 </TouchableOpacity>
@@ -84,18 +84,19 @@ export default function HomeScreen() {
             </ScrollView>
           </View>
 
-          {/* Section Université Responsive */}
-          <View style={styles.universitySectionContainer}>
-            <View style={styles.universityCard}>
+          {/* SECTION UNIVERSITÉ RESPONSIVE */}
+          <View style={styles.univSection}>
+            <View style={styles.imageContainer}>
               {univImage ? (
-                <Image source={{ uri: univImage }} style={styles.universityImage} resizeMode="cover" />
+                <Image source={{ uri: univImage }} style={styles.univImage} resizeMode="cover" />
               ) : (
-                <View style={styles.placeholderCard}>
-                   <Text style={{color: 'white', fontSize: 40, fontWeight: 'bold'}}>Université</Text>
+                <View style={styles.placeholderBlue}>
+                  <Text style={styles.placeholderText}>Université</Text>
                 </View>
               )}
             </View>
             
+            {/* TITRE JUSTE EN DESSOUS (Badge) */}
             <View style={styles.titleBadge}>
               <Text style={styles.titleText}>UNIVERSITE AUBE NOUVELLE</Text>
             </View>
@@ -104,15 +105,9 @@ export default function HomeScreen() {
 
         {/* Barre de Navigation du bas */}
         <View style={styles.bottomNav}>
-          <TouchableOpacity onPress={() => console.log('Alertes')}>
-            <Feather name="bell" size={22} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.replace('/')}>
-            <Feather name="home" size={22} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/screens/guide-viewer')}>
-            <Feather name="file-text" size={22} color="white" />
-          </TouchableOpacity>
+          <TouchableOpacity><Feather name="bell" size={22} color="white" /></TouchableOpacity>
+          <TouchableOpacity onPress={() => router.replace('/')}><Feather name="home" size={22} color="white" /></TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/guide-viewer')}><Feather name="file-text" size={22} color="white" /></TouchableOpacity>
         </View>
 
       </ImageBackground>
@@ -127,19 +122,26 @@ const styles = StyleSheet.create({
   flexRowCenter: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   batteryIcon: { width: 18, height: 9, borderWidth: 1, borderColor: 'white', borderRadius: 2, padding: 1, marginLeft: 4, justifyContent: 'center' },
   batteryLevel: { backgroundColor: 'white', height: '100%', width: '38%' },
+  
   headerRed: { marginHorizontal: 12, marginTop: 12, height: 48, backgroundColor: '#c0262b', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
+  
   searchContainer: { marginHorizontal: 12, marginTop: 12, flexDirection: 'row', alignItems: 'center' },
   searchInput: { flex: 1, height: 44, backgroundColor: 'white', borderRadius: 22, paddingLeft: 44, paddingRight: 48, fontSize: 13, fontWeight: '500', color: '#6b7280' },
   searchIcon: { position: 'absolute', left: 16, zIndex: 1 },
   botButton: { position: 'absolute', right: 12, zIndex: 1 },
+
   blockSelector: { marginHorizontal: 12, marginTop: 12, backgroundColor: '#263d7e', borderRadius: 10, padding: 6 },
   blockButton: { backgroundColor: '#385598', paddingHorizontal: 16, paddingVertical: 7, borderRadius: 6, marginRight: 6 },
   blockButtonText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  universitySectionContainer: { marginHorizontal: 12, marginTop: 16, alignItems: 'center' },
-  universityCard: { width: '100%', backgroundColor: '#4184f4', borderRadius: 24, overflow: 'hidden', marginBottom: -25 },
-  universityImage: { width: '100%', height: 330 },
-  placeholderCard: { width: '100%', height: 330, backgroundColor: '#4184f4', alignItems: 'center', justifyContent: 'center' },
-  titleBadge: { backgroundColor: '#263d7e', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 12, elevation: 5 },
-  titleText: { color: 'white', fontSize: 11, fontWeight: '700', letterSpacing: 1, textAlign: 'center' },
+
+  univSection: { marginHorizontal: 12, marginTop: 20, alignItems: 'center' },
+  imageContainer: { width: '100%', height: 320, borderRadius: 25, overflow: 'hidden', backgroundColor: '#4184f4' },
+  univImage: { width: '100%', height: '100%' },
+  placeholderBlue: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  placeholderText: { color: 'white', fontSize: 52, fontWeight: 'bold' },
+  
+  titleBadge: { backgroundColor: '#263d7e', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 12, marginTop: -20, elevation: 5 },
+  titleText: { color: 'white', fontSize: 11, fontWeight: 'bold', letterSpacing: 1 },
+
   bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 56 }
 });
