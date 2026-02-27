@@ -1,129 +1,176 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { 
+  View, Text, TouchableOpacity, TextInput, Image, 
+  ScrollView, Alert, StyleSheet, KeyboardAvoidingView, Platform 
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAppContext } from '@/lib/app-context'; // Connexion SQLite
+import { Ionicons } from '@expo/vector-icons';
 
 export default function AddRoomScreen() {
   const router = useRouter();
-  const { subBlocId } = useLocalSearchParams<{ subBlocId: string }>();
-  const { addSalle } = useAppContext();
-  
-  // États du formulaire
-  const [nom, setNom] = useState('');
-  const [emplacement, setEmplacement] = useState(subBlocId || '');
-  const [niveau, setNiveau] = useState('');
-  const [capacity, setCapacity] = useState('');
-  const [area, setArea] = useState('');
+  const [image, setImage] = useState<string | null>(null);
+  const [roomName, setRoomName] = useState("");
 
-  const handleSaveRoom = async () => {
-    if (!nom.trim()) {
-      Alert.alert('Erreur', 'Le nom de la salle est obligatoire');
+  // Fonction pour ouvrir la galerie
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert("Accès refusé", "Désolé, nous avons besoin des permissions pour accéder à vos photos.");
       return;
     }
 
-    const newRoom = {
-      id: `salle-${new Date().getTime()}`,
-      nom: nom.trim(),
-      emplacement: emplacement.trim(),
-      niveau: niveau.trim(),
-      capacity: capacity.trim(),
-      area: area.trim(),
-    };
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
 
-    try {
-      await addSalle(newRoom); // Sauvegarde réelle dans SQLite
-      Alert.alert('Succès', 'Salle enregistrée !', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    } catch (err) {
-      Alert.alert('Erreur', "Impossible d'enregistrer la salle");
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
     }
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
-      {/* Header avec bouton retour */}
-      <View className="px-6 pt-4">
-        <TouchableOpacity onPress={() => router.back()} className="p-2 w-10">
-          <Ionicons name="chevron-back" size={28} color="#4b5563" />
+      
+      {/* 1. HEADER STABILISÉ (Ne scrolle pas) */}
+      <View style={styles.fixedHeader}>
+        <TouchableOpacity 
+          onPress={() => router.replace('/')} 
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>AJOUTER UNE SALLE</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 120 }}>
-        
-        {/* 1. Titre Rouge Style Header */}
-        <View className="bg-[#B21F18] py-4 rounded-full shadow-lg mt-2 items-center">
-          <Text className="text-white font-bold text-lg uppercase tracking-widest">
-            Ajouter une salle
-          </Text>
-        </View>
+      {/* 2. CONTENU SCROLLABLE */}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          
+          {/* Zone de l'image */}
+          <Text style={styles.label}>PHOTO DE LA SALLE</Text>
+          <TouchableOpacity 
+            onPress={pickImage}
+            style={styles.imagePickerContainer}
+          >
+            {image ? (
+              <Image source={{ uri: image }} style={styles.previewImage} />
+            ) : (
+              <View style={{ alignItems: 'center' }}>
+                <Ionicons name="camera" size={50} color="#1D3583" />
+                <Text style={styles.placeholderText}>Appuyez pour choisir une photo</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
-        {/* 2. Zone Photo (Rectangle Bleu) */}
-        <TouchableOpacity className="bg-[#1D3583] rounded-[40px] aspect-[1.8/1] mt-6 items-center justify-center shadow-md">
-          <Ionicons name="camera" size={48} color="white" />
-          <Text className="text-white font-bold text-base mt-2">Photo de la salle</Text>
-        </TouchableOpacity>
-
-        {/* 3. Formulaire */}
-        <View className="mt-6 gap-y-4">
-          <TextInput
-            value={nom}
-            onChangeText={setNom}
-            placeholder="Nom"
-            className="w-full bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
-          />
-
-          <TextInput
-            value={emplacement}
-            onChangeText={setEmplacement}
-            placeholder="Emplacement (ex: Bloc A)"
-            className="w-full bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
-          />
-
-          <TextInput
-            value={niveau}
-            onChangeText={setNiveau}
-            placeholder="Niveau"
-            className="w-full bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
-          />
-
-          <View className="flex-row gap-4">
-            <TextInput
-              value={capacity}
-              onChangeText={setCapacity}
-              placeholder="Capacité"
-              keyboardType="numeric"
-              className="flex-1 bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
-            />
-            <TextInput
-              value={area}
-              onChangeText={setArea}
-              placeholder="Superficie (m²)"
-              className="flex-1 bg-white rounded-full px-6 py-4 text-gray-700 shadow-sm border border-gray-100"
+          {/* Formulaire */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>NOM DE LA SALLE</Text>
+            <TextInput 
+              style={styles.input}
+              placeholder="Ex: Laboratoire d'Informatique"
+              value={roomName}
+              onChangeText={setRoomName}
             />
           </View>
-        </View>
 
-        {/* 4. Zone Plan 3D (Pointillés) */}
-        <TouchableOpacity className="mt-6 border-2 border-dashed border-gray-300 rounded-[40px] py-10 items-center justify-center bg-white/40">
-          <MaterialCommunityIcons name="cube-outline" size={42} color="#9ca3af" />
-          <Text className="text-gray-400 font-bold mt-2">Ajouter Plan 3D</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {/* Ajoute ici tes autres champs (Bloc, Étage, etc.) */}
 
-      {/* 5. Bouton Enregistrer (Fixé en bas) */}
-      <View className="absolute bottom-6 left-6 right-6">
-        <TouchableOpacity 
-          onPress={handleSaveRoom}
-          className="w-full bg-[#1D3583] py-5 rounded-full shadow-2xl items-center"
-        >
-          <Text className="text-white font-bold text-lg uppercase tracking-wider">
-            Enregistrer
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={styles.submitButton}>
+            <Text style={styles.submitButtonText}>ENREGISTRER LA SALLE</Text>
+          </TouchableOpacity>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  fixedHeader: {
+    backgroundColor: '#1D3583',
+    height: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    elevation: 5, // Ombre Android
+    shadowColor: '#000', // Ombre iOS
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  backButton: {
+    padding: 8,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#1D3583',
+    marginBottom: 8,
+    marginTop: 15,
+  },
+  imagePickerContainer: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderText: {
+    color: '#94A3B8',
+    marginTop: 10,
+    fontWeight: 'bold',
+  },
+  formGroup: {
+    marginTop: 20,
+  },
+  input: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  submitButton: {
+    backgroundColor: '#B21F18',
+    borderRadius: 12,
+    padding: 18,
+    alignItems: 'center',
+    marginTop: 30,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontWeight: '900',
+    fontSize: 14,
+  }
+});
