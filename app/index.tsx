@@ -8,18 +8,32 @@ export default function HomeScreen() {
   const router = useRouter();
   const { appData } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const univImage = appData.settings?.univImage;
   const backgroundImage = appData.settings?.bgImage;
   const menuBg = appData.settings?.menuBg;
   const menuLogo = appData.settings?.menuLogo;
 
+  // Liste des blocs pour la recherche
+  const allBlocks = [
+    { id: 'A', name: 'Bloc A - Salles & Bureaux' },
+    { id: 'B', name: 'Bloc B - Salles & Bureaux' },
+    { id: 'C', name: 'Bloc C - Salles & Bureaux' },
+    { id: 'D', name: 'Bloc D - Salles & Bureaux' },
+    { id: 'E', name: 'Bloc E - Salles & Bureaux' },
+    { id: 'F', name: 'Bloc F - Salles & Bureaux' },
+  ];
+
+  const filteredResults = searchQuery.length > 0 
+    ? allBlocks.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [];
+
   return (
     <View style={{ flex: 1 }}>
-      {/* Barre d'état système réelle (transparente) */}
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* --- MENU LATÉRAL (SIDEBAR ROUGE) --- */}
+      {/* --- SIDEBAR --- */}
       <Modal transparent visible={isMenuOpen} animationType="fade">
         <View style={styles.sidebarContainer}>
           <ImageBackground 
@@ -28,110 +42,78 @@ export default function HomeScreen() {
           >
             <View style={styles.blueOverlay} />
           </ImageBackground>
-
           <View style={styles.sidebarDrawer}>
             <View style={styles.sidebarHeader}>
               <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '100%'}}>
                 <Text style={styles.sidebarTitle}>U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER</Text>
-                <TouchableOpacity onPress={() => setIsMenuOpen(false)}>
-                  <Feather name="x" size={28} color="white" />
-                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setIsMenuOpen(false)}><Feather name="x" size={28} color="white" /></TouchableOpacity>
               </View>
             </View>
-
             <View style={styles.sidebarNav}>
-              {[
-                { label: "Guide d'utilisation", path: '/guide-viewer' },
-                { label: "A propos du développeur", path: '/about-dev' },
-                { label: "Données essentielles", path: '/categories' }
-              ].map((option, index) => (
-                <TouchableOpacity 
-                  key={index} 
-                  style={styles.sidebarBtn}
-                  onPress={() => { setIsMenuOpen(false); router.push(option.path as any); }}
-                >
-                  <Text style={styles.sidebarBtnText}>· {option.label} ·</Text>
+              {["Guide d'utilisation", "A propos du développeur", "Données essentielles"].map((label, i) => (
+                <TouchableOpacity key={i} style={styles.sidebarBtn} onPress={() => setIsMenuOpen(false)}>
+                  <Text style={styles.sidebarBtnText}>· {label} ·</Text>
                 </TouchableOpacity>
               ))}
             </View>
-
             <View style={styles.sidebarFooter}>
-              <Text style={styles.versionText}>· Version 1.1.1 ·</Text>
               <View style={styles.logoCircle}>
-                {menuLogo ? (
-                  <Image source={{ uri: menuLogo }} style={styles.logoImg} />
-                ) : (
-                  <View style={styles.logoPlaceholder}><Text style={styles.logoPText}>LOGO</Text></View>
-                )}
+                {menuLogo ? <Image source={{ uri: menuLogo }} style={styles.logoImg} /> : <View style={styles.logoPlaceholder}><Text style={styles.logoPText}>LOGO</Text></View>}
               </View>
             </View>
           </View>
-          <TouchableOpacity style={{ flex: 1 }} onPress={() => setIsMenuOpen(false)} activeOpacity={1} />
+          <TouchableOpacity style={{ flex: 1 }} onPress={() => setIsMenuOpen(false)} />
         </View>
       </Modal>
 
-      {/* --- CORPS DE L'APPLICATION --- */}
-      <ImageBackground 
-        source={backgroundImage ? { uri: backgroundImage } : null}
-        style={[StyleSheet.absoluteFill, { backgroundColor: '#fceef5' }]}
-        resizeMode="cover"
-      >
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 150, paddingTop: 40 }} showsVerticalScrollIndicator={false}>
+      {/* --- ACCUEIL --- */}
+      <ImageBackground source={backgroundImage ? { uri: backgroundImage } : null} style={[StyleSheet.absoluteFill, { backgroundColor: '#fceef5' }]}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 150, paddingTop: 50 }}>
           
-          {/* Header Rouge */}
+          {/* Header */}
           <View style={styles.headerRed}>
-            <TouchableOpacity onPress={() => setIsMenuOpen(true)}>
-              <Feather name="menu" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/settings')}>
-              <MaterialCommunityIcons name="tune" size={24} color="white" />
-            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setIsMenuOpen(true)}><Feather name="menu" size={24} color="white" /></TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/settings')}><MaterialCommunityIcons name="tune" size={24} color="white" /></TouchableOpacity>
           </View>
 
           {/* Recherche */}
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
-            <TextInput 
-              placeholder="Que cherchez vous aujourd'hui ?" 
-              placeholderTextColor="#9ca3af"
-              style={styles.searchInput} 
-            />
-            <TouchableOpacity style={styles.botButton} onPress={() => router.push('/chat-aube')}>
-              <MaterialCommunityIcons name="robot" size={24} color="#3169e6" />
-            </TouchableOpacity>
+          <View style={styles.searchSection}>
+            <View style={styles.searchContainer}>
+              <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
+              <TextInput 
+                placeholder="Chercher un bloc..." 
+                style={styles.searchInput} 
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+            {filteredResults.map(res => (
+              <TouchableOpacity key={res.id} style={styles.resultItem} onPress={() => {setSearchQuery(''); router.push({ pathname: '/room-contents', params: { blockId: res.id } });}}>
+                <Text style={styles.resultText}>{res.name}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          {/* Sélecteur de Blocs */}
-          <View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blockSelector}>
-              {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
-                <TouchableOpacity 
-                  key={block} 
-                  style={styles.blockButton}
-                  onPress={() => router.push({ pathname: '/room-contents', params: { blockId: block } })}
-                >
-                  <Text style={styles.blockButtonText}>Bloc {block}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+          {/* Sélecteur de Blocs Horizontaux */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blockSelector}>
+            {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
+              <TouchableOpacity key={block} style={styles.blockButton} onPress={() => router.push({ pathname: '/room-contents', params: { blockId: block } })}>
+                <Text style={styles.blockButtonText}>Bloc {block}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
-          {/* Section Université */}
+          {/* Image Université */}
           <View style={styles.univSection}>
             <View style={styles.imageContainer}>
-              {univImage ? (
-                <Image source={{ uri: univImage }} style={styles.univImage} resizeMode="cover" />
-              ) : (
-                <View style={styles.placeholderBlue}><Text style={styles.placeholderText}>Université</Text></View>
-              )}
+              {univImage ? <Image source={{ uri: univImage }} style={styles.univImage} /> : <View style={styles.placeholderBlue}><Text style={styles.placeholderText}>U-AUBEN</Text></View>}
             </View>
-            <View style={styles.titleBadge}>
-              <Text style={styles.titleText}>UNIVERSITE AUBE NOUVELLE</Text>
-            </View>
+            <View style={styles.titleBadge}><Text style={styles.titleText}>UNIVERSITE AUBE NOUVELLE</Text></View>
           </View>
+
         </ScrollView>
 
-        {/* Navigation Basse */}
+        {/* Nav Basse */}
         <View style={styles.bottomNav}>
           <TouchableOpacity onPress={() => router.push('/categories')}><Feather name="bell" size={22} color="white" /></TouchableOpacity>
           <TouchableOpacity onPress={() => router.replace('/')}><Feather name="home" size={22} color="white" /></TouchableOpacity>
@@ -143,37 +125,38 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  // SideBar
   sidebarContainer: { flex: 1, flexDirection: 'row' },
   blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
   sidebarDrawer: { width: '65%', height: '100%', backgroundColor: '#8B1A1A', padding: 24, paddingTop: 60 },
   sidebarHeader: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)', paddingBottom: 20, marginBottom: 40 },
-  sidebarTitle: { color: 'white', fontWeight: '900', fontSize: 16, lineHeight: 18, fontFamily: 'serif' },
+  sidebarTitle: { color: 'white', fontWeight: '900', fontSize: 16 },
   sidebarNav: { flex: 1, alignItems: 'center' },
-  sidebarBtn: { marginBottom: 35 },
-  sidebarBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13, textAlign: 'center' },
+  sidebarBtn: { marginBottom: 30 },
+  sidebarBtnText: { color: 'white', fontWeight: 'bold' },
   sidebarFooter: { alignItems: 'center', marginBottom: 30 },
-  versionText: { color: 'white', fontSize: 10, fontWeight: 'bold', letterSpacing: 2, marginBottom: 15 },
-  logoCircle: { width: 70, height: 70, borderRadius: 35, backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, justifyContent: 'center', alignItems: 'center' },
-  logoImg: { width: '100%', height: '100%', borderRadius: 35 },
-  logoPlaceholder: { width: '100%', height: '100%', borderRadius: 35, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center' },
-  logoPText: { fontSize: 8, fontWeight: 'bold', color: '#8B1A1A' },
+  logoCircle: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'white', overflow: 'hidden' },
+  logoImg: { width: '100%', height: '100%' },
+  logoPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  logoPText: { fontSize: 10, color: '#8B1A1A', fontWeight: 'bold' },
 
-  // Home
   headerRed: { marginHorizontal: 12, height: 48, backgroundColor: '#c0262b', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
-  searchContainer: { marginHorizontal: 12, marginTop: 12, flexDirection: 'row', alignItems: 'center' },
-  searchInput: { flex: 1, height: 44, backgroundColor: 'white', borderRadius: 22, paddingLeft: 44, paddingRight: 48, fontSize: 13 },
-  searchIcon: { position: 'absolute', left: 16, zIndex: 1 },
-  botButton: { position: 'absolute', right: 12, zIndex: 1 },
-  blockSelector: { marginHorizontal: 12, marginTop: 12, backgroundColor: '#263d7e', borderRadius: 10, padding: 6, maxHeight: 50 },
-  blockButton: { backgroundColor: '#385598', paddingHorizontal: 16, paddingVertical: 7, borderRadius: 6, marginRight: 6 },
-  blockButtonText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+  searchSection: { marginHorizontal: 12, marginTop: 12, zIndex: 10 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 22, height: 44, paddingHorizontal: 15 },
+  searchInput: { flex: 1, marginLeft: 10, fontSize: 13 },
+  resultItem: { backgroundColor: 'white', padding: 15, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  resultText: { fontWeight: 'bold', color: '#8B1A1A' },
+  
+  blockSelector: { marginHorizontal: 12, marginTop: 12, maxHeight: 50 },
+  blockButton: { backgroundColor: '#263d7e', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, marginRight: 8 },
+  blockButtonText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
+
   univSection: { marginHorizontal: 12, marginTop: 20, alignItems: 'center' },
-  imageContainer: { width: '100%', height: 320, borderRadius: 25, overflow: 'hidden', backgroundColor: '#4184f4' },
+  imageContainer: { width: '100%', height: 300, borderRadius: 25, overflow: 'hidden', backgroundColor: '#4184f4' },
   univImage: { width: '100%', height: '100%' },
-  placeholderBlue: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  placeholderText: { color: 'white', fontSize: 52, fontWeight: 'bold' },
-  titleBadge: { backgroundColor: '#263d7e', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 12, marginTop: -20, elevation: 5 },
-  titleText: { color: 'white', fontSize: 11, fontWeight: 'bold' },
-  bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 56 }
+  placeholderBlue: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  placeholderText: { color: 'white', fontSize: 40, fontWeight: 'bold' },
+  titleBadge: { backgroundColor: '#263d7e', padding: 15, borderRadius: 12, marginTop: -25 },
+  titleText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
+  
+  bottomNav: { position: 'absolute', bottom: 20, left: 20, right: 20, backgroundColor: '#263d7e', height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 40 }
 });
