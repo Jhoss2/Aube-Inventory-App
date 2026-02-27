@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-router-native';
+// CORRECTION ICI : on importe depuis 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native'; 
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '@/lib/app-context';
@@ -9,7 +10,7 @@ export default function RoomContentsScreen() {
   const { blockId } = useLocalSearchParams();
   const { appData } = useAppContext();
 
-  // Récupération des images dynamiques depuis les paramètres
+  // Récupération des images dynamiques
   const aerialImg = appData.settings?.[`bloc${blockId}_aerial` as any];
   const sub1Img = appData.settings?.[`bloc${blockId}_sub1` as any];
   const sub2Img = appData.settings?.[`bloc${blockId}_sub2` as any];
@@ -22,8 +23,10 @@ export default function RoomContentsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={24} color="white" /></TouchableOpacity>
-        <Text style={styles.headerTitle}>BLOC {blockId}</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>ESPACES BLOC {blockId}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -34,7 +37,7 @@ export default function RoomContentsScreen() {
           ) : (
             <View style={[styles.fullImg, { backgroundColor: '#ddd', justifyContent: 'center', alignItems: 'center' }]}>
               <Feather name="map" size={40} color="#999" />
-              <Text style={{color: '#999'}}>Vue aérienne non configurée</Text>
+              <Text style={{color: '#999', marginTop: 10}}>Vue aérienne non configurée</Text>
             </View>
           )}
         </View>
@@ -44,14 +47,21 @@ export default function RoomContentsScreen() {
           <TouchableOpacity 
             key={cat.id} 
             style={styles.catCard}
-            onPress={() => router.push({ pathname: '/room-profiles', params: { categoryTitle: cat.title, subId: cat.sub } })}
+            onPress={() => router.push({ 
+              pathname: '/room-profiles', 
+              params: { categoryTitle: cat.title, subId: cat.sub } 
+            })}
           >
             <View style={[styles.imgPlaceholder, { backgroundColor: cat.color }]}>
-              {cat.image ? <Image source={{ uri: cat.image }} style={styles.fullImg} /> : <Feather name="home" size={30} color="white" />}
+              {cat.image ? (
+                <Image source={{ uri: cat.image }} style={styles.fullImg} />
+              ) : (
+                <Feather name="home" size={30} color="white" />
+              )}
             </View>
             <View style={styles.catInfo}>
               <Text style={styles.catTitle}>{cat.title}</Text>
-              <Text style={styles.catSub}>Cliquez pour voir les pièces</Text>
+              <Text style={styles.catSub}>Gérer l'inventaire des pièces</Text>
             </View>
             <Feather name="chevron-right" size={20} color="#ccc" />
           </TouchableOpacity>
@@ -63,14 +73,44 @@ export default function RoomContentsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  header: { backgroundColor: '#8B1A1A', paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center' },
+  header: { 
+    backgroundColor: '#8B1A1A', 
+    paddingTop: 50, 
+    paddingBottom: 20, 
+    paddingHorizontal: 20, 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+  },
   headerTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginLeft: 15 },
   scroll: { padding: 15 },
-  aerialCard: { width: '100%', height: 200, borderRadius: 15, overflow: 'hidden', marginBottom: 20, elevation: 3 },
-  fullImg: { width: '100%', height: '100%' },
-  catCard: { backgroundColor: 'white', borderRadius: 12, padding: 15, flexDirection: 'row', alignItems: 'center', marginBottom: 15, elevation: 2 },
-  imgPlaceholder: { width: 60, height: 60, borderRadius: 8, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  aerialCard: { 
+    width: '100%', 
+    height: 220, 
+    borderRadius: 15, 
+    overflow: 'hidden', 
+    marginBottom: 20, 
+    elevation: 3,
+    backgroundColor: 'white'
+  },
+  fullImg: { width: '100%', height: '100%', resizeMode: 'cover' },
+  catCard: { 
+    backgroundColor: 'white', 
+    borderRadius: 12, 
+    padding: 15, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 15, 
+    elevation: 2 
+  },
+  imgPlaceholder: { 
+    width: 65, 
+    height: 65, 
+    borderRadius: 10, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    overflow: 'hidden' 
+  },
   catInfo: { flex: 1, marginLeft: 15 },
   catTitle: { fontWeight: 'bold', fontSize: 14, color: '#333' },
-  catSub: { fontSize: 12, color: '#999', marginTop: 2 }
+  catSub: { fontSize: 12, color: '#999', marginTop: 4 }
 });
