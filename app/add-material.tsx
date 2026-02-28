@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Alert, StyleSheet } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  TextInput, 
+  ScrollView, 
+  Alert, 
+  StyleSheet, 
+  StatusBar 
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '@/lib/app-context';
 
 export default function AddMaterielScreen() {
   const router = useRouter();
-  const { salleId, category } = useLocalSearchParams<{ salleId: string, category: string }>();
+  const { salleId, category, roomName } = useLocalSearchParams<{ salleId: string, category: string, roomName: string }>();
   const { addMateriel } = useAppContext();
 
   // États du formulaire
@@ -20,131 +28,133 @@ export default function AddMaterielScreen() {
   const [infos, setInfos] = useState('');
 
   const handleSave = async () => {
+    if (!quantite || parseInt(quantite) <= 0) {
+      Alert.alert("Erreur", "Veuillez entrer une quantité valide.");
+      return;
+    }
+
     const newItem = {
-      id: `mat-${Date.now()}`,
       salleId: salleId,
-      nom: category, // Le nom est défini par la catégorie choisie précédemment
+      nom: category, 
       quantite: parseInt(quantite) || 1,
       etat,
-      couleur,
-      marque,
+      couleur: couleur.trim(),
+      marque: marque.trim(),
       dateAcquisition: dateAcq,
       dateRenouvellement: dateRen,
-      commentaires: infos,
+      commentaires: infos.trim(),
     };
 
     try {
       await addMateriel(newItem);
-      Alert.alert("Succès", `${category} ajouté à l'inventaire !`, [
-        { text: "OK", onPress: () => router.push({ pathname: '/screens/room-details', params: { salleId } }) }
+      Alert.alert("Succès", `${category} ajouté à ${roomName || 'la salle'} !`, [
+        { text: "OK", onPress: () => router.back() }
       ]);
     } catch (error) {
-      Alert.alert("Erreur", "Impossible d'enregistrer le matériel.");
+      Alert.alert("Erreur", "Impossible d'enregistrer le matériel dans SQLite.");
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       
       {/* Header */}
-      <View className="px-4 py-2 flex-row items-center bg-white border-b border-gray-100 shadow-sm">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={28} color="#1D3583" />
         </TouchableOpacity>
-        <Text className="flex-1 text-center font-black text-[#1D3583] text-lg uppercase tracking-wider">
-          AJOUTER MATÉRIEL
-        </Text>
+        <Text style={styles.headerTitle}>AJOUTER MATÉRIEL</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView className="flex-1 px-6 pt-6" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         
         {/* Badge Rouge d'entête */}
-        <View className="w-full bg-[#B21F18] py-3 rounded-full shadow-md mb-6 items-center">
-          <Text className="text-white font-bold text-[10px] uppercase tracking-[0.2em]">
-            Informations détaillées
-          </Text>
+        <View style={styles.redBadge}>
+          <Text style={styles.redBadgeText}>INFORMATIONS DÉTAILLÉES</Text>
         </View>
 
         {/* GRANDE CARTE ROSE ARRONDIE */}
         <View style={styles.pinkCard}>
           
-          {/* NOM DU MATÉRIEL (Lecture seule car vient de la catégorie) */}
-          <View className="mb-4">
+          {/* NOM DU MATÉRIEL */}
+          <View style={styles.inputGroup}>
             <Text style={styles.label}>Nom du matériel</Text>
-            <View className="bg-[#F8F9FB] rounded-2xl py-4 px-6 border border-white">
-              <Text className="text-gray-700 font-bold">{category}</Text>
+            <View style={styles.readOnlyInput}>
+              <Text style={styles.readOnlyText}>{category}</Text>
             </View>
           </View>
 
           {/* QUANTITÉ ET ÉTAT */}
-          <View className="flex-row gap-x-4 mb-4">
-            <View className="flex-1">
+          <View style={styles.row}>
+            <View style={styles.flex1}>
               <Text style={styles.label}>Quantité</Text>
               <TextInput
                 value={quantite}
                 onChangeText={setQuantite}
                 keyboardType="numeric"
-                className="bg-[#F8F9FB] rounded-2xl py-4 px-6 text-gray-700 font-bold border border-white"
+                style={styles.input}
               />
             </View>
-            <View className="flex-1">
+            <View style={[styles.flex1, { marginLeft: 15 }]}>
               <Text style={styles.label}>État</Text>
-              <TouchableOpacity className="bg-[#F8F9FB] rounded-2xl py-4 px-6 border border-white flex-row justify-between items-center">
-                <Text className="text-gray-700 font-bold">{etat}</Text>
+              <TouchableOpacity style={styles.selectInput} activeOpacity={0.7}>
+                <Text style={styles.inputText}>{etat}</Text>
                 <Ionicons name="chevron-down" size={16} color="#1D3583" />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* COULEUR ET MARQUE */}
-          <View className="flex-row gap-x-4 mb-4">
-            <View className="flex-1">
+          <View style={styles.row}>
+            <View style={styles.flex1}>
               <Text style={styles.label}>Couleur</Text>
               <TextInput
                 placeholder="Ex: Blanc"
                 value={couleur}
                 onChangeText={setCouleur}
-                className="bg-[#F8F9FB] rounded-2xl py-4 px-6 text-gray-700 font-bold border border-white"
+                style={styles.input}
               />
             </View>
-            <View className="flex-1">
+            <View style={[styles.flex1, { marginLeft: 15 }]}>
               <Text style={styles.label}>Marque</Text>
               <TextInput
                 placeholder="Ex: Philips"
                 value={marque}
                 onChangeText={setMarque}
-                className="bg-[#F8F9FB] rounded-2xl py-4 px-6 text-gray-700 font-bold border border-white"
+                style={styles.input}
               />
             </View>
           </View>
 
-          {/* PHOTO (Simulé) */}
-          <View className="mb-4">
+          {/* PHOTO */}
+          <View style={styles.inputGroup}>
             <Text style={styles.label}>Photo (Optionnel)</Text>
-            <TouchableOpacity className="w-full aspect-video rounded-[25px] border-2 border-dashed border-[#1D3583]/20 bg-white/50 items-center justify-center">
+            <TouchableOpacity style={styles.photoBox}>
               <Ionicons name="camera" size={32} color="#1D3583" />
-              <Text className="text-[10px] font-bold text-[#1D3583] mt-2">Prendre une photo</Text>
+              <Text style={styles.photoText}>Prendre une photo</Text>
             </TouchableOpacity>
           </View>
 
           {/* DATES */}
-          <View className="flex-row gap-x-4 mb-4">
-            <View className="flex-1">
+          <View style={styles.row}>
+            <View style={styles.flex1}>
               <Text style={styles.label}>Acquisition</Text>
-              <View className="bg-[#F8F9FB] rounded-2xl py-4 px-3 border border-white items-center">
-                <Text className="text-gray-700 font-bold text-[10px]">{dateAcq}</Text>
+              <View style={styles.dateBox}>
+                <Text style={styles.dateText}>{dateAcq}</Text>
               </View>
             </View>
-            <View className="flex-1">
+            <View style={[styles.flex1, { marginLeft: 15 }]}>
               <Text style={styles.label}>Renouvellement</Text>
-              <View className="bg-[#F8F9FB] rounded-2xl py-4 px-3 border border-white items-center">
-                <Text className="text-gray-700 font-bold text-[10px]">{dateRen}</Text>
+              <View style={styles.dateBox}>
+                <Text style={styles.dateText}>{dateRen}</Text>
               </View>
             </View>
           </View>
 
           {/* INFOS SUPPLÉMENTAIRES */}
-          <View>
+          <View style={styles.inputGroup}>
             <Text style={styles.label}>Informations supplémentaires</Text>
             <TextInput
               multiline
@@ -152,8 +162,7 @@ export default function AddMaterielScreen() {
               placeholder="Détails, notes..."
               value={infos}
               onChangeText={setInfos}
-              className="bg-[#F8F9FB] rounded-[25px] py-4 px-6 text-gray-700 font-bold border border-white text-vertical-top"
-              style={{ textAlignVertical: 'top' }}
+              style={[styles.input, styles.textArea]}
             />
           </View>
         </View>
@@ -161,33 +170,70 @@ export default function AddMaterielScreen() {
         {/* Bouton Enregistrer */}
         <TouchableOpacity 
           onPress={handleSave}
-          className="w-full bg-[#1D3583] py-5 rounded-full shadow-xl items-center mt-8"
+          style={styles.saveBtn}
         >
-          <Text className="text-white font-bold text-lg uppercase tracking-widest">
-            Enregistrer le matériel
-          </Text>
+          <Text style={styles.saveBtnText}>ENREGISTRER LE MATÉRIEL</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  pinkCard: {
-    backgroundColor: '#FDE7F3',
-    borderRadius: 35,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#FCE7F3',
-    elevation: 2,
+  container: { flex: 1, backgroundColor: '#F8F9FB' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingTop: 50, 
+    paddingBottom: 15, 
+    backgroundColor: 'white', 
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6'
   },
-  label: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: '#1D3583',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    marginBottom: 8,
-    marginLeft: 12,
-  }
+  backBtn: { padding: 5 },
+  headerTitle: { flex: 1, textAlign: 'center', fontWeight: '900', color: '#1D3583', fontSize: 18, letterSpacing: 1 },
+  scroll: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
+  
+  redBadge: { 
+    backgroundColor: '#B21F18', 
+    paddingVertical: 12, 
+    borderRadius: 50, 
+    alignItems: 'center', 
+    marginBottom: 20,
+    elevation: 4
+  },
+  redBadgeText: { color: 'white', fontWeight: 'bold', fontSize: 10, letterSpacing: 2 },
+
+  pinkCard: { 
+    backgroundColor: '#FDE7F3', 
+    borderRadius: 35, 
+    padding: 20, 
+    borderWidth: 1, 
+    borderColor: '#FCE7F3',
+    elevation: 3
+  },
+  inputGroup: { marginBottom: 15 },
+  label: { fontSize: 9, fontWeight: '900', color: '#1D3583', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8, marginLeft: 10 },
+  
+  input: { backgroundColor: '#F8F9FB', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, color: '#374151', fontWeight: 'bold', borderWidth: 1, borderColor: 'white' },
+  inputText: { color: '#374151', fontWeight: 'bold' },
+  textArea: { height: 100, textAlignVertical: 'top' },
+  
+  readOnlyInput: { backgroundColor: '#F8F9FB', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, borderWidth: 1, borderColor: 'white' },
+  readOnlyText: { color: '#6b7280', fontWeight: 'bold' },
+  
+  selectInput: { backgroundColor: '#F8F9FB', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: 'white' },
+  
+  row: { flexDirection: 'row', marginBottom: 15 },
+  flex1: { flex: 1 },
+  
+  photoBox: { width: '100%', height: 120, borderRadius: 25, borderStyle: 'dashed', borderWidth: 2, borderColor: '#1D358333', backgroundColor: 'rgba(255,255,255,0.5)', justifyContent: 'center', alignItems: 'center' },
+  photoText: { fontSize: 10, fontWeight: 'bold', color: '#1D3583', marginTop: 8 },
+  
+  dateBox: { backgroundColor: '#F8F9FB', borderRadius: 15, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: 'white' },
+  dateText: { color: '#374151', fontWeight: 'bold', fontSize: 11 },
+
+  saveBtn: { backgroundColor: '#1D3583', paddingVertical: 20, borderRadius: 50, marginTop: 30, alignItems: 'center', elevation: 8, shadowColor: '#1D3583', shadowOpacity: 0.3, shadowRadius: 10 },
+  saveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16, letterSpacing: 2 }
 });
