@@ -5,9 +5,8 @@ import {
   TouchableOpacity, 
   ScrollView, 
   TextInput, 
-  Image, 
   Alert, 
-  Platform // <--- L'IMPORT MANQUANT QUI CAUSAIT L'ERREUR
+  Platform 
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,7 +21,6 @@ export default function RoomProfilesScreen() {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filtrage des salles appartenant au sous-bloc spécifique
   const filteredRooms = useMemo(() => {
     const allRooms = appData?.salles || [];
     return allRooms.filter((room: any) => {
@@ -97,4 +95,19 @@ export default function RoomProfilesScreen() {
                   
                   <View {...({ className: "flex-1 ml-4" } as any)}>
                     <Text {...({ className: "font-bold text-gray-800 text-lg" } as any)}>{room.nom}</Text>
-                    <Text {...({ className: "text-gray-500 text-xs" } as any
+                    <Text {...({ className: "text-gray-500 text-xs" } as any)}>Niveau: {room.niveau} • Capacité: {room.capacity}</Text>
+                  </View>
+
+                  <TouchableOpacity onPress={() => handleDeleteRoom(room.id, room.nom)} {...({ className: "p-2" } as any)}>
+                    <Ionicons name="trash-outline" size={20} color="#d1d5db" />
+                  </TouchableOpacity>
+                  <Ionicons name="chevron-forward" size={20} color="#d1d5db" />
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
+  );
+}
