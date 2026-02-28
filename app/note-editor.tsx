@@ -1,179 +1,103 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, StyleSheet } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ScreenContainer } from '@/components/screen-container';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, FlatList } from 'react-native';
 import { useAppContext } from '@/lib/app-context';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function NoteEditorScreen() {
-  const router = useRouter();
-  const { noteId } = useLocalSearchParams<{ noteId: string }>();
-  const { appData, addNote, updateNote, deleteNote } = useAppContext();
+export default function NotesUnifiedScreen() {
+  const context = useAppContext();
+  const { appData, addNote, updateNote, deleteNote } = context as any;
+  const notes = appData?.notes || [];
 
-  const existingNote = noteId ? appData.notes.find((n) => n.id === noteId) : null;
-
-  const [title, setTitle] = useState(existingNote?.title || '');
-  const [content, setContent] = useState(existingNote?.content || '');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
 
   const handleSave = async () => {
-    if (!title.trim() && !content.trim()) {
-      router.back();
-      return;
-    }
+    if (!title.trim() && !content.trim()) return;
 
-    if (noteId && existingNote) {
-      await updateNote(noteId, {
-        title: title.trim(),
-        content: content.trim(),
-        date: new Date().toISOString(),
-      });
+    if (editingId) {
+      await updateNote(editingId, { title, content, date: new Date().toISOString() });
     } else {
-      await addNote({
-        id: `note-${new Date().getTime()}`,
-        title: title.trim(),
-        content: content.trim(),
-        date: new Date().toISOString(),
-      });
+      await addNote({ id: `note-${Date.now()}`, title, content, date: new Date().toISOString() });
     }
-
-    router.back();
+    resetForm();
   };
 
-  const handleDelete = () => {
-    if (!noteId) return;
+  const resetForm = () => {
+    setEditingId(null);
+    setTitle('');
+    setContent('');
+  };
 
-    Alert.alert('Supprimer la note', 'Êtes-vous sûr ?', [
-      { text: 'Annuler' },
-      {
-        text: 'Supprimer',
-        onPress: async () => {
-          await deleteNote(noteId);
-          router.back();
-        },
-        style: 'destructive',
-      },
-    ]);
+  const startEdit = (note: any) => {
+    setEditingId(note.id);
+    setTitle(note.title);
+    setContent(note.content);
   };
 
   return (
-    <ScreenContainer style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-          <Ionicons name="arrow-back" size={24} color="#4b5563" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Éditeur de note</Text>
-        {noteId ? (
-          <TouchableOpacity onPress={handleDelete} style={styles.iconButton}>
-            <Ionicons name="trash" size={24} color="#ef4444" />
+    <View style={styles.container}>
+      {/* SECTION 1 : L'ÉDITEUR (Toujours présent en haut) */}
+      <View style={styles.editorCard}>
+        <Text style={styles.sectionTitle}>{editingId ? "Modifier la note" : "Nouvelle note"}</Text>
+        <TextInput 
+          style={styles.inputTitle} 
+          placeholder="Titre..." 
+          value={title} 
+          onChangeText={setTitle} 
+        />
+        <TextInput 
+          style={styles.inputContent} 
+          placeholder="Écrivez ici..." 
+          multiline 
+          value={content} 
+          onChangeText={setContent} 
+        />
+        <View style={styles.row}>
+          <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
+            <Text style={styles.btnText}>Enregistrer</Text>
           </TouchableOpacity>
-        ) : (
-          <View style={styles.iconButton} /> /* Spacer pour garder le titre centré */
-        )}
+          {editingId && (
+            <TouchableOpacity onPress={resetForm} style={styles.cancelBtn}>
+              <Text style={styles.btnText}>Annuler</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Titre</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Titre de la note"
-              style={styles.input}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Contenu</Text>
-            <TextInput
-              value={content}
-              onChangeText={setContent}
-              placeholder="Contenu de la note"
-              multiline
-              numberOfLines={8}
-              textAlignVertical="top"
-              style={[styles.input, styles.textArea]}
-            />
-          </View>
-
-          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Enregistrer</Text>
+      {/* SECTION 2 : LA LISTE (En dessous) */}
+      <FlatList
+        data={notes}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.noteItem} onPress={() => startEdit(item)}>
+            <View style={{flex: 1}}>
+              <Text style={styles.noteTitle}>{item.title}</Text>
+              <Text numberOfLines={1} style={styles.noteSnippet}>{item.content}</Text>
+            </View>
+            <TouchableOpacity onPress={() => deleteNote(item.id)}>
+              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+            </TouchableOpacity>
           </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </ScreenContainer>
+        )}
+        ListHeaderComponent={<Text style={styles.listHeader}>Mes Notes ({notes.length})</Text>}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fde7f3',
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  iconButton: {
-    padding: 8,
-    width: 40,
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    color: '#374151',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    gap: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  inputGroup: {
-    marginBottom: 4,
-  },
-  label: {
-    color: '#1f2937',
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    color: '#1f2937',
-    fontSize: 16,
-  },
-  textArea: {
-    minHeight: 120,
-  },
-  saveButton: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  saveButtonText: {
-    color: '#ffffff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
+  container: { flex: 1, backgroundColor: '#F8F9FB', padding: 16, paddingTop: 50 },
+  editorCard: { backgroundColor: 'white', padding: 16, borderRadius: 20, marginBottom: 20, elevation: 4 },
+  sectionTitle: { fontWeight: 'bold', color: '#1D3583', marginBottom: 10 },
+  inputTitle: { borderBottomWidth: 1, borderBottomColor: '#eee', paddingVertical: 8, fontWeight: 'bold', fontSize: 16 },
+  inputContent: { minHeight: 60, paddingTop: 10 },
+  row: { flexDirection: 'row', marginTop: 10, gap: 10 },
+  saveBtn: { backgroundColor: '#1D3583', padding: 12, borderRadius: 10, flex: 1, alignItems: 'center' },
+  cancelBtn: { backgroundColor: '#9ca3af', padding: 12, borderRadius: 10, flex: 1, alignItems: 'center' },
+  btnText: { color: 'white', fontWeight: 'bold' },
+  listHeader: { fontWeight: 'bold', fontSize: 18, color: '#4b5563', marginBottom: 10 },
+  noteItem: { backgroundColor: 'white', padding: 15, borderRadius: 15, marginBottom: 10, flexDirection: 'row', alignItems: 'center' },
+  noteTitle: { fontWeight: 'bold', color: '#1f2937' },
+  noteSnippet: { color: '#6b7280', fontSize: 12 }
 });
