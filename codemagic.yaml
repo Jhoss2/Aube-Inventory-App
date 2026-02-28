@@ -22,20 +22,20 @@ workflows:
           
       - name: Lint & Type Check
         script: |
-          # Si un fichier a du texte hors balise (le fameux suspect), le build s'arrêtera ici avec le détail
+          # Maintenant que nous avons tout nettoyé, tsc devrait passer au vert !
           npx tsc --noEmit
 
       - name: Generate Native Android Folder
         script: |
-          # Utilisation du flag --no-interactive pour éviter les blocages
-          npx expo prebuild --platform android --no-interactive
+          # Correction ici : suppression de --no-interactive (inutile et obsolète)
+          npx expo prebuild --platform android
 
       - name: Build APK
         script: |
           cd android
           chmod +x gradlew
-          # Ajout de --stacktrace et --info pour voir l'erreur exacte dans les logs Codemagic
-          ./gradlew assembleRelease --no-daemon --stacktrace --info
+          # Suppression de --no-daemon pour éviter certains conflits de mémoire sur Codemagic
+          ./gradlew assembleRelease --stacktrace --info
 
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
