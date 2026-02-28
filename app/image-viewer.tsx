@@ -7,44 +7,26 @@ const { width, height } = Dimensions.get('window');
 
 export default function ImageViewerScreen() {
   const router = useRouter();
-  const { imageUrl } = useLocalSearchParams(); // On récupère l'image passée en paramètre
+  const { imageUrl } = useLocalSearchParams(); // Récupère l'image envoyée
 
   return (
     <View style={styles.container}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      
+      <StatusBar hidden />
       <Image 
         source={{ uri: imageUrl as string }} 
         style={styles.fullImage} 
-        resizeMode="contain" // "contain" pour voir l'intégralité du plan sans rognage
+        resizeMode="contain" 
       />
-
-      {/* Bouton retour flottant et translucide */}
-      <TouchableOpacity 
-        style={styles.backButton} 
-        onPress={() => router.back()}
-      >
-        <Ionicons name="arrow-back" size={24} color="white" />
+      {/* Bouton retour transparent */}
+      <TouchableOpacity style={styles.floatingBack} onPress={() => router.back()}>
+        <Ionicons name="close-circle" size={45} color="rgba(255,255,255,0.5)" />
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: 'black' },
   fullImage: { width: width, height: height },
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Translucide
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    zIndex: 10
-  }
+  floatingBack: { position: 'absolute', top: 40, left: 20, zIndex: 10 }
 });
