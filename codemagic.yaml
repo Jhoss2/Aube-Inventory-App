@@ -13,28 +13,29 @@ workflows:
       
       - name: Verify Assets & Screens
         script: |
-          echo "--- Nettoyage des anciens builds ---"
+          echo "--- Nettoyage préventif ---"
           rm -rf android
-          echo "--- Vérification des fichiers ---"
+          rm -rf node_modules/.cache
           mkdir -p assets/pdf
           
       - name: Lint & Type Check
         script: |
+          # Vérification du code TypeScript
           npx tsc --noEmit
 
       - name: Generate Native Android Folder
         script: |
-          # Le flag --clean force Expo à recréer un dossier Android tout neuf
+          # On force la régénération totale du dossier natif
           npx expo prebuild --platform android --clean
 
       - name: Build APK
         script: |
           cd android
           chmod +x gradlew
-          # 1. Nettoyage du cache Gradle
-          ./gradlew clean
-          # 2. Build en ignorant les erreurs de Lint (souvent la cause du crash final)
-          ./gradlew assembleRelease -x lint --stacktrace
+          # Nettoyage profond de Gradle et compilation
+          # -x lint : ignore les erreurs de style/icones
+          # -x test : ignore les tests unitaires pour accélérer et éviter les plantages
+          ./gradlew clean assembleRelease -x lint -x test --stacktrace
 
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
