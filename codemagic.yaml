@@ -5,29 +5,37 @@ workflows:
     environment:
       node: 20.11.0
       java: 17
+      groups:
+        - keystore_credentials # Optionnel: si tu as des variables d'environnement pour la signature
     scripts:
       - name: Install dependencies
         script: |
+          # Installation propre des dépendances avec correction des conflits de pairs
           npm install --legacy-peer-deps
-      
-      - name: Verify Assets
+          # Vérification de la compatibilité des versions Expo (Blur, Slider, etc.)
+          npx expo install --check
+
+      - name: Verify Assets & Clean
         script: |
-          echo "--- Nettoyage ---"
+          echo "--- Nettoyage des dossiers temporaires ---"
           rm -rf android
-          mkdir -p assets/pdf
+          # S'assurer que les dossiers d'assets requis existent sur l'agent
+          mkdir -p assets/images
           
       - name: Generate Native Android Folder
         script: |
-          # On génère le dossier natif en mode release
-          npx expo prebuild --platform android --clean
+          # Le prebuild génère le dossier /android à la volée. 
+          # On utilise --no-install car on a déjà fait npm install plus haut.
+          npx expo prebuild --platform android --clean --no-install
 
       - name: Build APK Release
         script: |
           cd android
           chmod +x gradlew
-          # On repasse en assembleRelease pour réduire le poids et inclure le JS
-          # Le flag -x lint évite que le build bloque sur des détails visuels
-          ./gradlew assembleRelease -x lint -x test --stacktrace
+          # assembleRelease génère l'APK universelle.
+          # -x lint : ignore les erreurs de style pour ne pas bloquer le build.
+          # --no-daemon : plus stable sur les environnements CI comme Codemagic.
+          ./gradlew assembleRelease -x lint -x test --stacktrace --no-daemon
 
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
