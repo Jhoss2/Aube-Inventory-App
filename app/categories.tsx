@@ -1,51 +1,66 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Modal } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '@/lib/app-context';
+
+// Activation de l'animation pour Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export default function CategoriesScreen() {
   const router = useRouter();
   const { salleId } = useLocalSearchParams<{ salleId: string }>();
   const context = useAppContext();
-  const { appData, updateAppData } = context as any; // Cast en any pour éviter les erreurs TS sur les propriétés dynamiques
+  const { appData, updateAppData } = context as any;
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [showAddInput, setShowAddInput] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
-  // Utilisation de variables locales pour clarifier l'accès aux données
   const data = appData as any;
 
-  // Fusionner les catégories par défaut et les catégories personnalisées
+  // Fusionner et trier les catégories
   const allCategories = useMemo(() => {
-    const defaults = data?.defaultCategories || [];
+    const defaults = data?.defaultCategories || ['Mobilier', 'Informatique', 'Climatisation', 'Éclairage'];
     const customs = data?.customCategories || [];
     const combined = [...defaults, ...customs] as string[];
-    return combined.sort((a, b) => a.localeCompare(b));
+    return Array.from(new Set(combined)).sort((a, b) => a.localeCompare(b));
   }, [data?.defaultCategories, data?.customCategories]);
 
-  // Filtrage pour la recherche
   const filteredCategories = allCategories.filter(cat => 
     cat.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Ajouter une catégorie
+  const toggleAddInput = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShowAddInput(!showAddInput);
+  };
+
   const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return;
-    if (allCategories.includes(newCategoryName.trim())) {
+    if (!newCategoryName.trim()) {
+      toggleAddInput();
+      return;
+    }
+    
+    if (allCategories.some(c => c.toLowerCase() === newCategoryName.trim().toLowerCase())) {
       Alert.alert("Erreur", "Cette catégorie existe déjà.");
       return;
     }
 
-    const updatedCustom = [...(data?.customCategories || []), newCategoryName.trim()];
-    await updateAppData({ ...data, customCategories: updatedCustom });
-    setNewCategoryName('');
-    setIsAddModalVisible(false);
+    try {
+      const updatedCustom = [...(data?.customCategories || []), newCategoryName.trim()];
+      await updateAppData({ ...data, customCategories: updatedCustom });
+      setNewCategoryName('');
+      setShowAddInput(false);
+      Alert.alert("Succès", "Catégorie ajoutée");
+    } catch (err) {
+      Alert.alert("Erreur", "Impossible de sauvegarder la catégorie");
+    }
   };
 
-  // Supprimer une catégorie
   const handleDeleteCategory = (catName: string) => {
     Alert.alert(
       "Supprimer",
@@ -73,95 +88,87 @@ export default function CategoriesScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
       
       {/* Header */}
-      <View {...({ className: "px-4 pt-2 flex-row items-center bg-white border-b border-gray-100 pb-4 shadow-sm" } as any)}>
-        <TouchableOpacity onPress={() => router.back()} {...({ className: "p-2" } as any)}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 8, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f3f4f6', paddingBottom: 16 }}>
+        <TouchableOpacity onPress={() => router.back()} style={{ padding: 8 }}>
           <Ionicons name="chevron-back" size={28} color="#4b5563" />
         </TouchableOpacity>
-        <Text {...({ className: "flex-1 text-center font-black text-[#1D3583] text-xl uppercase tracking-wider" } as any)}>
+        <Text style={{ flex: 1, textAlign: 'center', fontWeight: '900', color: '#1D3583', fontSize: 18, letterSpacing: 1 }}>
           CATÉGORIES
         </Text>
-        <TouchableOpacity onPress={() => setIsAddModalVisible(true)} {...({ className: "p-2" } as any)}>
-          <Ionicons name="add-circle" size={30} color="#1D3583" />
+        <TouchableOpacity onPress={toggleAddInput} style={{ padding: 8 }}>
+          <Ionicons name={showAddInput ? "close-circle" : "add-circle"} size={32} color={showAddInput ? "#B21F18" : "#1D3583"} />
         </TouchableOpacity>
       </View>
 
-      <View {...({ className: "flex-1 px-6 pt-6" } as any)}>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 20 }}>
         
+        {/* Champ d'ajout dynamique (masqué par défaut) */}
+        {showAddInput && (
+          <View style={{ marginBottom: 20, flexDirection: 'row', gap: 10 }}>
+            <TextInput
+              autoFocus
+              placeholder="Nom de la nouvelle catégorie..."
+              value={newCategoryName}
+              onChangeText={setNewCategoryName}
+              style={{ flex: 1, backgroundColor: 'white', borderRadius: 15, paddingHorizontal: 20, height: 55, borderWidth: 1, borderColor: '#1D3583' }}
+            />
+            <TouchableOpacity 
+              onPress={handleAddCategory}
+              style={{ backgroundColor: '#1D3583', width: 55, height: 55, borderRadius: 15, justifyContent: 'center', alignItems: 'center' }}
+            >
+              <Ionicons name="checkmark" size={28} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Barre de Recherche */}
-        <View {...({ className: "relative mb-6" } as any)}>
-          <View {...({ className: "absolute inset-y-0 left-5 z-10 justify-center" } as any)}>
+        <View style={{ position: 'relative', marginBottom: 20 }}>
+          <View style={{ position: 'absolute', insetY: 0, left: 15, zIndex: 10, justifyContent: 'center' }}>
             <Ionicons name="search" size={20} color="#9ca3af" />
           </View>
           <TextInput
-            placeholder="Rechercher..."
+            placeholder="Rechercher une catégorie..."
             value={searchTerm}
             onChangeText={setSearchTerm}
-            {...({ className: "w-full bg-[#EDF0F5] rounded-2xl py-4 pl-14 pr-6 text-gray-700" } as any)}
+            style={{ w: '100%', backgroundColor: '#EDF0F5', borderRadius: 20, py: 15, paddingVertical: 14, paddingLeft: 50, paddingRight: 20, color: '#374151' }}
           />
         </View>
 
         {/* Liste des Catégories */}
         <ScrollView 
           showsVerticalScrollIndicator={false}
-          {...({ className: "bg-white rounded-[30px] shadow-sm border border-gray-50 mb-10" } as any)}
+          style={{ backgroundColor: 'white', borderRadius: 30, borderWeight: 1, borderColor: '#f3f4f6', marginBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 20 }}
         >
-          {filteredCategories.map((category, index) => (
-            <View 
-              key={index}
-              {...({ className: `flex-row items-center justify-between px-8 py-5 ${
-                index !== filteredCategories.length - 1 ? 'border-b border-gray-100' : ''
-              }` } as any)}
-            >
-              <TouchableOpacity 
-                {...({ className: "flex-1" } as any)}
-                onPress={() => router.push({
-                  pathname: '/screens/add-materiel',
-                  params: { salleId, category }
-                })}
+          {filteredCategories.length > 0 ? (
+            filteredCategories.map((category, index) => (
+              <View 
+                key={index}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 25, paddingVertical: 20, borderBottomWidth: index !== filteredCategories.length - 1 ? 1 : 0, borderBottomColor: '#f3f4f6' }}
               >
-                <Text {...({ className: "text-gray-700 font-bold text-base" } as any)}>{category}</Text>
-              </TouchableOpacity>
+                <TouchableOpacity 
+                  style={{ flex: 1 }}
+                  onPress={() => router.push({
+                    pathname: '/add-item',
+                    params: { salleId, category }
+                  })}
+                >
+                  <Text style={{ color: '#374151', fontWeight: '700', fontSize: 16 }}>{category}</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => handleDeleteCategory(category)} {...({ className: "ml-4" } as any)}>
-                <Ionicons name="trash-outline" size={18} color="#d1d5db" />
-              </TouchableOpacity>
-              
-              <Ionicons name="chevron-forward" size={20} color="#d1d5db" />
-            </View>
-          ))}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <TouchableOpacity onPress={() => handleDeleteCategory(category)} style={{ padding: 5, marginRight: 10 }}>
+                    <Ionicons name="trash-outline" size={20} color="#d1d5db" />
+                  </TouchableOpacity>
+                  <Ionicons name="chevron-forward" size={20} color="#1D3583" />
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}>Aucune catégorie trouvée</Text>
+          )}
         </ScrollView>
       </View>
-
-      {/* Modal d'ajout */}
-      <Modal visible={isAddModalVisible} transparent animationType="fade">
-        <View {...({ className: "flex-1 bg-black/50 justify-center items-center px-6" } as any)}>
-          <View {...({ className: "bg-white w-full rounded-[30px] p-6 shadow-2xl" } as any)}>
-            <Text {...({ className: "text-[#1D3583] font-bold text-lg mb-4 text-center" } as any)}>Nouvelle Catégorie</Text>
-            <TextInput
-              autoFocus
-              placeholder="Nom de la catégorie..."
-              value={newCategoryName}
-              onChangeText={setNewCategoryName}
-              {...({ className: "bg-gray-100 rounded-xl p-4 mb-6" } as any)}
-            />
-            <View {...({ className: "flex-row gap-x-4" } as any)}>
-              <TouchableOpacity 
-                onPress={() => setIsAddModalVisible(false)}
-                {...({ className: "flex-1 py-4 rounded-full border border-gray-200" } as any)}
-              >
-                <Text {...({ className: "text-center font-bold text-gray-500" } as any)}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={handleAddCategory}
-                {...({ className: "flex-1 py-4 rounded-full bg-[#1D3583]" } as any)}
-              >
-                <Text {...({ className: "text-center font-bold text-white" } as any)}>Ajouter</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-      
     </SafeAreaView>
   );
-          }
+                           }
