@@ -1,78 +1,86 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Linking, Image } from 'react-native';
+import { 
+  View, 
+  TouchableOpacity, 
+  Image, 
+  StyleSheet, 
+  StatusBar, 
+  Dimensions 
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '@/lib/app-context';
+
+const { width, height } = Dimensions.get('window');
 
 export default function AboutDevScreen() {
   const router = useRouter();
-  const { appData } = useAppContext();
-  const aboutPdfUri = appData.settings?.aboutPdf;
+  const { appData } = useAppContext() as any;
+  
+  // On récupère l'image définie dans les paramètres (Settings)
+  const aboutPosterUri = appData.settings?.aboutPoster;
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color="#8B1A1A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>DÉVELOPPEUR</Text>
-      </View>
+      {/* Barre d'état transparente pour une immersion totale */}
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <MaterialCommunityIcons name="account-circle" size={80} color="white" />
+      {aboutPosterUri ? (
+        <Image 
+          source={{ uri: aboutPosterUri }} 
+          style={styles.fullScreenImage}
+          resizeMode="cover" // L'image occupe tout l'espace (quitte à être un peu rognée)
+        />
+      ) : (
+        <View style={styles.placeholderContainer}>
+          <Ionicons name="image-outline" size={100} color="rgba(255,255,255,0.2)" />
+          <View style={{ marginTop: 20 }}>
+            <Ionicons name="alert-circle" size={24} color="white" />
           </View>
-          <Text style={styles.devName}>Équipe de Développement</Text>
-          <Text style={styles.devRole}>Université Aube Nouvelle</Text>
         </View>
+      )}
 
-        <View style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>PROJET</Text>
-          <Text style={styles.description}>
-            U-AUBEN Supplies Tracker est une application conçue pour digitaliser l'inventaire 
-            et le suivi du matériel au sein des différents campus de l'université.
-          </Text>
-        </View>
-
-        {aboutPdfUri && (
-          <TouchableOpacity 
-            style={styles.pdfButton} 
-            onPress={() => Linking.openURL(aboutPdfUri)}
-          >
-            <Feather name="file-text" size={20} color="white" />
-            <Text style={styles.pdfButtonText}>Consulter la fiche technique (PDF)</Text>
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.contactSection}>
-          <Text style={styles.sectionTitle}>CONTACT</Text>
-          <TouchableOpacity style={styles.contactItem} onPress={() => Linking.openURL('mailto:support@u-auben.bf')}>
-            <Feather name="mail" size={20} color="#1D3583" />
-            <Text style={styles.contactText}>support@u-auben.bf</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      {/* Bouton Retour Flottant (Indispensable pour la navigation) */}
+      <TouchableOpacity 
+        style={styles.floatingBack} 
+        onPress={() => router.back()}
+      >
+        <Ionicons name="arrow-back" size={24} color="white" />
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  backButton: { width: 40 },
-  headerTitle: { fontSize: 16, fontWeight: '900', color: '#8B1A1A' },
-  scrollContent: { padding: 25, alignItems: 'center' },
-  profileSection: { alignItems: 'center', marginBottom: 30 },
-  avatarContainer: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#1D3583', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
-  devName: { fontSize: 20, fontWeight: 'bold' },
-  devRole: { fontSize: 14, color: '#666' },
-  infoCard: { width: '100%', backgroundColor: '#f9f9f9', padding: 20, borderRadius: 15, marginBottom: 20 },
-  sectionTitle: { fontSize: 12, fontWeight: '900', color: '#1D3583', marginBottom: 10, letterSpacing: 1 },
-  description: { fontSize: 14, color: '#444', lineHeight: 20 },
-  pdfButton: { flexDirection: 'row', width: '100%', backgroundColor: '#8B1A1A', padding: 18, borderRadius: 12, justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 20 },
-  pdfButtonText: { color: 'white', fontWeight: 'bold' },
-  contactSection: { width: '100%' },
-  contactItem: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#eee', borderRadius: 10 },
-  contactText: { marginLeft: 15, fontWeight: '600' }
+  container: { 
+    flex: 1, 
+    backgroundColor: '#000' // Fond noir pour éviter les flashs blancs
+  },
+  fullScreenImage: { 
+    width: width, 
+    height: height,
+    position: 'absolute',
+    top: 0,
+    left: 0
+  },
+  placeholderContainer: {
+    flex: 1,
+    backgroundColor: '#1D3583',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  floatingBack: { 
+    position: 'absolute', 
+    top: 50, // Ajusté pour l'encoche (notch)
+    left: 20, 
+    width: 45, 
+    height: 45, 
+    borderRadius: 22.5, 
+    backgroundColor: 'rgba(0,0,0,0.4)', // Effet translucide moderne
+    justifyContent: 'center', 
+    alignItems: 'center',
+    zIndex: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)'
+  }
 });
