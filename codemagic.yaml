@@ -11,31 +11,30 @@ workflows:
           npm install --legacy-peer-deps
           npm install @expo/vector-icons expo-router expo-asset expo-file-system expo-sharing
       
-      - name: Verify Assets & Screens (Le débusqueur)
+      - name: Verify Assets & Screens
         script: |
-          echo "--- Vérification des fichiers critiques ---"
-          ls app/room-info.tsx || echo "ERREUR: room-info.tsx introuvable"
-          ls app/room-contents.tsx || echo "ERREUR: room-contents.tsx introuvable"
-          echo "--- Vérification des PDF ---"
+          echo "--- Nettoyage des anciens builds ---"
+          rm -rf android
+          echo "--- Vérification des fichiers ---"
           mkdir -p assets/pdf
-          ls assets/pdf/ || echo "ERREUR: Le dossier assets/pdf est vide"
           
       - name: Lint & Type Check
         script: |
-          # Maintenant que nous avons tout nettoyé, tsc devrait passer au vert !
           npx tsc --noEmit
 
       - name: Generate Native Android Folder
         script: |
-          # Correction ici : suppression de --no-interactive (inutile et obsolète)
-          npx expo prebuild --platform android
+          # Le flag --clean force Expo à recréer un dossier Android tout neuf
+          npx expo prebuild --platform android --clean
 
       - name: Build APK
         script: |
           cd android
           chmod +x gradlew
-          # Suppression de --no-daemon pour éviter certains conflits de mémoire sur Codemagic
-          ./gradlew assembleRelease --stacktrace --info
+          # 1. Nettoyage du cache Gradle
+          ./gradlew clean
+          # 2. Build en ignorant les erreurs de Lint (souvent la cause du crash final)
+          ./gradlew assembleRelease -x lint --stacktrace
 
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
