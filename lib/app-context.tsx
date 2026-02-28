@@ -1,20 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 1. Définition de la structure de toutes nos données personnalisables
+// 1. Structure mise à jour pour inclure les Affiches (Posters) à la place des PDF
 interface AppSettings {
   // Images Générales
   univImage?: string;
   bgImage?: string;
-  menuBg?: string;   // Fond du Sidebar
-  menuLogo?: string; // Logo du Sidebar
+  menuBg?: string;   
+  menuLogo?: string; 
 
-  // Documents PDF
-  guidePdf?: string;
-  aboutPdf?: string;
+  // Affiches (Remplacent les PDF)
+  guidePoster?: string; // Image du guide
+  aboutPoster?: string; // Image à propos
 
   // Images des Blocs (A à F)
-  // Chaque bloc a une vue aérienne, une image Salles (sub1) et une image Bureaux (sub2)
   blocA_aerial?: string; blocA_sub1?: string; blocA_sub2?: string;
   blocB_aerial?: string; blocB_sub1?: string; blocB_sub2?: string;
   blocC_aerial?: string; blocC_sub1?: string; blocC_sub2?: string;
@@ -32,6 +31,8 @@ interface AppContextType {
   appData: AppData;
   updateSettings: (newSettings: Partial<AppSettings>) => Promise<void>;
   addNote: (note: any) => Promise<void>;
+  updateNote: (id: string, updatedNote: any) => Promise<void>; // Ajouté pour fixer ton bug de mise à jour
+  deleteNote: (id: string) => Promise<void>; // Ajouté pour fixer ton bug de suppression
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -42,7 +43,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     notes: []
   });
 
-  // Charger les données au démarrage
   useEffect(() => {
     loadData();
   }, []);
@@ -66,7 +66,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Fonction pour mettre à jour les paramètres (Images, PDF, etc.)
   const updateSettings = async (newSettings: Partial<AppSettings>) => {
     const updatedData = {
       ...appData,
@@ -85,8 +84,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveData(updatedData);
   };
 
+  // --- NOUVELLE FONCTION : Mise à jour d'une note ---
+  const updateNote = async (id: string, updatedFields: any) => {
+    const updatedNotes = appData.notes.map(note => 
+      note.id === id ? { ...note, ...updatedFields } : note
+    );
+    const updatedData = { ...appData, notes: updatedNotes };
+    setAppData(updatedData);
+    await saveData(updatedData);
+  };
+
+  // --- NOUVELLE FONCTION : Suppression d'une note ---
+  const deleteNote = async (id: string) => {
+    const updatedNotes = appData.notes.filter(note => note.id !== id);
+    const updatedData = { ...appData, notes: updatedNotes };
+    setAppData(updatedData);
+    await saveData(updatedData);
+  };
+
   return (
-    <AppContext.Provider value={{ appData, updateSettings, addNote }}>
+    <AppContext.Provider value={{ 
+      appData, 
+      updateSettings, 
+      addNote, 
+      updateNote, 
+      deleteNote 
+    }}>
       {children}
     </AppContext.Provider>
   );
@@ -98,4 +121,4 @@ export function useAppContext() {
     throw new Error('useAppContext must be used within an AppProvider');
   }
   return context;
-}
+    }
