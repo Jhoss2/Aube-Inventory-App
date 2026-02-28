@@ -1,6 +1,6 @@
 workflows:
   android-workflow:
-    name: U-Auben Tracker Build
+    name: U-Auben Tracker Build - Debug Mode
     max_build_duration: 60
     environment:
       node: 20.11.0
@@ -8,18 +8,34 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          # Installation forcée des dépendances de base
           npm install --legacy-peer-deps
-          # On s'assure que les icônes et expo-router sont présents
-          npm install @expo/vector-icons expo-router
+          npm install @expo/vector-icons expo-router expo-asset expo-file-system expo-sharing
+      
+      - name: Verify Assets & Screens (Le débusqueur)
+        script: |
+          echo "--- Vérification des fichiers critiques ---"
+          ls app/room-info.tsx || echo "ERREUR: room-info.tsx introuvable"
+          ls app/room-contents.tsx || echo "ERREUR: room-contents.tsx introuvable"
+          echo "--- Vérification des PDF ---"
+          mkdir -p assets/pdf
+          ls assets/pdf/ || echo "ERREUR: Le dossier assets/pdf est vide"
+          
+      - name: Lint & Type Check
+        script: |
+          # Si un fichier a du texte hors balise (le fameux suspect), le build s'arrêtera ici avec le détail
+          npx tsc --noEmit
+
       - name: Generate Native Android Folder
         script: |
-          # Prebuild génère le dossier /android nécessaire au build
-          npx expo prebuild --platform android
+          # Utilisation du flag --no-interactive pour éviter les blocages
+          npx expo prebuild --platform android --no-interactive
+
       - name: Build APK
         script: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          # Ajout de --stacktrace et --info pour voir l'erreur exacte dans les logs Codemagic
+          ./gradlew assembleRelease --no-daemon --stacktrace --info
+
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
