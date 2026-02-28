@@ -5,30 +5,35 @@ workflows:
     environment:
       node: 20.11.0
       java: 17
-      groups:
-        - keystore_credentials 
+      # On booste la mémoire pour éviter le crash après 6 minutes
+      GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
     scripts:
       - name: Install dependencies
         script: |
           npm install --legacy-peer-deps
-          npx expo install --check || echo "Avertissements Expo ignorés"
+          npx expo install --check || echo "Ignored version warnings"
 
       - name: Verify Assets & Clean
         script: |
-          echo "--- Nettoyage ---"
+          echo "--- Nettoyage Profond ---"
           rm -rf android
+          # Supprime les caches Expo locaux qui pourraient être sur GitHub
+          rm -rf .expo
           mkdir -p assets/images
           
       - name: Generate Native Android Folder
         script: |
+          # Prebuild sans réinstaller les modules
           npx expo prebuild --platform android --clean --no-install
 
       - name: Build APK Release
         script: |
           cd android
           chmod +x gradlew
-          # Ajout de --info pour voir l'erreur réelle en cas d'échec
-          ./gradlew assembleRelease -x lint -x test --stacktrace --no-daemon --info
+          # Clean interne avant l'assemblage
+          ./gradlew clean
+          # Build sans lint ni tests pour gagner du temps et de la RAM
+          ./gradlew assembleRelease -x lint -x test --stacktrace --no-daemon
 
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
