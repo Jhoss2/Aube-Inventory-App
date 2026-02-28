@@ -5,8 +5,11 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 
 export default function RoomInfoScreen() {
   const router = useRouter();
-  // On récupère les infos de la salle cliquée (nom, capacité, superficie)
+  // On récupère les infos de la salle cliquée
   const { roomName, capacity, area, roomId } = useLocalSearchParams();
+
+  // Sécurisation du nom pour l'affichage en majuscules
+  const displayName = Array.isArray(roomName) ? roomName[0] : roomName;
 
   return (
     <View style={styles.container}>
@@ -17,7 +20,7 @@ export default function RoomInfoScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={28} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{roomName || "Détails"}</Text>
+        <Text style={styles.headerTitle}>{displayName || "Détails"}</Text>
         <View style={{ width: 40 }} /> {/* Spacer pour centrer */}
       </View>
 
@@ -26,7 +29,7 @@ export default function RoomInfoScreen() {
         {/* 1. BOUTON HEADER ROUGE (PILL SHAPE) */}
         <View style={styles.redPill}>
           <Text style={styles.redPillText}>
-            DÉTAILS DE {roomName ? roomName.toUpperCase() : "LA SALLE"}
+            DÉTAILS DE {displayName ? displayName.toUpperCase() : "LA SALLE"}
           </Text>
         </View>
 
@@ -60,14 +63,14 @@ export default function RoomInfoScreen() {
         <View style={styles.actionContainer}>
           <TouchableOpacity 
             style={styles.actionBtn}
-            onPress={() => router.push({ pathname: '/room-materials', params: { roomId, roomName } })}
+            onPress={() => router.push({ pathname: '/room-materials', params: { roomId, roomName: displayName } })}
           >
             <Text style={styles.actionBtnText}>AFFICHER LE MATÉRIEL</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.actionBtn}
-            onPress={() => router.push({ pathname: '/add-material', params: { roomId, roomName } })}
+            onPress={() => router.push({ pathname: '/add-material', params: { roomId, roomName: displayName } })}
           >
             <Text style={styles.actionBtnText}>AJOUTER DU MATÉRIEL</Text>
           </TouchableOpacity>
@@ -101,7 +104,10 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, justifyContent: 'center' },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: 'black' },
   
-  scrollContent: { paddingHorizontal: 24, py: 32, paddingVertical: 32 },
+  scrollContent: { 
+    paddingHorizontal: 24, 
+    paddingVertical: 32 
+  },
 
   redPill: { 
     width: '100%', 
