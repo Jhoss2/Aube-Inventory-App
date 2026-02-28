@@ -21,7 +21,7 @@ export default function SettingsScreen() {
   const [password, setPassword] = useState('');
 
   const [openSections, setOpenSections] = useState({
-    security: true, // Nouvelle section pour le design de l'auth
+    security: true,
     general: false,
     menu: false,
     blocs: false,
@@ -70,7 +70,6 @@ export default function SettingsScreen() {
     );
   };
 
-  // --- ÉCRAN D'AUTHENTIFICATION AMÉLIORÉ ---
   if (!isAuthenticated) {
     const authBg = appData.settings?.authBgImage;
     const blurVal = appData.settings?.authBlur || 0;
@@ -78,18 +77,20 @@ export default function SettingsScreen() {
     return (
       <View style={styles.fullContainer}>
         <ImageBackground 
-          source={authBg ? { uri: authBg } : require('@/assets/images/icon.png')} 
-          style={styles.absoluteFull}
+          // CORRECTION ICI : Suppression du require vers l'icône inexistante
+          source={authBg ? { uri: authBg } : undefined} 
+          // Ajout d'une couleur de secours si pas d'image
+          style={[styles.absoluteFull, !authBg && { backgroundColor: '#1D3583' }]}
           resizeMode="cover"
         >
-          <BlurView intensity={blurVal} tint="dark" style={styles.absoluteFull} />
+          {/* Le flou ne s'applique que s'il y a une image pour éviter les artefacts */}
+          {authBg && <BlurView intensity={blurVal} tint="dark" style={styles.absoluteFull} />}
           
           <View style={styles.authOverlay}>
             <View style={styles.authModalContent}>
               <MaterialCommunityIcons name="shield-lock" size={60} color="white" style={{marginBottom: 15}} />
               <Text style={styles.authTitleFull}>ADMINISTRATEUR</Text>
               
-              {/* Le champ avec Halo Lumineux Rouge */}
               <View style={styles.haloWrapper}>
                 <TextInput 
                   style={styles.authInputHalo} 
@@ -116,7 +117,6 @@ export default function SettingsScreen() {
     );
   }
 
-  // --- ÉCRAN DES PARAMÈTRES ---
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       <View style={styles.header}>
@@ -125,8 +125,6 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView style={{ flex: 1 }}>
-        
-        {/* NOUVEAU : Sécurité & Design Authentification */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('security')}>
           <Text style={styles.accordionTitle}>Sécurité & Design Auth</Text>
           <Feather name={openSections.security ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
@@ -135,7 +133,7 @@ export default function SettingsScreen() {
           <View style={styles.accordionContent}>
             <SettingRow label="Fond d'écran Authentification" field="authBgImage" />
             <View style={{marginTop: 15}}>
-              <Text style={styles.rowLabel}>Intensité du flou (Progression) : {Math.round(appData.settings?.authBlur || 0)}%</Text>
+              <Text style={styles.rowLabel}>Intensité du flou : {Math.round(appData.settings?.authBlur || 0)}%</Text>
               <Slider
                 style={{width: '100%', height: 40}}
                 minimumValue={0}
@@ -150,7 +148,6 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* ANCIENS RÉGLAGES : Interface Accueil */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('general')}>
           <Text style={styles.accordionTitle}>Interface Accueil</Text>
           <Feather name={openSections.general ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
@@ -162,7 +159,6 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* ANCIENS RÉGLAGES : Menu Latéral */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('menu')}>
           <Text style={styles.accordionTitle}>Menu Latéral</Text>
           <Feather name={openSections.menu ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
@@ -174,7 +170,6 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* ANCIENS RÉGLAGES : Blocs (A à F) */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('blocs')}>
           <Text style={styles.accordionTitle}>Personnalisation des Blocs</Text>
           <Feather name={openSections.blocs ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
@@ -192,9 +187,8 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* ANCIENS RÉGLAGES : Affiches */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('affiches')}>
-          <Text style={styles.accordionTitle}>Affiches d'Information (Images)</Text>
+          <Text style={styles.accordionTitle}>Affiches d'Information</Text>
           <Feather name={openSections.affiches ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
         </TouchableOpacity>
         {openSections.affiches && (
@@ -209,21 +203,18 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  // Styles d'Auth
   fullContainer: { flex: 1, backgroundColor: 'black' },
   absoluteFull: { position: 'absolute', width: width, height: height },
   authOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   authModalContent: { width: '80%', alignItems: 'center' },
   authTitleFull: { color: 'white', fontSize: 18, fontWeight: '900', letterSpacing: 6, marginBottom: 40 },
-  
-  // Halo Lumineux Rouge
   haloWrapper: {
     width: '100%',
     shadowColor: "#FF0000",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 15,
-    elevation: 25, // Intensité du halo sur Android
+    elevation: 25,
     marginBottom: 25
   },
   authInputHalo: { 
@@ -239,8 +230,6 @@ const styles = StyleSheet.create({
   },
   authBtnFull: { backgroundColor: '#8B1A1A', padding: 18, borderRadius: 15, width: '100%', alignItems: 'center', elevation: 5 },
   authBtnTextFull: { color: 'white', fontWeight: 'bold', letterSpacing: 2 },
-
-  // Styles Paramètres Classiques
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#eee', backgroundColor: 'white' },
   headerTitle: { fontSize: 16, fontWeight: '900', color: '#1D3583' },
   accordionHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#f9f9f9', borderBottomWidth: 1, borderBottomColor: '#eee' },
