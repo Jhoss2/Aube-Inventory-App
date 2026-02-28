@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, StyleSheet } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ScreenContainer } from '@/components/screen-container';
 import { useAppContext } from '@/lib/app-context';
@@ -56,33 +56,35 @@ export default function NoteEditorScreen() {
   };
 
   return (
-    <ScreenContainer className="bg-[#fde7f3]">
-      <View className="flex-row justify-between items-center mb-4 pb-3 border-b border-gray-200">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
+    <ScreenContainer style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
           <Ionicons name="arrow-back" size={24} color="#4b5563" />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-gray-700 font-semibold">Éditeur de note</Text>
-        {noteId && (
-          <TouchableOpacity onPress={handleDelete} className="p-2">
+        <Text style={styles.headerTitle}>Éditeur de note</Text>
+        {noteId ? (
+          <TouchableOpacity onPress={handleDelete} style={styles.iconButton}>
             <Ionicons name="trash" size={24} color="#ef4444" />
           </TouchableOpacity>
+        ) : (
+          <View style={styles.iconButton} /> /* Spacer pour garder le titre centré */
         )}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-        <View className="bg-white rounded-xl p-4 shadow-sm gap-4">
-          <View>
-            <Text className="text-gray-800 font-semibold mb-2">Titre</Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Titre</Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
               placeholder="Titre de la note"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-gray-800"
+              style={styles.input}
             />
           </View>
 
-          <View>
-            <Text className="text-gray-800 font-semibold mb-2">Contenu</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Contenu</Text>
             <TextInput
               value={content}
               onChangeText={setContent}
@@ -90,12 +92,12 @@ export default function NoteEditorScreen() {
               multiline
               numberOfLines={8}
               textAlignVertical="top"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-gray-800"
+              style={[styles.input, styles.textArea]}
             />
           </View>
 
-          <TouchableOpacity onPress={handleSave} className="bg-blue-600 rounded-lg py-3 items-center mt-4">
-            <Text className="text-white font-semibold">Enregistrer</Text>
+          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+            <Text style={styles.saveButtonText}>Enregistrer</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -103,3 +105,75 @@ export default function NoteEditorScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#fde7f3',
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  iconButton: {
+    padding: 8,
+    width: 40,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    color: '#374151',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    gap: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  inputGroup: {
+    marginBottom: 4,
+  },
+  label: {
+    color: '#1f2937',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#1f2937',
+    fontSize: 16,
+  },
+  textArea: {
+    minHeight: 120,
+  },
+  saveButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  saveButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+});
