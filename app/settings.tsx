@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,7 +27,7 @@ export default function SettingsScreen() {
   };
 
   const handleLogin = () => {
-    if (password === '123') { // Tu peux changer le mot de passe ici
+    if (password === '123') { 
       setIsAuthenticated(true);
     } else {
       Alert.alert("Accès refusé", "Mot de passe incorrect.");
@@ -53,20 +53,26 @@ export default function SettingsScreen() {
   };
 
   // Petit composant interne pour les lignes de sélection
-  const SettingRow = ({ label, field, type = 'image' }: { label: string, field: string, type?: 'image' | 'pdf' }) => (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <TouchableOpacity 
-        style={[styles.rowButton, appData.settings?.[field as any] && styles.rowButtonActive]} 
-        onPress={() => type === 'image' ? pickImage(field) : pickDoc(field)}
-      >
-        <Feather name={appData.settings?.[field as any] ? "check-circle" : "upload"} size={16} color={appData.settings?.[field as any] ? "white" : "#666"} />
-        <Text style={[styles.rowButtonText, appData.settings?.[field as any] && {color: 'white'}]}>
-          {appData.settings?.[field as any] ? "Modifié" : "Choisir"}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
+  const SettingRow = ({ label, field, type = 'image' }: { label: string, field: string, type?: 'image' | 'pdf' }) => {
+    // Cast technique pour TypeScript
+    const settings = (appData.settings || {}) as any;
+    const hasValue = !!settings[field];
+
+    return (
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        <TouchableOpacity 
+          style={[styles.rowButton, hasValue && styles.rowButtonActive]} 
+          onPress={() => type === 'image' ? pickImage(field) : pickDoc(field)}
+        >
+          <Feather name={hasValue ? "check-circle" : "upload"} size={16} color={hasValue ? "white" : "#666"} />
+          <Text style={[styles.rowButtonText, hasValue && {color: 'white'}]}>
+            {hasValue ? "Modifié" : "Choisir"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   if (!isAuthenticated) {
     return (
@@ -100,7 +106,6 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView style={{ flex: 1 }}>
-        {/* SECTION GÉNÉRAL */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('general')}>
           <Text style={styles.accordionTitle}>Général</Text>
           <Feather name={openSections.general ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
@@ -112,7 +117,6 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* SECTION MENU */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('menu')}>
           <Text style={styles.accordionTitle}>Menu Latéral</Text>
           <Feather name={openSections.menu ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
@@ -124,7 +128,6 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* SECTION BLOCS (A à F) */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('blocs')}>
           <Text style={styles.accordionTitle}>Personnalisation des Blocs</Text>
           <Feather name={openSections.blocs ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
@@ -132,7 +135,7 @@ export default function SettingsScreen() {
         {openSections.blocs && (
           <View style={styles.accordionContent}>
             {['A', 'B', 'C', 'D', 'E', 'F'].map((b) => (
-              <View key={b} style={{marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#eee', pb: 10}}>
+              <View key={b} style={styles.blockSection}>
                 <Text style={styles.blockLabel}>BLOC {b}</Text>
                 <SettingRow label={`Vue Aérienne ${b}`} field={`bloc${b}_aerial`} />
                 <SettingRow label={`Image Salles ${b}1`} field={`bloc${b}_sub1`} />
@@ -142,7 +145,6 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* SECTION DOCUMENTS */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('docs')}>
           <Text style={styles.accordionTitle}>Documents (PDF)</Text>
           <Feather name={openSections.docs ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
@@ -161,19 +163,16 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#eee' },
   headerTitle: { fontSize: 18, fontWeight: '900', color: '#1D3583' },
-  
   accordionHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#f9f9f9', borderBottomWidth: 1, borderBottomColor: '#eee' },
   accordionTitle: { fontWeight: 'bold', color: '#333' },
   accordionContent: { padding: 20, backgroundColor: 'white' },
-  
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   rowLabel: { fontSize: 14, color: '#444', flex: 1 },
   rowButton: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#ddd' },
   rowButtonActive: { backgroundColor: '#16A34A', borderColor: '#16A34A' },
   rowButtonText: { fontSize: 12, fontWeight: '600' },
-  
+  blockSection: { marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 10 },
   blockLabel: { fontSize: 14, fontWeight: '900', color: '#8B1A1A', marginBottom: 10 },
-
   authContainer: { flex: 1, backgroundColor: '#1D3583', justifyContent: 'center', padding: 30 },
   authModal: { backgroundColor: 'white', borderRadius: 20, padding: 30, elevation: 20 },
   authTitle: { textAlign: 'center', fontSize: 16, fontWeight: '900', letterSpacing: 2, marginBottom: 20 },
