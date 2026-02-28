@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-screen.png",
       "resizeMode": "contain",
@@ -40,7 +40,7 @@
       "expo-file-system",
       "expo-image-picker",
       "expo-document-picker",
-      "expo-blur", 
+      "expo-blur",
       [
         "expo-build-properties",
         {
