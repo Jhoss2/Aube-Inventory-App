@@ -159,5 +159,4 @@ export default function CategoriesScreen() {
       
     </SafeAreaView>
   );
-}
-
+              }
