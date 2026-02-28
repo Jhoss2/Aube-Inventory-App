@@ -6,7 +6,7 @@ import { useAppContext } from '@/lib/app-context';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { appData } = useAppContext();
+  const { appData } = useAppContext() as any;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const univImage = appData?.settings?.univImage;
@@ -39,8 +39,9 @@ export default function HomeScreen() {
             <View style={styles.sidebarNav}>
               {[
                 { label: "Guide d'utilisation", path: '/guide-viewer' },
-                { label: "A propos du développeur", path: '/about-dev' },
-                { label: "Données essentielles", path: '/categories' }
+                { label: "À propos du développeur", path: '/about-dev' },
+                { label: "Gestion des Salles", path: '/room-profiles' }, // Correction chemin
+                { label: "Paramètres", path: '/settings' }
               ].map((option, index) => (
                 <TouchableOpacity 
                   key={index} 
@@ -69,61 +70,81 @@ export default function HomeScreen() {
 
       {/* --- CORPS DE L'APPLICATION --- */}
       <ImageBackground 
-        source={backgroundImage ? { uri: backgroundImage } : undefined} // Correction: undefined au lieu de null
+        source={backgroundImage ? { uri: backgroundImage } : undefined}
         style={[StyleSheet.absoluteFill, { backgroundColor: '#fceef5' }]}
         resizeMode="cover"
       >
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 150 }} showsVerticalScrollIndicator={false}>
           
+          {/* Header Rouge */}
           <View style={styles.headerRed}>
             <TouchableOpacity onPress={() => setIsMenuOpen(true)}>
               <Feather name="menu" size={24} color="white" />
             </TouchableOpacity>
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>ACCUEIL</Text>
             <TouchableOpacity onPress={() => router.push('/settings')}>
               <MaterialCommunityIcons name="tune" size={24} color="white" />
             </TouchableOpacity>
           </View>
 
+          {/* Recherche */}
           <View style={styles.searchContainer}>
             <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
-            <TextInput placeholder="Que cherchez vous aujourd'hui ?" style={styles.searchInput} />
+            <TextInput placeholder="Que cherchez vous ?" style={styles.searchInput} />
             <TouchableOpacity style={styles.botButton} onPress={() => router.push('/chat-aube')}>
               <MaterialCommunityIcons name="robot" size={24} color="#3169e6" />
             </TouchableOpacity>
           </View>
 
+          {/* Sélecteur de Blocs */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blockSelector}>
             {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
               <TouchableOpacity 
                 key={block} 
                 style={styles.blockButton}
-                onPress={() => router.push({ pathname: '/room-contents', params: { blockId: block } })}
+                onPress={() => router.push({ pathname: '/room-profiles', params: { blockId: block } })}
               >
                 <Text style={styles.blockButtonText}>Bloc {block}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          <View style={styles.univSection}>
+          {/* Section Université / Accès aux Profils */}
+          <TouchableOpacity 
+            style={styles.univSection} 
+            activeOpacity={0.9}
+            onPress={() => router.push('/room-profiles')}
+          >
             <View style={styles.imageContainer}>
               {univImage ? (
                 <Image source={{ uri: univImage }} style={styles.univImage} resizeMode="cover" />
               ) : (
                 <View style={styles.placeholderBlue}>
-                  <Text style={styles.placeholderText}>Université</Text>
+                  <Feather name="image" size={50} color="rgba(255,255,255,0.3)" />
+                  <Text style={styles.placeholderText}>Cliquer pour voir les salles</Text>
                 </View>
               )}
             </View>
             <View style={styles.titleBadgeUnder}>
-              <Text style={styles.titleText}>UNIVERSITE AUBE NOUVELLE</Text>
+              <Text style={styles.titleText}>VOIR LES PROFILS DES SALLES</Text>
             </View>
-          </View> 
+          </TouchableOpacity> 
         </ScrollView>
 
+        {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
-          <TouchableOpacity onPress={() => router.push('/categories')}><Feather name="bell" size={22} color="white" /></TouchableOpacity>
-          <TouchableOpacity onPress={() => router.replace('/')}><Feather name="home" size={22} color="white" /></TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/note-editor')}><Feather name="edit-3" size={22} color="white" /></TouchableOpacity>
+          {/* Correction : mène maintenant aux Alertes */}
+          <TouchableOpacity onPress={() => router.push('/alerts')}>
+            <Feather name="bell" size={24} color="white" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={() => router.replace('/')}>
+            <Feather name="home" size={24} color="#fbcfe8" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={() => router.push('/note-editor')}>
+            <Feather name="edit-3" size={24} color="white" />
+          </TouchableOpacity>
         </View>
       </ImageBackground>
     </View>
@@ -147,19 +168,19 @@ const styles = StyleSheet.create({
   logoPText: { fontSize: 8, fontWeight: 'bold', color: '#8B1A1A' },
 
   headerRed: { marginHorizontal: 12, marginTop: 20, height: 60, backgroundColor: '#c0262b', borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
-  searchContainer: { marginHorizontal: 12, marginTop: 70, flexDirection: 'row', alignItems: 'center', position: 'relative' },
-  searchInput: { flex: 1, height: 60, backgroundColor: 'white', borderRadius: 30, paddingLeft: 44, paddingRight: 48, fontSize: 16 },
+  searchContainer: { marginHorizontal: 12, marginTop: 30, flexDirection: 'row', alignItems: 'center', position: 'relative' },
+  searchInput: { flex: 1, height: 60, backgroundColor: 'white', borderRadius: 30, paddingLeft: 44, paddingRight: 48, fontSize: 16, elevation: 2 },
   searchIcon: { position: 'absolute', left: 16, zIndex: 1 },
   botButton: { position: 'absolute', right: 12, zIndex: 1 },
-  blockSelector: { marginHorizontal: 12, marginTop: 70, backgroundColor: '#263d7e', borderRadius: 30, padding: 6, maxHeight: 60 },
+  blockSelector: { marginHorizontal: 12, marginTop: 20, backgroundColor: '#263d7e', borderRadius: 30, padding: 6, maxHeight: 60 },
   blockButton: { backgroundColor: '#385598', paddingHorizontal: 16, paddingVertical: 7, borderRadius: 6, marginRight: 6, justifyContent: 'center' },
   blockButtonText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
-  univSection: { marginHorizontal: 12, marginTop: 70, alignItems: 'center' },
-  imageContainer: { width: '100%', height: 600, borderWidth: 3, borderColor: '#fceef5', borderRadius: 80, overflow: 'hidden', backgroundColor: '#4184f4', elevation: 10 },
+  univSection: { marginHorizontal: 12, marginTop: 30, alignItems: 'center' },
+  imageContainer: { width: '100%', height: 400, borderWidth: 3, borderColor: '#fceef5', borderRadius: 60, overflow: 'hidden', backgroundColor: '#4184f4', elevation: 10 },
   univImage: { width: '100%', height: '100%' },
   placeholderBlue: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  placeholderText: { color: 'white', fontWeight: 'bold' },
-  titleBadgeUnder: { backgroundColor: '#263d7e', paddingHorizontal: 25, paddingVertical: 12, borderRadius: 15, marginTop: 20, elevation: 5, borderWidth: 1, borderColor: '#fceef5' },
+  placeholderText: { color: 'white', fontWeight: 'bold', marginTop: 10 },
+  titleBadgeUnder: { backgroundColor: '#263d7e', paddingHorizontal: 25, paddingVertical: 12, borderRadius: 15, marginTop: -30, elevation: 5, borderWidth: 1, borderColor: '#fceef5' },
   titleText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
-  bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 56 }
+  bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 65, borderRadius: 35, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 40, elevation: 10 }
 });
