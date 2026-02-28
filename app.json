@@ -1,56 +1,59 @@
 {
   "expo": {
-    "name": "U-AUBEN Tracker",
+    "name": "U-Auben Tracker",
     "slug": "uaubentracker",
     "version": "1.0.1",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-screen.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.uauben.tracker"
     },
     "android": {
-      "package": "com.uauben.tracker",
-      "versionCode": 3,
-      "permissions": [
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "CAMERA",
-        "READ_MEDIA_IMAGES"
-      ],
       "adaptiveIcon": {
-        "backgroundColor": "#B21F18"
-      }
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.uauben.tracker",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
+      "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
     "plugins": [
       "expo-router",
       "expo-sqlite",
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "L'application a besoin d'accéder à vos photos pour illustrer les salles et le matériel."
-        }
-      ],
+      "expo-font",
+      "expo-asset",
+      "expo-file-system",
+      "expo-image-picker",
+      "expo-document-picker",
       [
         "expo-build-properties",
         {
           "android": {
-            "usesCleartextTraffic": true
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0",
+            "kotlinVersion": "1.9.24"
           }
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "router": {
-        "origin": false
-      }
     }
   }
 }
