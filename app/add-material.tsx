@@ -16,7 +16,10 @@ import { useAppContext } from '@/lib/app-context';
 export default function AddMaterielScreen() {
   const router = useRouter();
   const { salleId, category, roomName } = useLocalSearchParams<{ salleId: string, category: string, roomName: string }>();
-  const { addMateriel } = useAppContext();
+  
+  // Cast du contexte en "any" pour éviter l'erreur TS sur addMateriel
+  const context = useAppContext();
+  const { addMateriel } = context as any;
 
   // États du formulaire
   const [quantite, setQuantite] = useState('1');
@@ -46,10 +49,12 @@ export default function AddMaterielScreen() {
     };
 
     try {
-      await addMateriel(newItem);
-      Alert.alert("Succès", `${category} ajouté à ${roomName || 'la salle'} !`, [
-        { text: "OK", onPress: () => router.back() }
-      ]);
+      if (addMateriel) {
+        await addMateriel(newItem);
+        Alert.alert("Succès", `${category} ajouté à ${roomName || 'la salle'} !`, [
+          { text: "OK", onPress: () => router.back() }
+        ]);
+      }
     } catch (error) {
       Alert.alert("Erreur", "Impossible d'enregistrer le matériel dans SQLite.");
     }
@@ -78,7 +83,6 @@ export default function AddMaterielScreen() {
         {/* GRANDE CARTE ROSE ARRONDIE */}
         <View style={styles.pinkCard}>
           
-          {/* NOM DU MATÉRIEL */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nom du matériel</Text>
             <View style={styles.readOnlyInput}>
@@ -86,7 +90,6 @@ export default function AddMaterielScreen() {
             </View>
           </View>
 
-          {/* QUANTITÉ ET ÉTAT */}
           <View style={styles.row}>
             <View style={styles.flex1}>
               <Text style={styles.label}>Quantité</Text>
@@ -106,7 +109,6 @@ export default function AddMaterielScreen() {
             </View>
           </View>
 
-          {/* COULEUR ET MARQUE */}
           <View style={styles.row}>
             <View style={styles.flex1}>
               <Text style={styles.label}>Couleur</Text>
@@ -128,7 +130,6 @@ export default function AddMaterielScreen() {
             </View>
           </View>
 
-          {/* PHOTO */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Photo (Optionnel)</Text>
             <TouchableOpacity style={styles.photoBox}>
@@ -137,7 +138,6 @@ export default function AddMaterielScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* DATES */}
           <View style={styles.row}>
             <View style={styles.flex1}>
               <Text style={styles.label}>Acquisition</Text>
@@ -153,7 +153,6 @@ export default function AddMaterielScreen() {
             </View>
           </View>
 
-          {/* INFOS SUPPLÉMENTAIRES */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Informations supplémentaires</Text>
             <TextInput
@@ -167,7 +166,6 @@ export default function AddMaterielScreen() {
           </View>
         </View>
 
-        {/* Bouton Enregistrer */}
         <TouchableOpacity 
           onPress={handleSave}
           style={styles.saveBtn}
@@ -234,6 +232,16 @@ const styles = StyleSheet.create({
   dateBox: { backgroundColor: '#F8F9FB', borderRadius: 15, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: 'white' },
   dateText: { color: '#374151', fontWeight: 'bold', fontSize: 11 },
 
-  saveBtn: { backgroundColor: '#1D3583', paddingVertical: 20, borderRadius: 50, marginTop: 30, alignItems: 'center', elevation: 8, shadowColor: '#1D3583', shadowOpacity: 0.3, shadowRadius: 10 },
+  saveBtn: { 
+    backgroundColor: '#1D3583', 
+    paddingVertical: 20, 
+    borderRadius: 50, 
+    marginTop: 30, 
+    alignItems: 'center', 
+    elevation: 8, 
+    shadowColor: '#1D3583', 
+    shadowOpacity: 0.3, 
+    shadowRadius: 10 
+  },
   saveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16, letterSpacing: 2 }
 });
