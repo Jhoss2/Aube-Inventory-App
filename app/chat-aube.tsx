@@ -11,8 +11,14 @@ import { useAppContext } from '@/lib/app-context';
 // @ts-ignore
 import { chatWithAubeStream } from '@/lib/aube-engine';
 
-// Petit correctif pour que TypeScript accepte les className si le fichier env est ignoré
-declare title: string;
+// Correctif global pour autoriser className dans ce fichier sans erreur TS
+declare global {
+  namespace JSX {
+    interface IntrinsicAttributes {
+      className?: string;
+    }
+  }
+}
 
 export default function ChatAubeScreen() {
   const router = useRouter();
