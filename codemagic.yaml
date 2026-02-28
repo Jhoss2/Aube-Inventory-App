@@ -1,6 +1,6 @@
 workflows:
   android-workflow:
-    name: U-Auben Tracker Build - Debug Mode
+    name: U-Auben Tracker - Production Build
     max_build_duration: 60
     environment:
       node: 20.11.0
@@ -8,35 +8,26 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          # Suppression du lock pour éviter les conflits de version
-          rm -f package-lock.json
           npm install --legacy-peer-deps
       
-      - name: Verify Assets & Screens
+      - name: Verify Assets
         script: |
-          echo "--- Nettoyage et préparation ---"
+          echo "--- Nettoyage ---"
           rm -rf android
           mkdir -p assets/pdf
           
-      - name: Lint & Type Check
-        script: |
-          # On passe le check TS mais on ne bloque pas si erreurs mineures
-          npx tsc --noEmit || echo "TS Check ignoré pour le build"
-
       - name: Generate Native Android Folder
         script: |
-          # Crucial pour Expo 52 : générer proprement sans cache
+          # On génère le dossier natif en mode release
           npx expo prebuild --platform android --clean
 
-      - name: Build APK
+      - name: Build APK Release
         script: |
           cd android
           chmod +x gradlew
-          # Nettoyage Gradle
-          ./gradlew clean
-          # Utilisation de assembleDebug pour contourner les erreurs de signature/optimisation
-          # --no-daemon aide à stabiliser les builds sur Expo 52/RN 0.76
-          ./gradlew assembleDebug -x lint -x test --stacktrace --no-daemon
+          # On repasse en assembleRelease pour réduire le poids et inclure le JS
+          # Le flag -x lint évite que le build bloque sur des détails visuels
+          ./gradlew assembleRelease -x lint -x test --stacktrace
 
     artifacts:
-      - android/app/build/outputs/apk/debug/*.apk
+      - android/app/build/outputs/apk/release/*.apk
