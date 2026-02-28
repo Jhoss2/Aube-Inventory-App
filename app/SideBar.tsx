@@ -20,6 +20,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.container}>
+        
         <ImageBackground 
           source={menuBg ? { uri: menuBg } : { uri: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1000' }}
           style={StyleSheet.absoluteFill}
@@ -69,7 +70,11 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
           </View>
         </View>
 
-        <TouchableOpacity style={styles.closeZone} onPress={onClose} activeOpacity={1} />
+        <TouchableOpacity 
+          style={styles.closeZone} 
+          onPress={onClose} 
+          activeOpacity={1} 
+        />
       </View>
     </Modal>
   );
