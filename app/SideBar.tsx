@@ -9,8 +9,8 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
   const { appData } = useAppContext();
 
   // Récupération des assets personnalisés
-  const menuBg = appData.settings?.menuBg;
-  const menuLogo = appData.settings?.menuLogo;
+  const menuBg = appData?.settings?.menuBg;
+  const menuLogo = appData?.settings?.menuLogo;
 
   const menuOptions = [
     { label: "Guide d'utilisation de l'application", path: '/guide-viewer' },
@@ -92,10 +92,10 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
 
 const styles = StyleSheet.create({
   container: { flex: 1, flexDirection: 'row' },
-  blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' }, // bg-blue-900/40
+  blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
   
   sidebarDrawer: {
-    width: '65%',
+    width: '50%',
     height: '100%',
     backgroundColor: '#8B1A1A',
     shadowColor: '#000',
@@ -117,8 +117,7 @@ const styles = StyleSheet.create({
   versionText: { color: 'rgba(255,255,255,0.9)', fontWeight: 'bold', fontSize: 10, letterSpacing: 2, marginBottom: 20 },
   
   logoOuter: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  logoGradient: { width: '100%', height: '100%', borderRadius: 40, backgroundColor: '#fbcfe8', // Simulation dégradé pink-200
-    justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  logoGradient: { width: '100%', height: '100%', borderRadius: 40, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   logoImage: { width: '100%', height: '100%' },
   logoPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
   logoText: { fontSize: 10, fontWeight: 'bold', color: '#8B1A1A' },
