@@ -131,6 +131,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Styles Sidebar
   sidebarContainer: { flex: 1, flexDirection: 'row' },
   blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
   sidebarDrawer: { width: '65%', height: '100%', backgroundColor: '#8B1A1A', padding: 24, paddingTop: 50 },
@@ -145,6 +146,8 @@ const styles = StyleSheet.create({
   logoImg: { width: '100%', height: '100%', borderRadius: 35 },
   logoPlaceholder: { width: '100%', height: '100%', borderRadius: 35, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center' },
   logoPText: { fontSize: 8, fontWeight: 'bold', color: '#8B1A1A' },
+
+  // Styles Home
   headerRed: { marginHorizontal: 12, marginTop: 20, height: 60, backgroundColor: '#c0262b', borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
   searchContainer: { marginHorizontal: 12, marginTop: 70, flexDirection: 'row', alignItems: 'center' },
   searchInput: { flex: 1, height: 60, backgroundColor: 'white', borderRadius: 30, paddingLeft: 44, paddingRight: 48, fontSize: 16 },
