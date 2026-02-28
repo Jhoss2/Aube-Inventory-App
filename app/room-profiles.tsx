@@ -1,160 +1,100 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, StatusBar } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView, 
+  TextInput, 
+  Image, 
+  Alert, 
+  Platform // <--- L'IMPORT MANQUANT QUI CAUSAIT L'ERREUR
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppContext } from '@/lib/app-context';
 
 export default function RoomProfilesScreen() {
   const router = useRouter();
-  const { categoryTitle, subId } = useLocalSearchParams();
+  const { subId, blocId } = useLocalSearchParams<{ subId: string; blocId: string }>();
+  const context = useAppContext();
+  const { appData, deleteSalle } = context as any;
 
-  // Liste des niveaux
-  const niveaux = [
-    "Sous-sol",
-    "Rez-de-chaussée",
-    "Premier Niveau",
-    "Deuxième Niveau",
-    "Troisième Niveau",
-    "Quatrième Niveau"
-  ];
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filtrage des salles appartenant au sous-bloc spécifique
+  const filteredRooms = useMemo(() => {
+    const allRooms = appData?.salles || [];
+    return allRooms.filter((room: any) => {
+      const matchSubBloc = room.emplacement === subId || room.subId === subId;
+      const matchSearch = room.nom.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchSubBloc && matchSearch;
+    });
+  }, [appData?.salles, subId, searchTerm]);
+
+  const handleDeleteRoom = (id: string, name: string) => {
+    Alert.alert("Supprimer", `Supprimer la salle ${name} ?`, [
+      { text: "Annuler", style: "cancel" },
+      { 
+        text: "Supprimer", 
+        style: "destructive", 
+        onPress: async () => {
+          if (deleteSalle) await deleteSalle(id);
+        } 
+      }
+    ]);
+  };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={28} color="#4b5563" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
+      {/* Header */}
+      <View {...({ className: "px-4 py-3 flex-row items-center bg-white border-b border-gray-100 shadow-sm" } as any)}>
+        <TouchableOpacity onPress={() => router.back()} {...({ className: "p-2" } as any)}>
+          <Ionicons name="chevron-back" size={28} color="#1D3583" />
+        </TouchableOpacity>
+        <Text {...({ className: "flex-1 text-center font-black text-[#1D3583] text-lg uppercase" } as any)}>
+          SALLES : {subId}
+        </Text>
+        <TouchableOpacity 
+          onPress={() => router.push('/add-room')}
+          {...({ className: "p-2" } as any)}
+        >
+          <Ionicons name="add-circle" size={30} color="#1D3583" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        
-        {/* Badge Rouge */}
-        <View style={styles.redBadge}>
-          <Text style={styles.redBadgeText}>
-            {categoryTitle ? categoryTitle : `BLOC ${subId}`}
-          </Text>
-        </View>
-
-        {/* Sous-titre */}
-        <View style={styles.subTitleContainer}>
-          <View style={styles.decoCircleOuter}>
-            <View style={styles.decoCircleInner} />
+      <View {...({ className: "flex-1 px-4 pt-4" } as any)}>
+        {/* Barre de Recherche */}
+        <View {...({ className: "relative mb-4" } as any)}>
+          <TextInput
+            placeholder="Rechercher une salle..."
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+            {...({ className: "w-full bg-white rounded-2xl py-3 pl-12 pr-4 border border-gray-200" } as any)}
+          />
+          <View {...({ className: "absolute left-4 top-3" } as any)}>
+            <Ionicons name="search" size={20} color="#9ca3af" />
           </View>
-          <Text style={styles.subTitleText}>· Niveaux de Subdivision ·</Text>
         </View>
 
-        {/* Liste des niveaux */}
-        <View style={styles.levelsList}>
-          {niveaux.map((niveau, index) => (
-            <TouchableOpacity 
-              key={index}
-              style={styles.levelButton}
-              onPress={() => router.push({ 
-                pathname: '/room-details', 
-                params: { roomName: niveau } 
-              })}
-            >
-              <Text style={styles.levelButtonText}>· {niveau} ·</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-
-      {/* Barre de navigation Android simulée */}
-      <View style={styles.androidNav}>
-        <Ionicons name="chevron-back" size={20} color="#ccc" />
-        <View style={styles.navSquare} />
-        <View style={styles.navCircle} />
-      </View>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
-  header: { paddingHorizontal: 16, paddingTop: 50, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f9fafb' },
-  backBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  content: { paddingHorizontal: 32, paddingTop: 24, alignItems: 'center' },
-  
-  redBadge: { 
-    width: '100%', 
-    backgroundColor: '#B21F18', 
-    paddingVertical: 16, // Correction ici (suppression de py)
-    borderRadius: 25, 
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  redBadgeText: { 
-    color: 'white', 
-    textAlign: 'center', 
-    fontWeight: '900', 
-    fontSize: 20, 
-    letterSpacing: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' 
-  },
-
-  subTitleContainer: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
-    paddingVertical: 12,
-    borderRadius: 50,
-    backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24,
-    elevation: 2,
-    position: 'relative'
-  },
-  decoCircleOuter: {
-    position: 'absolute',
-    top: -16,
-    width: 32,
-    height: 32,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 2
-  },
-  decoCircleInner: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#dbeafe',
-  },
-  subTitleText: { color: '#1D3583', fontWeight: 'bold', fontSize: 14, letterSpacing: 1.5 },
-
-  levelsList: { width: '100%', marginTop: 24, paddingBottom: 40 },
-  levelButton: {
-    width: '100%',
-    backgroundColor: '#1D3583',
-    paddingVertical: 16,
-    borderRadius: 50,
-    marginBottom: 12,
-    elevation: 4,
-    alignItems: 'center'
-  },
-  levelButtonText: { color: 'white', fontWeight: 'bold', fontSize: 14, letterSpacing: 1 },
-
-  androidNav: {
-    marginTop: 'auto',
-    height: 48,
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#f9fafb',
-    opacity: 0.3
-  },
-  navSquare: { width: 16, height: 16, borderWidth: 2, borderColor: '#9ca3af', borderRadius: 2 },
-  navCircle: { width: 16, height: 16, backgroundColor: '#9ca3af', borderRadius: 8 }
-});
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {filteredRooms.length === 0 ? (
+            <Text {...({ className: "text-center text-gray-400 mt-10" } as any)}>Aucune salle trouvée</Text>
+          ) : (
+            filteredRooms.map((room: any) => (
+              <TouchableOpacity
+                key={room.id}
+                onPress={() => router.push({
+                  pathname: '/categories',
+                  params: { salleId: room.id, roomName: room.nom }
+                })}
+                {...({ className: "bg-white rounded-3xl mb-4 overflow-hidden shadow-sm border border-gray-100" } as any)}
+              >
+                <View {...({ className: "flex-row p-4 items-center" } as any)}>
+                  <View {...({ className: "w-16 h-16 bg-[#FDE7F3] rounded-2xl items-center justify-center" } as any)}>
+                    <Ionicons name="business" size={30} color="#1D3583" />
+                  </View>
+                  
+                  <View {...({ className: "flex-1 ml-4" } as any)}>
+                    <Text {...({ className: "font-bold text-gray-800 text-lg" } as any)}>{room.nom}</Text>
+                    <Text {...({ className: "text-gray-500 text-xs" } as any
