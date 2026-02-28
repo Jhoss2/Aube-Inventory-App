@@ -8,7 +8,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
   const router = useRouter();
   const { appData } = useAppContext();
 
-  // Récupération des assets personnalisés
   const menuBg = appData?.settings?.menuBg;
   const menuLogo = appData?.settings?.menuLogo;
 
@@ -21,8 +20,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.container}>
-        
-        {/* IMAGE DE FOND */}
         <ImageBackground 
           source={menuBg ? { uri: menuBg } : { uri: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1000' }}
           style={StyleSheet.absoluteFill}
@@ -31,10 +28,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
           <View style={styles.blueOverlay} />
         </ImageBackground>
 
-        {/* MENU LATÉRAL ROUGE */}
         <View style={styles.sidebarDrawer}>
-          
-          {/* Header du Menu */}
           <View style={styles.header}>
             <View style={styles.headerRow}>
               <Text style={styles.titleText}>U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER</Text>
@@ -44,7 +38,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
             </View>
           </View>
 
-          {/* Options de Navigation */}
           <View style={styles.navContainer}>
             {menuOptions.map((option, index) => (
               <TouchableOpacity 
@@ -60,11 +53,8 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
             ))}
           </View>
 
-          {/* Pied de Page */}
           <View style={styles.footer}>
             <Text style={styles.versionText}>· Version 1.1.1 ·</Text>
-            
-            {/* Logo Circulaire Dynamique */}
             <View style={styles.logoOuter}>
               <View style={styles.logoGradient}>
                 {menuLogo ? (
@@ -79,12 +69,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
           </View>
         </View>
 
-        {/* Zone cliquable à droite pour fermer */}
-        <TouchableOpacity 
-          style={styles.closeZone} 
-          onPress={onClose} 
-          activeOpacity={1} 
-        />
+        <TouchableOpacity style={styles.closeZone} onPress={onClose} activeOpacity={1} />
       </View>
     </Modal>
   );
