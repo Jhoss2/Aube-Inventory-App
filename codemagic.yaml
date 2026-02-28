@@ -10,10 +10,7 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          # Installation des dépendances avec le package.json mis à jour
           npm install --legacy-peer-deps
-          
-          # Force la suite même si Expo trouve des incohérences mineures
           npx expo install --check || echo "Avertissements Expo ignorés"
 
       - name: Verify Assets & Clean
@@ -24,15 +21,14 @@ workflows:
           
       - name: Generate Native Android Folder
         script: |
-          # Génération du dossier natif sans réinstaller les modules
           npx expo prebuild --platform android --clean --no-install
 
       - name: Build APK Release
         script: |
           cd android
           chmod +x gradlew
-          # Construction de l'APK
-          ./gradlew assembleRelease -x lint -x test --stacktrace --no-daemon
+          # Ajout de --info pour voir l'erreur réelle en cas d'échec
+          ./gradlew assembleRelease -x lint -x test --stacktrace --no-daemon --info
 
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
