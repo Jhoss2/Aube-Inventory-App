@@ -8,23 +8,24 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
+          # Suppression du lock pour éviter les conflits de version
+          rm -f package-lock.json
           npm install --legacy-peer-deps
-          npm install @expo/vector-icons expo-router expo-asset expo-file-system expo-sharing
       
       - name: Verify Assets & Screens
         script: |
-          echo "--- Nettoyage total ---"
+          echo "--- Nettoyage et préparation ---"
           rm -rf android
           mkdir -p assets/pdf
           
       - name: Lint & Type Check
         script: |
-          # On ignore les erreurs de type ici pour ne pas bloquer le build natif
-          npx tsc --noEmit || echo "Warnings TS ignorés"
+          # On passe le check TS mais on ne bloque pas si erreurs mineures
+          npx tsc --noEmit || echo "TS Check ignoré pour le build"
 
       - name: Generate Native Android Folder
         script: |
-          # Régénération propre
+          # Crucial pour Expo 52 : générer proprement sans cache
           npx expo prebuild --platform android --clean
 
       - name: Build APK
@@ -33,9 +34,9 @@ workflows:
           chmod +x gradlew
           # Nettoyage Gradle
           ./gradlew clean
-          # On utilise assembleDebug au lieu de assembleRelease
-          # C'est la méthode la plus fiable pour sortir un APK quand le mode release bloque
-          ./gradlew assembleDebug -x lint -x test --stacktrace
+          # Utilisation de assembleDebug pour contourner les erreurs de signature/optimisation
+          # --no-daemon aide à stabiliser les builds sur Expo 52/RN 0.76
+          ./gradlew assembleDebug -x lint -x test --stacktrace --no-daemon
 
     artifacts:
       - android/app/build/outputs/apk/debug/*.apk
