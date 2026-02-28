@@ -8,7 +8,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
   const router = useRouter();
   const { appData } = useAppContext();
 
-  // Récupération des assets personnalisés
   const menuBg = appData?.settings?.menuBg;
   const menuLogo = appData?.settings?.menuLogo;
 
@@ -21,8 +20,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.container}>
-        
-        {/* IMAGE DE FOND (Simulation chambre avec overlay bleu) */}
         <ImageBackground 
           source={menuBg ? { uri: menuBg } : { uri: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1000' }}
           style={StyleSheet.absoluteFill}
@@ -31,10 +28,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
           <View style={styles.blueOverlay} />
         </ImageBackground>
 
-        {/* MENU LATÉRAL ROUGE (Couvre environ 65% comme demandé) */}
         <View style={styles.sidebarDrawer}>
-          
-          {/* Header du Menu */}
           <View style={styles.header}>
             <View style={styles.headerRow}>
               <Text style={styles.titleText}>U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER</Text>
@@ -44,7 +38,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
             </View>
           </View>
 
-          {/* Options de Navigation */}
           <View style={styles.navContainer}>
             {menuOptions.map((option, index) => (
               <TouchableOpacity 
@@ -60,11 +53,8 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
             ))}
           </View>
 
-          {/* Pied de Page */}
           <View style={styles.footer}>
             <Text style={styles.versionText}>· Version 1.1.1 ·</Text>
-            
-            {/* Logo Circulaire Dynamique */}
             <View style={styles.logoOuter}>
               <View style={styles.logoGradient}>
                 {menuLogo ? (
@@ -79,7 +69,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
           </View>
         </View>
 
-        {/* Zone cliquable à droite pour fermer */}
         <TouchableOpacity 
           style={styles.closeZone} 
           onPress={onClose} 
@@ -93,9 +82,8 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
 const styles = StyleSheet.create({
   container: { flex: 1, flexDirection: 'row' },
   blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
-  
   sidebarDrawer: {
-    width: '50%',
+    width: '65%',
     height: '100%',
     backgroundColor: '#8B1A1A',
     shadowColor: '#000',
@@ -104,23 +92,18 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 20,
   },
-  
   header: { padding: 24, paddingTop: 50, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)' },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   titleText: { color: 'white', fontWeight: '900', fontSize: 18, letterSpacing: -0.5, lineHeight: 20 },
-  
   navContainer: { flex: 1, paddingTop: 50, alignItems: 'center' },
   navButton: { marginBottom: 40, paddingHorizontal: 10 },
   navText: { color: 'white', fontWeight: 'bold', fontSize: 13, textAlign: 'center', letterSpacing: 0.5 },
-  
   footer: { paddingBottom: 40, alignItems: 'center' },
   versionText: { color: 'rgba(255,255,255,0.9)', fontWeight: 'bold', fontSize: 10, letterSpacing: 2, marginBottom: 20 },
-  
   logoOuter: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   logoGradient: { width: '100%', height: '100%', borderRadius: 40, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   logoImage: { width: '100%', height: '100%' },
   logoPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
   logoText: { fontSize: 10, fontWeight: 'bold', color: '#8B1A1A' },
-  
   closeZone: { flex: 1, height: '100%' }
 });
