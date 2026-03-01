@@ -1,115 +1,112 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, SafeAreaView, StatusBar, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { ArrowLeft, Pencil, Trash2, Plus } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
 
 export default function RoomContentsScreen() {
   const router = useRouter();
-  const { blockId } = useLocalSearchParams(); // Récupère 'A', 'B', etc.
-  const { appData } = useAppContext();
+  const { roomId, roomName } = useLocalSearchParams();
+  const { appData, deleteMateriel } = useAppContext() as any;
 
-  // Extraction dynamique des images depuis les paramètres selon le bloc cliqué
-  const aerialImage = appData.settings?.[`bloc${blockId}_aerial` as keyof typeof appData.settings];
-  const sub1Image = appData.settings?.[`bloc${blockId}_sub1` as keyof typeof appData.settings];
-  const sub2Image = appData.settings?.[`bloc${blockId}_sub2` as keyof typeof appData.settings];
+  const inventory = (appData.materiels || []).filter((m: any) => m.roomId === roomId);
+
+  const handleDelete = (id: string) => {
+    Alert.alert("Supprimer", "Confirmer la suppression ?", [
+      { text: "Annuler", style: "cancel" },
+      { text: "Supprimer", style: "destructive", onPress: () => deleteMateriel(id) }
+    ]);
+  };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
-      
-      {/* Header avec bouton Retour */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.container}>
+        
+        {/* HEADER ROUGE : Retour et Titre intégrés */}
+        <View style={styles.headerWrapper}>
+          <View style={styles.redHeaderPill}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <ArrowLeft size={28} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText} numberOfLines={1}>Matériel de {roomName}</Text>
+            <View style={{ width: 44 }} /> 
+          </View>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {inventory.map((item: any) => (
+            <View key={item.id} style={styles.materialCard}>
+              <View style={styles.imageBox}>
+                <Image 
+                  source={{ uri: item.image || 'https://via.placeholder.com/400' }} 
+                  style={styles.materialImg} 
+                />
+              </View>
+
+              <View style={styles.detailsRow}>
+                <View style={styles.infoCol}>
+                  <Text style={styles.txt}><Text style={styles.labelBlue}>Nom :</Text> {item.nom}</Text>
+                  <Text style={styles.txt}><Text style={styles.labelBlue}>Marque :</Text> {item.marque || "-"}</Text>
+                  <Text style={styles.txt}><Text style={styles.labelBlue}>Quantité :</Text> {item.quantite}</Text>
+                  <Text style={styles.txt}><Text style={styles.labelBlue}>Etat :</Text> <Text style={styles.greenVal}>{item.etat}</Text></Text>
+                </View>
+
+                <View style={styles.actionCol}>
+                  <TouchableOpacity style={styles.editBtn}>
+                    <Pencil size={22} color="#2563EB" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item.id)}>
+                    <Trash2 size={22} color="#DC2626" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ))}
+          
+          {inventory.length === 0 && (
+            <Text style={styles.emptyText}>Aucun matériel enregistré.</Text>
+          )}
+        </ScrollView>
+
+        <TouchableOpacity 
+          style={styles.fab} 
+          onPress={() => router.push({ pathname: '/categories', params: { roomId, roomName } })}
+        >
+          <Plus size={32} color="white" strokeWidth={3} />
         </TouchableOpacity>
       </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
-        {/* Titre du Bloc (Badge Rouge) */}
-        <View style={styles.blockBadge}>
-          <Text style={styles.blockBadgeText}>BLOC {blockId}</Text>
-        </View>
-
-        {/* 1. CARTE VUE AÉRIENNE (Dynamique) */}
-        <View style={styles.mainCard}>
-          <View style={styles.imageWrapper}>
-            {aerialImage ? (
-              <Image source={{ uri: aerialImage }} style={styles.fullImage} resizeMode="cover" />
-            ) : (
-              <View style={[styles.placeholder, { backgroundColor: '#6b7280' }]}>
-                <Text style={styles.placeholderText}>Vue Aérienne {blockId}</Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.cardFooter}>
-            <Text style={styles.footerText}>· Bloc {blockId} vu de dessus ·</Text>
-          </View>
-        </View>
-
-        {/* 2. CARTE SALLES (Dynamique) */}
-        <Text style={styles.sectionTitle}>{blockId}1</Text>
-        <TouchableOpacity 
-          style={styles.mainCard}
-          onPress={() => router.push({ pathname: '/room-details', params: { roomId: `${blockId}1` } })}
-        >
-          <View style={styles.imageWrapper}>
-            {sub1Image ? (
-              <Image source={{ uri: sub1Image }} style={styles.fullImage} resizeMode="cover" />
-            ) : (
-              <View style={[styles.placeholder, { backgroundColor: '#4184f4' }]}>
-                <Text style={styles.placeholderText}>Salles {blockId}1</Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.cardFooter}>
-            <Text style={styles.footerText}>· Salles de classe ·</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* 3. CARTE BUREAUX (Dynamique) */}
-        <Text style={styles.sectionTitle}>{blockId}2</Text>
-        <TouchableOpacity 
-          style={styles.mainCard}
-          onPress={() => router.push({ pathname: '/room-details', params: { roomId: `${blockId}2` } })}
-        >
-          <View style={styles.imageWrapper}>
-            {sub2Image ? (
-              <Image source={{ uri: sub2Image }} style={styles.fullImage} resizeMode="cover" />
-            ) : (
-              <View style={[styles.placeholder, { backgroundColor: '#4184f4' }]}>
-                <Text style={styles.placeholderText}>Bureaux {blockId}2</Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.cardFooter}>
-            <Text style={styles.footerText}>· Bureaux ·</Text>
-          </View>
-        </TouchableOpacity>
-
-      </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6' },
-  header: { paddingHorizontal: 16, paddingTop: 10, backgroundColor: 'white' },
-  backButton: { width: 40, height: 40, justifyContent: 'center' },
-  scrollContent: { paddingHorizontal: 20, alignItems: 'center', paddingBottom: 40 },
-  
-  blockBadge: { backgroundColor: '#c0262b', paddingHorizontal: 60, paddingVertical: 12, borderRadius: 25, marginVertical: 20, elevation: 4 },
-  blockBadgeText: { color: 'white', fontWeight: '900', fontSize: 18, letterSpacing: 1 },
-
-  sectionTitle: { fontSize: 22, fontWeight: '900', color: '#1D3583', marginTop: 25, marginBottom: 10, fontFamily: 'serif' },
-  
-  mainCard: { width: '100%', backgroundColor: 'white', borderRadius: 20, elevation: 5, overflow: 'hidden', marginBottom: 10 },
-  imageWrapper: { width: '100%', height: 220 },
-  fullImage: { width: '100%', height: '100%' },
-  placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  placeholderText: { color: 'white', fontSize: 32, fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 10 },
-  
-  cardFooter: { paddingVertical: 8, alignItems: 'center', borderTopWidth: 1, borderTopColor: '#f0f0f0' },
-  footerText: { fontSize: 12, color: '#374151', fontStyle: 'italic' }
+  safeArea: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: 'white' },
+  headerWrapper: { paddingVertical: 10, alignItems: 'center' },
+  redHeaderPill: { 
+    backgroundColor: '#B22222', 
+    width: '92%', 
+    paddingVertical: 15, 
+    paddingHorizontal: 15, 
+    borderRadius: 50, 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+  },
+  backBtn: { padding: 5 },
+  headerTitleText: { color: 'white', fontWeight: 'bold', fontSize: 16, flex: 1, textAlign: 'center' },
+  scrollContent: { padding: 20, paddingBottom: 100 },
+  materialCard: { backgroundColor: 'white', borderRadius: 30, marginBottom: 30, elevation: 6, padding: 15, borderWidth: 1, borderColor: '#f1f5f9' },
+  imageBox: { marginBottom: 15 },
+  materialImg: { width: '100%', aspectRatio: 1, borderRadius: 20, backgroundColor: '#f3f4f6' },
+  detailsRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  infoCol: { flex: 1 },
+  actionCol: { gap: 12, marginLeft: 10 },
+  txt: { fontSize: 15, marginBottom: 5 },
+  labelBlue: { color: '#1A237E', fontWeight: '900' },
+  greenVal: { color: '#059669', fontWeight: 'bold' },
+  editBtn: { backgroundColor: '#EFF6FF', padding: 12, borderRadius: 12 },
+  deleteBtn: { backgroundColor: '#FEF2F2', padding: 12, borderRadius: 12 },
+  emptyText: { textAlign: 'center', color: '#ccc', fontStyle: 'italic', marginTop: 50 },
+  fab: { position: 'absolute', bottom: 30, right: 30, width: 64, height: 64, backgroundColor: '#B22222', borderRadius: 32, justifyContent: 'center', alignItems: 'center', elevation: 8 }
 });
