@@ -8,7 +8,8 @@ import {
   StyleSheet, 
   SafeAreaView, 
   StatusBar,
-  Dimensions
+  Dimensions,
+  Alert
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Plus } from 'lucide-react-native';
@@ -17,39 +18,38 @@ import { useAppContext } from '@/lib/app-context';
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 60) / 4; 
 
-const initialRooms = [
-  { id: '1', nom: "Yu", type: "initial", lettre: "Y" },
-  { id: '2', nom: "Ujdd", type: "initial", lettre: "U" },
-  { id: '3', nom: "Rdfj", type: "initial", lettre: "R" },
-  { id: '4', nom: "Gghut", type: "image", image: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=1000&auto=format&fit=crop" },
-  { id: '5', nom: "Salle E", type: "initial", lettre: "E" },
-  { id: '6', nom: "Salle F", type: "initial", lettre: "F" },
-  { id: '7', nom: "Salle G", type: "initial", lettre: "G" },
-  { id: '8', nom: "Salle H", type: "initial", lettre: "H" }
-];
-
 export default function RoomProfilesScreen() {
   const router = useRouter();
-  const { subId, blocId } = useLocalSearchParams<{ subId: string, blocId: string }>();
-  const { appData } = useAppContext() as any;
+  const { blockId, type, level } = useLocalSearchParams<{ blockId: string, type: string, level: string }>();
+  const { appData, setAppData } = useAppContext() as any;
 
-  // FUSION DES DONNÉES : Test + Nouvelles Salles du contexte
+  // FILTRAGE : Uniquement les salles qui correspondent au bloc, au type et au niveau
   const rooms = useMemo(() => {
-    // On récupère les salles créées par l'utilisateur qui correspondent à ce bloc
-    const userRooms = (appData.salles || []).filter((s: any) => s.blocId === blocId);
-    
-    // On transforme les salles utilisateur pour qu'elles aient le format d'affichage (Initiales si pas d'image)
-    const formattedUserRooms = userRooms.map((s: any) => ({
-      id: s.id,
-      nom: s.name,
-      type: s.image ? "image" : "initial",
-      lettre: s.name.charAt(0).toUpperCase(),
-      image: s.image,
-      isUserCreated: true // Flag pour identifier les vraies données
-    }));
+    return (appData.salles || []).filter((s: any) => 
+      s.blockId === blockId && 
+      s.type === type && 
+      s.level === level
+    );
+  }, [appData.salles, blockId, type, level]);
 
-    return [...initialRooms, ...formattedUserRooms];
-  }, [appData.salles, blocId]);
+  // FONCTION DE SUPPRESSION AVEC CONFIRMATION
+  const handleDeleteRoom = (id: string, name: string) => {
+    Alert.alert(
+      "Supprimer la salle",
+      `Êtes-vous sûr de vouloir supprimer "${name}" ?`,
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Supprimer", 
+          style: "destructive", 
+          onPress: () => {
+            const updatedSalles = appData.salles.filter((s: any) => s.id !== id);
+            setAppData({ ...appData, salles: updatedSalles });
+          } 
+        }
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -63,13 +63,13 @@ export default function RoomProfilesScreen() {
               <ChevronLeft size={28} color="white" />
             </TouchableOpacity>
             <Text style={styles.headerTitleText}>
-              {subId || "PROFIL"}
+              {level ? level.toUpperCase() : "PROFIL"}
             </Text>
             <View style={{ width: 40 }} /> 
           </View>
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>PROFILS DES SALLES</Text>
+            <Text style={styles.sectionTitle}>PROFILS DES {type === 'salles' ? 'SALLES' : 'BUREAUX'}</Text>
           </View>
 
           <View style={styles.grid}>
@@ -80,20 +80,21 @@ export default function RoomProfilesScreen() {
                 activeOpacity={0.8}
                 onPress={() => router.push({ 
                     pathname: '/room-details', 
-                    params: { roomId: room.id, roomName: room.nom } 
+                    params: { roomId: room.id, roomName: room.name } 
                 })}
+                onLongPress={() => handleDeleteRoom(room.id, room.name)} // APPUI LONG
               >
                 <View style={styles.avatarContainer}>
-                  {room.type === "initial" ? (
-                    <View style={styles.initialAvatar}>
-                      <Text style={styles.initialText}>{room.lettre}</Text>
-                    </View>
-                  ) : (
+                  {room.image ? (
                     <Image source={{ uri: room.image }} style={styles.imageAvatar} />
+                  ) : (
+                    <View style={styles.initialAvatar}>
+                      <Text style={styles.initialText}>{room.name.charAt(0).toUpperCase()}</Text>
+                    </View>
                   )}
                 </View>
                 <Text style={styles.roomName} numberOfLines={1}>
-                  {room.nom}
+                  {room.name}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -102,7 +103,10 @@ export default function RoomProfilesScreen() {
 
         <TouchableOpacity 
           style={styles.fab}
-          onPress={() => router.push({ pathname: '/add-room', params: { blocId, type: 'SALLES' } })}
+          onPress={() => router.push({ 
+            pathname: '/add-room', 
+            params: { blockId, type, level } 
+          })}
         >
           <Plus size={32} color="white" strokeWidth={3} />
         </TouchableOpacity>
@@ -127,7 +131,7 @@ const styles = StyleSheet.create({
     elevation: 8
   },
   backBtn: { padding: 5 },
-  headerTitleText: { color: 'white', fontWeight: '900', fontSize: 22, textAlign: 'center', letterSpacing: 2 },
+  headerTitleText: { color: 'white', fontWeight: '900', fontSize: 18, textAlign: 'center', letterSpacing: 2 },
   sectionHeader: { marginBottom: 25, paddingLeft: 5 },
   sectionTitle: { color: '#000', fontWeight: '900', fontSize: 18, letterSpacing: 0.5 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', marginHorizontal: -5 },
