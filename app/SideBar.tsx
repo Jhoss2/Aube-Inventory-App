@@ -1,20 +1,19 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ImageBackground, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ImageBackground, Image, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useAppContext } from '@/lib/app-context';
+import { useAppContext } from '../lib/app-context'; // Ajustement du chemin vers le lib
 
 export default function SideBar({ visible, onClose }: { visible: boolean, onClose: () => void }) {
   const router = useRouter();
-  const { appData } = useAppContext();
+  const { appData } = useAppContext() as any;
 
   const menuBg = appData?.settings?.menuBg;
   const menuLogo = appData?.settings?.menuLogo;
 
   const menuOptions = [
-    { label: "Guide d'utilisation de l'application", path: '/guide-viewer' },
-    { label: "A propos du développeur", path: '/about-dev' },
-    { label: "Données essentielles", path: '/categories' }
+    { label: "Guide d'utilisation", path: '/guide-viewer' },
+    { label: "A propos du développeur", path: '/about-dev' }
   ];
 
   return (
@@ -26,15 +25,17 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
           style={StyleSheet.absoluteFill}
           resizeMode="cover"
         >
+          {/* Superposition bleue sur l'image d'arrière-plan */}
           <View style={styles.blueOverlay} />
         </ImageBackground>
 
+        {/* TIROIR ROUGE SEMI-TRANSPARENT (rgba à 0.92) */}
         <View style={styles.sidebarDrawer}>
           <View style={styles.header}>
             <View style={styles.headerRow}>
               <Text style={styles.titleText}>U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER</Text>
               <TouchableOpacity onPress={onClose}>
-                <Feather name="x" size={28} color="white" />
+                <Feather name="x" size={32} color="white" />
               </TouchableOpacity>
             </View>
           </View>
@@ -70,6 +71,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
           </View>
         </View>
 
+        {/* Zone cliquable pour fermer */}
         <TouchableOpacity 
           style={styles.closeZone} 
           onPress={onClose} 
@@ -83,28 +85,46 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
 const styles = StyleSheet.create({
   container: { flex: 1, flexDirection: 'row' },
   blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
+  
+  // Style du tiroir mis à jour
   sidebarDrawer: {
-    width: '65%',
+    width: '50%',
     height: '100%',
-    backgroundColor: '#8B1A1A',
-    shadowColor: '#000',
-    shadowOffset: { width: 5, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
+    // ROUGE PROFOND SEMI-TRANSPARENT (92% opaque)
+    backgroundColor: 'rgba(139, 0, 0, 0.92)', 
     elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 10, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
   },
-  header: { padding: 24, paddingTop: 50, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)' },
+  
+  header: { padding: 20, paddingTop: 60, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)' },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  titleText: { color: 'white', fontWeight: '900', fontSize: 20, letterSpacing: -0.5, lineHeight: 20 },
-  navContainer: { flex: 1, paddingTop: 50, alignItems: 'center' },
-  navButton: { marginBottom: 40, paddingHorizontal: 10 },
-  navText: { color: 'white', fontWeight: 'bold', fontSize: 16, textAlign: 'center', letterSpacing: 0.5 },
+  titleText: { 
+    color: 'white', 
+    fontWeight: '900', 
+    fontSize: 28, 
+    lineHeight: 32,
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', 
+    textTransform: 'uppercase'
+  },
+  navContainer: { flex: 1, paddingTop: 60, alignItems: 'center' },
+  navButton: { marginBottom: 50, paddingHorizontal: 15, width: '100%' },
+  navText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 22, 
+    textAlign: 'center', 
+    fontStyle: 'italic',
+    fontFamily: Platform.OS === 'ios' ? 'Snell Roundhand' : 'serif',
+  },
   footer: { paddingBottom: 40, alignItems: 'center' },
-  versionText: { color: 'rgba(255,255,255,0.9)', fontWeight: 'bold', fontSize: 16, letterSpacing: 2, marginBottom: 20 },
+  versionText: { color: 'rgba(255,255,255,0.9)', fontWeight: 'bold', fontSize: 14, marginBottom: 20 },
   logoOuter: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   logoGradient: { width: '100%', height: '100%', borderRadius: 40, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   logoImage: { width: '100%', height: '100%' },
   logoPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
-  logoText: { fontSize: 16, fontWeight: 'bold', color: '#8B1A1A' },
+  logoText: { fontSize: 16, fontWeight: 'bold', color: '#8B0000' }, // Rouge plein pour le logo interne
   closeZone: { flex: 1, height: '100%' }
 });
