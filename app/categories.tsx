@@ -5,52 +5,44 @@ import {
   TouchableOpacity, 
   ScrollView, 
   TextInput, 
-  Alert, 
   StyleSheet, 
-  SafeAreaView, 
   StatusBar,
-  LayoutAnimation,
-  Platform,
-  UIManager
+  Alert
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Plus, X, Search, Check } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 export default function CategoriesScreen() {
   const router = useRouter();
   const { roomId, roomName } = useLocalSearchParams<{ roomId: string, roomName: string }>();
-  const { appData, updateAppData } = useAppContext() as any;
   
+  // Connexion au contexte pour la persistance
+  const { appData, setAppData } = useAppContext() as any;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddInput, setShowAddInput] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
-  // Fusion des catégories par défaut et personnalisées
-  const allCategories = useMemo(() => {
-    const defaults = appData?.defaultCategories || ['AMPOULES', 'PROJECTEURS', 'CHAISES', 'TABLES', 'CLIMATISATION'];
-    const customs = appData?.customCategories || [];
-    const combined = [...defaults, ...customs] as string[];
-    return Array.from(new Set(combined.map(c => c.toUpperCase()))).sort();
-  }, [appData?.defaultCategories, appData?.customCategories]);
+  // Catégories par défaut
+  const defaultCategories = ['AMPOULES', 'PROJECTEURS', 'CHAISES', 'TABLES', 'CLIMATISATION'];
 
+  // Fusion des catégories par défaut + celles ajoutées par l'utilisateur (stockées dans appData)
+  const allCategories = useMemo(() => {
+    const userCats = appData.customCategories || [];
+    const combined = [...defaultCategories, ...userCats];
+    return Array.from(new Set(combined.map(c => c.toUpperCase()))).sort();
+  }, [appData.customCategories]);
+
+  // Filtrage pour la recherche
   const filteredCategories = allCategories.filter(cat => 
     cat.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const toggleAddInput = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setShowAddInput(!showAddInput);
-  };
-
-  const handleAddCategory = async () => {
+  const handleAddCategory = () => {
     const name = newCategoryName.trim().toUpperCase();
     if (!name) {
-      toggleAddInput();
+      setShowAddInput(false);
       return;
     }
     
@@ -59,131 +51,124 @@ export default function CategoriesScreen() {
       return;
     }
 
-    try {
-      const updatedCustom = [...(appData?.customCategories || []), name];
-      await updateAppData({ ...appData, customCategories: updatedCustom });
-      setNewCategoryName('');
-      setShowAddInput(false);
-    } catch (err) {
-      Alert.alert("Erreur", "Impossible de sauvegarder la catégorie.");
-    }
+    // Sauvegarde dans le contexte
+    const currentCustom = appData.customCategories || [];
+    setAppData({
+      ...appData,
+      customCategories: [...currentCustom, name]
+    });
+
+    setNewCategoryName('');
+    setShowAddInput(false);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
+      
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* HEADER ROUGE PILL AVEC LUEUR */}
+        <View style={[styles.redHeaderPill, styles.glowBlack]}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <ChevronLeft size={28} color="white" />
+          </TouchableOpacity>
           
-          {/* HEADER ROUGE PILL SHAPE : SANS WRAPPER BLANC */}
-          <View style={styles.redHeaderPill}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <ChevronLeft size={28} color="white" />
-            </TouchableOpacity>
-            
-            <Text style={styles.headerTitleText}>CATÉGORIES</Text>
-            
-            <TouchableOpacity onPress={toggleAddInput} style={styles.addIconBtn}>
-              {showAddInput ? <X size={26} color="white" /> : <Plus size={26} color="white" />}
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.headerTitleText}>CATÉGORIES</Text>
+          
+          <TouchableOpacity onPress={() => setShowAddInput(!showAddInput)} style={styles.backBtn}>
+            {showAddInput ? <X size={26} color="white" /> : <Plus size={26} color="white" />}
+          </TouchableOpacity>
+        </View>
 
-          {/* INPUT D'AJOUT DYNAMIQUE */}
-          {showAddInput && (
-            <View style={styles.addContainer}>
-              <TextInput
-                autoFocus
-                placeholder="NOUVELLE CATÉGORIE..."
-                value={newCategoryName}
-                onChangeText={setNewCategoryName}
-                style={styles.addInput}
-                placeholderTextColor="#94A3B8"
-              />
-              <TouchableOpacity onPress={handleAddCategory} style={styles.checkBtn}>
-                <Check size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* BARRE DE RECHERCHE */}
-          <View style={styles.searchSection}>
-            <Search size={20} color="#94A3B8" style={styles.searchIcon} />
+        {/* INPUT D'AJOUT DYNAMIQUE */}
+        {showAddInput && (
+          <View style={styles.addContainer}>
             <TextInput
-              placeholder="RECHERCHER UNE CATÉGORIE..."
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-              style={styles.searchInput}
+              autoFocus
+              placeholder="NOUVELLE CATÉGORIE..."
+              value={newCategoryName}
+              onChangeText={setNewCategoryName}
               placeholderTextColor="#94A3B8"
+              style={[styles.addInput, styles.glowBlack]}
             />
+            <TouchableOpacity 
+              onPress={handleAddCategory}
+              style={[styles.checkBtn, styles.glowBlack]}
+            >
+              <Check size={24} color="white" />
+            </TouchableOpacity>
           </View>
+        )}
 
-          {/* LISTE DES BOUTONS (PILL SHAPE) */}
-          <View style={styles.listContainer}>
-            {filteredCategories.length > 0 ? (
-              filteredCategories.map((category, index) => (
-                <TouchableOpacity 
-                  key={index}
-                  style={styles.catBtn}
-                  onPress={() => router.push({
-                    pathname: '/add-material',
-                    params: { roomId, category, roomName }
-                  })}
-                >
-                  <Text style={styles.catBtnText}>{category}</Text>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <Text style={styles.emptyText}>AUCUNE CATÉGORIE TROUVÉE</Text>
-            )}
-          </View>
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+        {/* BARRE DE RECHERCHE */}
+        <View style={styles.searchBar}>
+          <Search size={20} color="#94A3B8" style={{ marginRight: 10 }} />
+          <TextInput
+            placeholder="RECHERCHER..."
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+            placeholderTextColor="#94A3B8"
+            style={styles.searchInput}
+          />
+        </View>
+
+        {/* LISTE DES BOUTONS */}
+        <View style={styles.listContainer}>
+          {filteredCategories.length > 0 ? (
+            filteredCategories.map((category, index) => (
+              <TouchableOpacity 
+                key={index}
+                style={[styles.catBtn, styles.glowBlack]}
+                onPress={() => router.push({
+                  pathname: '/add-item',
+                  params: { roomId, roomName, category }
+                })}
+              >
+                <Text style={styles.catBtnText}>{category}</Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>AUCUNE CATÉGORIE TROUVÉE</Text>
+          )}
+        </View>
+
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
-  container: { flex: 1 },
-  scrollContent: { padding: 25, paddingTop: 30 },
+  container: { flex: 1, backgroundColor: '#FFE4E8' },
+  scrollContent: { padding: 25, paddingTop: 55, paddingBottom: 40 },
   
-  // Header Rouge unifié (Pill)
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
-    paddingVertical: 12, 
-    paddingHorizontal: 15, 
+    height: 55, 
     borderRadius: 50, 
     flexDirection: 'row', 
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 30,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 15,
+    marginBottom: 35
   },
   backBtn: { padding: 5 },
-  addIconBtn: { padding: 5 },
   headerTitleText: { 
     color: 'white', 
-    fontWeight: 'bold', 
+    fontWeight: '900', 
     fontSize: 14, 
-    letterSpacing: 2,
-    textTransform: 'uppercase'
+    letterSpacing: 2.5 
   },
-  
-  // Ajout dynamique
-  addContainer: { flexDirection: 'row', marginBottom: 20, gap: 10 },
+
+  addContainer: { flexDirection: 'row', gap: 10, marginBottom: 25 },
   addInput: { 
     flex: 1, 
     backgroundColor: 'white', 
     borderRadius: 50, 
     paddingHorizontal: 20, 
     height: 55, 
-    elevation: 2,
-    fontWeight: 'bold',
-    color: '#1A237E'
+    fontWeight: 'bold', 
+    color: '#1A237E' 
   },
   checkBtn: { 
     backgroundColor: '#059669', 
@@ -191,45 +176,51 @@ const styles = StyleSheet.create({
     height: 55, 
     borderRadius: 27.5, 
     justifyContent: 'center', 
-    alignItems: 'center',
-    elevation: 2 
+    alignItems: 'center' 
   },
 
-  // Barre de recherche
-  searchSection: { 
+  searchBar: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+    backgroundColor: 'rgba(255,255,255,0.7)', 
     borderRadius: 50, 
-    paddingHorizontal: 15, 
-    marginBottom: 25,
+    paddingHorizontal: 20, 
+    height: 50, 
+    marginBottom: 30,
     borderWidth: 1,
     borderColor: 'white'
   },
-  searchIcon: { marginRight: 10 },
-  searchInput: { flex: 1, height: 50, fontWeight: 'bold', color: '#1A237E' },
+  searchInput: { flex: 1, fontWeight: 'bold', color: '#1A237E' },
 
-  // Liste
-  listContainer: { paddingBottom: 40 },
+  listContainer: { gap: 18 },
   catBtn: { 
-    backgroundColor: '#1A237E', 
-    paddingVertical: 18, 
+    backgroundColor: 'white', 
+    paddingVertical: 20, 
     borderRadius: 50, 
-    marginBottom: 15, 
-    alignItems: 'center',
-    elevation: 3
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderColor: '#FCE7F3' 
   },
   catBtnText: { 
-    color: 'white', 
-    fontWeight: 'bold', 
+    color: '#1A237E', 
+    fontWeight: '900', 
     fontSize: 13, 
-    letterSpacing: 1.5 
+    letterSpacing: 2 
   },
   emptyText: { 
     textAlign: 'center', 
     color: '#94A3B8', 
-    marginTop: 50, 
-    fontWeight: 'bold', 
-    letterSpacing: 1 
+    fontWeight: '900', 
+    marginTop: 40, 
+    fontSize: 11, 
+    letterSpacing: 1.5 
   },
+
+  glowBlack: {
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 }
+  }
 });
