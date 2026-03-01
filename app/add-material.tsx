@@ -15,9 +15,9 @@ import { useAppContext } from '@/lib/app-context';
 
 export default function AddMaterielScreen() {
   const router = useRouter();
-  const { salleId, category, roomName } = useLocalSearchParams<{ salleId: string, category: string, roomName: string }>();
+  // Récupération des paramètres envoyés par room-details ou categories
+  const { roomId, category, roomName } = useLocalSearchParams<{ roomId: string, category: string, roomName: string }>();
   
-  // Cast du contexte en "any" pour éviter l'erreur TS sur addMateriel
   const context = useAppContext();
   const { addMateriel } = context as any;
 
@@ -37,8 +37,8 @@ export default function AddMaterielScreen() {
     }
 
     const newItem = {
-      salleId: salleId,
-      nom: category, 
+      roomId: roomId, // Correspond à l'ID de la salle
+      nom: category || "Matériel", 
       quantite: parseInt(quantite) || 1,
       etat,
       couleur: couleur.trim(),
@@ -51,12 +51,12 @@ export default function AddMaterielScreen() {
     try {
       if (addMateriel) {
         await addMateriel(newItem);
-        Alert.alert("Succès", `${category} ajouté à ${roomName || 'la salle'} !`, [
+        Alert.alert("Succès", `${category || 'Matériel'} ajouté !`, [
           { text: "OK", onPress: () => router.back() }
         ]);
       }
     } catch (error) {
-      Alert.alert("Erreur", "Impossible d'enregistrer le matériel dans SQLite.");
+      Alert.alert("Erreur", "Impossible d'enregistrer le matériel.");
     }
   };
 
@@ -86,7 +86,7 @@ export default function AddMaterielScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nom du matériel</Text>
             <View style={styles.readOnlyInput}>
-              <Text style={styles.readOnlyText}>{category}</Text>
+              <Text style={styles.readOnlyText}>{category || "Non spécifié"}</Text>
             </View>
           </View>
 
@@ -116,6 +116,7 @@ export default function AddMaterielScreen() {
                 placeholder="Ex: Blanc"
                 value={couleur}
                 onChangeText={setCouleur}
+                placeholderTextColor="#9ca3af"
                 style={styles.input}
               />
             </View>
@@ -125,6 +126,7 @@ export default function AddMaterielScreen() {
                 placeholder="Ex: Philips"
                 value={marque}
                 onChangeText={setMarque}
+                placeholderTextColor="#9ca3af"
                 style={styles.input}
               />
             </View>
@@ -161,6 +163,7 @@ export default function AddMaterielScreen() {
               placeholder="Détails, notes..."
               value={infos}
               onChangeText={setInfos}
+              placeholderTextColor="#9ca3af"
               style={[styles.input, styles.textArea]}
             />
           </View>
@@ -192,56 +195,23 @@ const styles = StyleSheet.create({
   backBtn: { padding: 5 },
   headerTitle: { flex: 1, textAlign: 'center', fontWeight: '900', color: '#1D3583', fontSize: 18, letterSpacing: 1 },
   scroll: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
-  
-  redBadge: { 
-    backgroundColor: '#B21F18', 
-    paddingVertical: 12, 
-    borderRadius: 50, 
-    alignItems: 'center', 
-    marginBottom: 20,
-    elevation: 4
-  },
+  redBadge: { backgroundColor: '#8B0000', paddingVertical: 12, borderRadius: 50, alignItems: 'center', marginBottom: 20 },
   redBadgeText: { color: 'white', fontWeight: 'bold', fontSize: 10, letterSpacing: 2 },
-
-  pinkCard: { 
-    backgroundColor: '#FDE7F3', 
-    borderRadius: 35, 
-    padding: 20, 
-    borderWidth: 1, 
-    borderColor: '#FCE7F3',
-    elevation: 3
-  },
+  pinkCard: { backgroundColor: '#FDE7F3', borderRadius: 35, padding: 20, borderWidth: 1, borderColor: '#FCE7F3' },
   inputGroup: { marginBottom: 15 },
   label: { fontSize: 9, fontWeight: '900', color: '#1D3583', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8, marginLeft: 10 },
-  
   input: { backgroundColor: '#F8F9FB', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, color: '#374151', fontWeight: 'bold', borderWidth: 1, borderColor: 'white' },
   inputText: { color: '#374151', fontWeight: 'bold' },
   textArea: { height: 100, textAlignVertical: 'top' },
-  
   readOnlyInput: { backgroundColor: '#F8F9FB', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, borderWidth: 1, borderColor: 'white' },
   readOnlyText: { color: '#6b7280', fontWeight: 'bold' },
-  
   selectInput: { backgroundColor: '#F8F9FB', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: 'white' },
-  
   row: { flexDirection: 'row', marginBottom: 15 },
   flex1: { flex: 1 },
-  
   photoBox: { width: '100%', height: 120, borderRadius: 25, borderStyle: 'dashed', borderWidth: 2, borderColor: '#1D358333', backgroundColor: 'rgba(255,255,255,0.5)', justifyContent: 'center', alignItems: 'center' },
   photoText: { fontSize: 10, fontWeight: 'bold', color: '#1D3583', marginTop: 8 },
-  
   dateBox: { backgroundColor: '#F8F9FB', borderRadius: 15, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: 'white' },
   dateText: { color: '#374151', fontWeight: 'bold', fontSize: 11 },
-
-  saveBtn: { 
-    backgroundColor: '#1D3583', 
-    paddingVertical: 20, 
-    borderRadius: 50, 
-    marginTop: 30, 
-    alignItems: 'center', 
-    elevation: 8, 
-    shadowColor: '#1D3583', 
-    shadowOpacity: 0.3, 
-    shadowRadius: 10 
-  },
+  saveBtn: { backgroundColor: '#1A237E', paddingVertical: 20, borderRadius: 50, marginTop: 30, alignItems: 'center' },
   saveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16, letterSpacing: 2 }
 });
