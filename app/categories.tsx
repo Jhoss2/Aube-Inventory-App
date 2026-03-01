@@ -17,7 +17,6 @@ export default function CategoriesScreen() {
   const router = useRouter();
   const { roomId, roomName } = useLocalSearchParams<{ roomId: string, roomName: string }>();
   
-  // Connexion au contexte pour la persistance
   const { appData, setAppData } = useAppContext() as any;
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,14 +26,12 @@ export default function CategoriesScreen() {
   // Catégories par défaut
   const defaultCategories = ['AMPOULES', 'PROJECTEURS', 'CHAISES', 'TABLES', 'CLIMATISATION'];
 
-  // Fusion des catégories par défaut + celles ajoutées par l'utilisateur (stockées dans appData)
   const allCategories = useMemo(() => {
     const userCats = appData.customCategories || [];
     const combined = [...defaultCategories, ...userCats];
     return Array.from(new Set(combined.map(c => c.toUpperCase()))).sort();
   }, [appData.customCategories]);
 
-  // Filtrage pour la recherche
   const filteredCategories = allCategories.filter(cat => 
     cat.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -51,7 +48,6 @@ export default function CategoriesScreen() {
       return;
     }
 
-    // Sauvegarde dans le contexte
     const currentCustom = appData.customCategories || [];
     setAppData({
       ...appData,
@@ -68,7 +64,7 @@ export default function CategoriesScreen() {
       
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* HEADER ROUGE PILL AVEC LUEUR */}
+        {/* HEADER ROUGE PILL AVEC LUEUR NOIRE */}
         <View style={[styles.redHeaderPill, styles.glowBlack]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <ChevronLeft size={28} color="white" />
@@ -113,7 +109,7 @@ export default function CategoriesScreen() {
           />
         </View>
 
-        {/* LISTE DES BOUTONS */}
+        {/* LISTE DES BOUTONS (REDIRECT VERS ADD-MATERIAL) */}
         <View style={styles.listContainer}>
           {filteredCategories.length > 0 ? (
             filteredCategories.map((category, index) => (
@@ -121,7 +117,7 @@ export default function CategoriesScreen() {
                 key={index}
                 style={[styles.catBtn, styles.glowBlack]}
                 onPress={() => router.push({
-                  pathname: '/add-item',
+                  pathname: '/add-material', // Chemin mis à jour vers ton nouvel écran
                   params: { roomId, roomName, category }
                 })}
               >
