@@ -1,83 +1,82 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  ScrollView, 
-  StyleSheet, 
-  SafeAreaView 
-} from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 
 export default function SubdivisionScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams(); // Récupère A, B, C...
+  const { id } = useLocalSearchParams(); // 'A', 'B', etc.
 
   const niveaux = [
-    "· Sous-sol ·",
-    "· Rez-de-chaussée ·",
+    "· Sous-sol ·", 
+    "· Rez-de-chaussée ·", 
     "· Premier Niveau ·",
-    "· Deuxième Niveau ·",
-    "· Troisième Niveau ·",
+    "· Deuxième Niveau ·", 
+    "· Troisième Niveau ·", 
     "· Quatrième Niveau ·"
   ];
 
   return (
-    <View style={styles.container}>
-      {/* BOUTON RETOUR TRANSPARENT */}
-      <TouchableOpacity 
-        onPress={() => router.back()} 
-        style={styles.backButton}
-      >
-        <ChevronLeft size={32} color="rgba(0,0,0,0.4)" />
-      </TouchableOpacity>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.container}>
         
-        {/* BOUTON HEADER ROUGE */}
-        <View style={styles.headerSpacer}>
-          <View style={styles.redBadge}>
-            <Text style={styles.redBadgeText}>BLOC {id}1</Text>
+        {/* HEADER ROUGE AVEC RETOUR INTÉGRÉ */}
+        <View style={styles.headerContainer}>
+          <View style={styles.redHeaderPill}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <ChevronLeft size={28} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText}>BLOC {id}1</Text>
+            <View style={{ width: 40 }} /> 
           </View>
         </View>
 
-        {/* SOUS-TITRE */}
-        <View style={styles.subTitleContainer}>
-          <Text style={styles.subTitleText}>· NIVEAUX DE SUBDIVISION ·</Text>
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.subTitleContainer}>
+            <Text style={styles.subTitleText}>· NIVEAUX DE SUBDIVISION ·</Text>
+          </View>
 
-        {/* LISTE DE BOUTONS BLEU MARINE */}
-        <View style={styles.listContainer}>
-          {niveaux.map((niveau, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={styles.levelBtn}
-              onPress={() => router.push({
-                pathname: '/room-profiles',
-                params: { blocId: id, niveau: niveau }
-              })}
-            >
-              <Text style={styles.levelBtnText}>{niveau}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-      </ScrollView>
-    </View>
+          <View style={styles.listContainer}>
+            {niveaux.map((niveau, index) => (
+              <TouchableOpacity 
+                key={index} 
+                style={styles.levelBtn}
+                onPress={() => router.push({
+                  pathname: '/room-profiles',
+                  params: { blocId: id, niveau: niveau }
+                })}
+              >
+                <Text style={styles.levelBtnText}>{niveau}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: 'white' },
   container: { flex: 1, backgroundColor: '#F8F9FB' },
-  backButton: { position: 'absolute', top: 50, left: 20, zIndex: 10 },
-  scrollContent: { paddingTop: 110, paddingBottom: 40 },
-  headerSpacer: { paddingHorizontal: 24, marginBottom: 30 },
-  redBadge: { backgroundColor: '#8B0000', paddingVertical: 18, borderRadius: 50, alignItems: 'center' },
-  redBadgeText: { color: 'white', fontWeight: '900', textTransform: 'uppercase', fontSize: 16, letterSpacing: 4 },
+  headerContainer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 10, backgroundColor: 'white' },
+  redHeaderPill: { 
+    backgroundColor: '#8B0000', 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    paddingVertical: 15, 
+    paddingHorizontal: 10,
+    borderRadius: 50,
+    elevation: 4
+  },
+  backBtn: { padding: 5 },
+  headerTitleText: { color: 'white', fontWeight: '900', fontSize: 16, letterSpacing: 3, flex: 1, textAlign: 'center' },
+  scrollContent: { paddingTop: 20, paddingBottom: 40 },
   subTitleContainer: { alignItems: 'center', marginBottom: 25 },
-  subTitleText: { color: '#9CA3AF', fontSize: 11, fontWeight: 'bold', letterSpacing: 2.5, textTransform: 'uppercase' },
+  subTitleText: { color: '#9CA3AF', fontSize: 11, fontWeight: 'bold', letterSpacing: 2.5 },
   listContainer: { paddingHorizontal: 24, gap: 15 },
-  levelBtn: { backgroundColor: '#1A237E', paddingVertical: 18, borderRadius: 50, alignItems: 'center' },
+  levelBtn: { backgroundColor: '#1A237E', paddingVertical: 18, borderRadius: 50, alignItems: 'center', elevation: 2 },
   levelBtnText: { color: 'white', fontWeight: 'bold', fontSize: 14 }
 });
