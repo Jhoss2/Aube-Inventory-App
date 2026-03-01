@@ -1,34 +1,42 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView, 
+  TextInput, 
+  Alert, 
+  StyleSheet, 
+  SafeAreaView, 
+  StatusBar,
+  LayoutAnimation,
+  Platform,
+  UIManager
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { ChevronLeft, Plus, X, Search, Check } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
 
-// Activation de l'animation pour Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 export default function CategoriesScreen() {
   const router = useRouter();
-  const { salleId } = useLocalSearchParams<{ salleId: string }>();
-  const context = useAppContext();
-  const { appData, updateAppData } = context as any;
+  const { roomId, roomName } = useLocalSearchParams<{ roomId: string, roomName: string }>();
+  const { appData, updateAppData } = useAppContext() as any;
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddInput, setShowAddInput] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
-  const data = appData as any;
-
-  // Fusionner et trier les catégories
+  // Fusion des catégories par défaut et personnalisées
   const allCategories = useMemo(() => {
-    const defaults = data?.defaultCategories || ['Mobilier', 'Informatique', 'Climatisation', 'Éclairage'];
-    const customs = data?.customCategories || [];
+    const defaults = appData?.defaultCategories || ['AMPOULES', 'PROJECTEURS', 'CHAISES', 'TABLES', 'CLIMATISATION'];
+    const customs = appData?.customCategories || [];
     const combined = [...defaults, ...customs] as string[];
-    return Array.from(new Set(combined)).sort((a, b) => a.localeCompare(b));
-  }, [data?.defaultCategories, data?.customCategories]);
+    return Array.from(new Set(combined.map(c => c.toUpperCase()))).sort();
+  }, [appData?.defaultCategories, appData?.customCategories]);
 
   const filteredCategories = allCategories.filter(cat => 
     cat.toLowerCase().includes(searchTerm.toLowerCase())
@@ -40,135 +48,167 @@ export default function CategoriesScreen() {
   };
 
   const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) {
+    const name = newCategoryName.trim().toUpperCase();
+    if (!name) {
       toggleAddInput();
       return;
     }
     
-    if (allCategories.some(c => c.toLowerCase() === newCategoryName.trim().toLowerCase())) {
+    if (allCategories.includes(name)) {
       Alert.alert("Erreur", "Cette catégorie existe déjà.");
       return;
     }
 
     try {
-      const updatedCustom = [...(data?.customCategories || []), newCategoryName.trim()];
-      await updateAppData({ ...data, customCategories: updatedCustom });
+      const updatedCustom = [...(appData?.customCategories || []), name];
+      await updateAppData({ ...appData, customCategories: updatedCustom });
       setNewCategoryName('');
       setShowAddInput(false);
-      Alert.alert("Succès", "Catégorie ajoutée");
     } catch (err) {
-      Alert.alert("Erreur", "Impossible de sauvegarder la catégorie");
+      Alert.alert("Erreur", "Impossible de sauvegarder la catégorie.");
     }
   };
 
-  const handleDeleteCategory = (catName: string) => {
-    Alert.alert(
-      "Supprimer",
-      `Voulez-vous supprimer la catégorie "${catName}" ?`,
-      [
-        { text: "Annuler", style: "cancel" },
-        { 
-          text: "Supprimer", 
-          style: "destructive",
-          onPress: async () => {
-            const updatedCustom = (data?.customCategories || []).filter((c: string) => c !== catName);
-            const updatedDefault = (data?.defaultCategories || []).filter((c: string) => c !== catName);
-            await updateAppData({ 
-              ...data, 
-              customCategories: updatedCustom,
-              defaultCategories: updatedDefault 
-            });
-          }
-        }
-      ]
-    );
-  };
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F9FB' }}>
-      
-      {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 8, flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f3f4f6', paddingBottom: 16 }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ padding: 8 }}>
-          <Ionicons name="chevron-back" size={28} color="#4b5563" />
-        </TouchableOpacity>
-        <Text style={{ flex: 1, textAlign: 'center', fontWeight: '900', color: '#1D3583', fontSize: 18, letterSpacing: 1 }}>
-          CATÉGORIES
-        </Text>
-        <TouchableOpacity onPress={toggleAddInput} style={{ padding: 8 }}>
-          <Ionicons name={showAddInput ? "close-circle" : "add-circle"} size={32} color={showAddInput ? "#B21F18" : "#1D3583"} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 20 }}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.container}>
         
-        {/* Champ d'ajout dynamique (masqué par défaut) */}
-        {showAddInput && (
-          <View style={{ marginBottom: 20, flexDirection: 'row', gap: 10 }}>
-            <TextInput
-              autoFocus
-              placeholder="Nom de la nouvelle catégorie..."
-              value={newCategoryName}
-              onChangeText={setNewCategoryName}
-              style={{ flex: 1, backgroundColor: 'white', borderRadius: 15, paddingHorizontal: 20, height: 55, borderWidth: 1, borderColor: '#1D3583' }}
-            />
-            <TouchableOpacity 
-              onPress={handleAddCategory}
-              style={{ backgroundColor: '#1D3583', width: 55, height: 55, borderRadius: 15, justifyContent: 'center', alignItems: 'center' }}
-            >
-              <Ionicons name="checkmark" size={28} color="white" />
+        {/* HEADER ROUGE PILL SHAPE */}
+        <View style={styles.headerWrapper}>
+          <View style={styles.redHeaderPill}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <ChevronLeft size={28} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText}>CATÉGORIES</Text>
+            <TouchableOpacity onPress={toggleAddInput} style={styles.addIconBtn}>
+              {showAddInput ? <X size={24} color="white" /> : <Plus size={24} color="white" />}
             </TouchableOpacity>
           </View>
-        )}
-
-        {/* Barre de Recherche */}
-        <View style={{ position: 'relative', marginBottom: 20 }}>
-          <View style={{ position: 'absolute', insetY: 0, left: 15, zIndex: 10, justifyContent: 'center' }}>
-            <Ionicons name="search" size={20} color="#9ca3af" />
-          </View>
-          <TextInput
-            placeholder="Rechercher une catégorie..."
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-            style={{ w: '100%', backgroundColor: '#EDF0F5', borderRadius: 20, py: 15, paddingVertical: 14, paddingLeft: 50, paddingRight: 20, color: '#374151' }}
-          />
         </View>
 
-        {/* Liste des Catégories */}
-        <ScrollView 
-          showsVerticalScrollIndicator={false}
-          style={{ backgroundColor: 'white', borderRadius: 30, borderWeight: 1, borderColor: '#f3f4f6', marginBottom: 20 }}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        >
-          {filteredCategories.length > 0 ? (
-            filteredCategories.map((category, index) => (
-              <View 
-                key={index}
-                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 25, paddingVertical: 20, borderBottomWidth: index !== filteredCategories.length - 1 ? 1 : 0, borderBottomColor: '#f3f4f6' }}
-              >
+        <View style={styles.content}>
+          
+          {/* INPUT D'AJOUT DYNAMIQUE */}
+          {showAddInput && (
+            <View style={styles.addContainer}>
+              <TextInput
+                autoFocus
+                placeholder="NOUVELLE CATÉGORIE..."
+                value={newCategoryName}
+                onChangeText={setNewCategoryName}
+                style={styles.addInput}
+                placeholderTextColor="#94A3B8"
+              />
+              <TouchableOpacity onPress={handleAddCategory} style={styles.checkBtn}>
+                <Check size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* BARRE DE RECHERCHE */}
+          <View style={styles.searchSection}>
+            <Search size={20} color="#94A3B8" style={styles.searchIcon} />
+            <TextInput
+              placeholder="RECHERCHER..."
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+              style={styles.searchInput}
+              placeholderTextColor="#94A3B8"
+            />
+          </View>
+
+          {/* LISTE DES BOUTONS (PILL SHAPE) */}
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollPadding}
+          >
+            {filteredCategories.length > 0 ? (
+              filteredCategories.map((category, index) => (
                 <TouchableOpacity 
-                  style={{ flex: 1 }}
+                  key={index}
+                  style={styles.catBtn}
                   onPress={() => router.push({
-                    pathname: '/add-item',
-                    params: { salleId, category }
+                    pathname: '/add-material',
+                    params: { roomId, category, roomName }
                   })}
                 >
-                  <Text style={{ color: '#374151', fontWeight: '700', fontSize: 16 }}>{category}</Text>
+                  <Text style={styles.catBtnText}>{category}</Text>
                 </TouchableOpacity>
-
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <TouchableOpacity onPress={() => handleDeleteCategory(category)} style={{ padding: 5, marginRight: 10 }}>
-                    <Ionicons name="trash-outline" size={20} color="#d1d5db" />
-                  </TouchableOpacity>
-                  <Ionicons name="chevron-forward" size={20} color="#1D3583" />
-                </View>
-              </View>
-            ))
-          ) : (
-            <Text style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}>Aucune catégorie trouvée</Text>
-          )}
-        </ScrollView>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>AUCUNE CATÉGORIE TROUVÉE</Text>
+            )}
+          </ScrollView>
+        </View>
       </View>
     </SafeAreaView>
   );
-                           }
+}
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: '#F8F9FB' },
+  headerWrapper: { paddingVertical: 10, alignItems: 'center', backgroundColor: 'white' },
+  redHeaderPill: { 
+    backgroundColor: '#8B0000', 
+    width: '92%', 
+    paddingVertical: 12, 
+    paddingHorizontal: 15, 
+    borderRadius: 50, 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 4
+  },
+  backBtn: { padding: 5 },
+  addIconBtn: { padding: 5 },
+  headerTitleText: { color: 'white', fontWeight: 'bold', fontSize: 14, letterSpacing: 2 },
+  
+  content: { flex: 1, paddingHorizontal: 25, paddingTop: 15 },
+  
+  addContainer: { flexDirection: 'row', marginBottom: 20, gap: 10 },
+  addInput: { 
+    flex: 1, 
+    backgroundColor: 'white', 
+    borderRadius: 50, 
+    paddingHorizontal: 20, 
+    height: 55, 
+    borderWidth: 1, 
+    borderColor: '#8B0000',
+    fontWeight: 'bold',
+    color: '#1A237E'
+  },
+  checkBtn: { 
+    backgroundColor: '#059669', 
+    width: 55, 
+    height: 55, 
+    borderRadius: 27.5, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    elevation: 2 
+  },
+
+  searchSection: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#E2E8F0', 
+    borderRadius: 50, 
+    paddingHorizontal: 15, 
+    marginBottom: 25 
+  },
+  searchIcon: { marginRight: 10 },
+  searchInput: { flex: 1, height: 50, fontWeight: 'bold', color: '#1A237E' },
+
+  scrollPadding: { paddingBottom: 40 },
+  catBtn: { 
+    backgroundColor: '#1A237E', 
+    paddingVertical: 18, 
+    borderRadius: 50, 
+    marginBottom: 15, 
+    alignItems: 'center',
+    elevation: 3
+  },
+  catBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13, letterSpacing: 1.5 },
+  emptyText: { textAlign: 'center', color: '#94A3B8', marginTop: 50, fontWeight: 'bold', letterSpacing: 1 },
+});
