@@ -5,252 +5,198 @@ import {
   TouchableOpacity, 
   TextInput, 
   ScrollView, 
-  Alert, 
   StyleSheet, 
-  SafeAreaView,
-  StatusBar 
+  StatusBar,
+  Dimensions
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { ChevronLeft, Camera } from 'lucide-react-native';
-import { useAppContext } from '@/lib/app-context';
+import { ChevronLeft, Camera, ChevronDown } from 'lucide-react-native';
 
-export default function AddMaterielScreen() {
+const { width } = Dimensions.get('window');
+
+export default function AddMaterialScreen() {
   const router = useRouter();
-  const { roomId, category, roomName } = useLocalSearchParams<{ roomId: string, category: string, roomName: string }>();
-  
-  const { addMateriel } = useAppContext() as any;
+  const { category } = useLocalSearchParams();
 
   const [quantite, setQuantite] = useState('1');
   const [etat, setEtat] = useState('Bon');
   const [couleur, setCouleur] = useState('');
   const [marque, setMarque] = useState('');
+  const [dateAcquisition, setDateAcquisition] = useState('');
+  const [dateRenouvellement, setDateRenouvellement] = useState('');
   const [infos, setInfos] = useState('');
 
-  const handleSave = async () => {
-    if (!quantite || parseInt(quantite) <= 0) {
-      Alert.alert("Erreur", "Veuillez entrer une quantité valide.");
-      return;
-    }
-
-    const newItem = {
-      roomId: roomId,
-      nom: category, 
-      quantite: parseInt(quantite) || 1,
-      etat,
-      couleur: couleur.trim(),
-      marque: marque.trim(),
-      dateAcquisition: new Date().toLocaleDateString(),
-      commentaires: infos.trim(),
-    };
-
-    try {
-      await addMateriel(newItem);
-      Alert.alert("Succès", `${category} ajouté !`, [
-        { text: "OK", onPress: () => router.push({ pathname: '/room-details', params: { roomId } }) }
-      ]);
-    } catch (error) {
-      Alert.alert("Erreur", "Impossible d'enregistrer le matériel.");
-    }
+  const handleSave = () => {
+    console.log("Sauvegarde...", { category, quantite });
+    router.back();
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.container}>
-        
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.mainContainer}>
+      {/* Rendre la barre d'état transparente pour que le fond rose passe dessous */}
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
+      
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* HEADER ROUGE PILL - Positionné pour éviter l'encoche sans bande blanche */}
+        <View style={styles.headerPill}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <ChevronLeft size={28} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>AJOUTER MATÉRIEL</Text>
+          <View style={{ width: 40 }} /> 
+        </View>
+
+        {/* GRANDE CARTE BLANCHE */}
+        <View style={styles.mainCard}>
           
-          {/* HEADER ROUGE PILL SHAPE AVEC RETOUR INTÉGRÉ (SANS BANDEAU BLANC) */}
-          <View style={styles.redHeaderPill}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <ChevronLeft size={28} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>AJOUTER MATÉRIEL</Text>
-            <View style={{ width: 40 }} /> 
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nom du matériel</Text>
+            <View style={styles.readOnlyInput}>
+              <Text style={styles.readOnlyText}>{category || "Climatiseur"}</Text>
+            </View>
           </View>
 
-          <View style={styles.redBadgeLabel}>
-            <Text style={styles.redBadgeLabelText}>INFORMATIONS DÉTAILLÉES</Text>
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>Quantité</Text>
+              <TextInput 
+                keyboardType="numeric"
+                value={quantite}
+                onChangeText={setQuantite}
+                style={styles.input}
+              />
+            </View>
+            <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>État</Text>
+              <View style={styles.selectWrapper}>
+                <TextInput value={etat} editable={false} style={styles.input} />
+                <ChevronDown size={16} color="#1A237E" style={styles.selectIcon} />
+              </View>
+            </View>
           </View>
 
-          {/* GRANDE CARTE BLANCHE (Design épuré sur fond rose) */}
-          <View style={styles.mainCard}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Nom du matériel</Text>
-              <View style={styles.readOnlyInput}>
-                <Text style={styles.readOnlyText}>{category}</Text>
-              </View>
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>Couleur</Text>
+              <TextInput 
+                placeholder="Ex: Blanc"
+                value={couleur}
+                onChangeText={setCouleur}
+                style={styles.input}
+                placeholderTextColor="#94A3B8"
+              />
             </View>
-
-            <View style={styles.row}>
-              <View style={styles.flex1}>
-                <Text style={styles.label}>Quantité</Text>
-                <TextInput value={quantite} onChangeText={setQuantite} keyboardType="numeric" style={styles.input} />
-              </View>
-              <View style={[styles.flex1, { marginLeft: 15 }]}>
-                <Text style={styles.label}>État</Text>
-                <TouchableOpacity style={styles.selectInput}>
-                  <Text style={styles.inputText}>{etat}</Text>
-                  <Ionicons name="chevron-down" size={16} color="#1A237E" />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.row}>
-              <View style={styles.flex1}>
-                <Text style={styles.label}>Couleur</Text>
-                <TextInput placeholder="Ex: Blanc" value={couleur} onChangeText={setCouleur} style={styles.input} />
-              </View>
-              <View style={[styles.flex1, { marginLeft: 15 }]}>
-                <Text style={styles.label}>Marque</Text>
-                <TextInput placeholder="Ex: Philips" value={marque} onChangeText={setMarque} style={styles.input} />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Photo (Optionnel)</Text>
-              <TouchableOpacity style={styles.photoBox}>
-                <Camera size={30} color="#1A237E" />
-                <Text style={styles.photoText}>Prendre une photo</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Informations supplémentaires</Text>
-              <TextInput
-                multiline
-                numberOfLines={3}
-                placeholder="Détails, notes..."
-                value={infos}
-                onChangeText={setInfos}
-                style={[styles.input, styles.textArea]}
+            <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>Marque</Text>
+              <TextInput 
+                placeholder="Ex: LG"
+                value={marque}
+                onChangeText={setMarque}
+                style={styles.input}
+                placeholderTextColor="#94A3B8"
               />
             </View>
           </View>
 
-          <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
-            <Text style={styles.saveBtnText}>ENREGISTRER LE MATÉRIEL</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>Date d'acquisition</Text>
+              <TextInput 
+                placeholder="JJ/MM/AAAA"
+                value={dateAcquisition}
+                onChangeText={setDateAcquisition}
+                style={styles.input}
+              />
+            </View>
+            <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>Renouvellement</Text>
+              <TextInput 
+                placeholder="JJ/MM/AAAA"
+                value={dateRenouvellement}
+                onChangeText={setDateRenouvellement}
+                style={styles.input}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Photo (Optionnel)</Text>
+            <TouchableOpacity style={styles.photoBtn}>
+              <Camera size={30} color="#1A237E" />
+              <Text style={styles.photoBtnText}>PRENDRE UNE PHOTO</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Informations supplémentaires</Text>
+            <TextInput
+              placeholder="Détails, notes..."
+              multiline
+              numberOfLines={3}
+              value={infos}
+              onChangeText={setInfos}
+              style={[styles.input, styles.textArea]}
+              placeholderTextColor="#94A3B8"
+            />
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+          <Text style={styles.saveBtnText}>ENREGISTRER LE MATÉRIEL</Text>
+        </TouchableOpacity>
+
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
-  container: { flex: 1 },
-  scroll: { flex: 1 },
-  scrollContent: { padding: 25, paddingTop: 30, paddingBottom: 60 },
+  mainContainer: { flex: 1, backgroundColor: '#FFE4E8' },
+  scrollContent: { 
+    paddingHorizontal: 20, 
+    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 20 : 50, 
+    paddingBottom: 50 
+  },
   
-  // Header Rouge Pill
-  redHeaderPill: { 
+  headerPill: { 
     backgroundColor: '#8B0000', 
-    paddingVertical: 12, 
-    paddingHorizontal: 15, 
-    borderRadius: 50, 
+    height: 55, 
+    borderRadius: 30, 
     flexDirection: 'row', 
     alignItems: 'center', 
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8
+    justifyContent: 'space-between', 
+    paddingHorizontal: 15,
+    elevation: 5,
+    marginBottom: 25
   },
+  headerTitle: { color: 'white', fontWeight: '900', fontSize: 13, letterSpacing: 2 },
   backBtn: { padding: 5 },
-  headerTitleText: { 
-    color: 'white', 
-    fontWeight: 'bold', 
-    fontSize: 13, 
-    letterSpacing: 1.5,
-    textTransform: 'uppercase'
-  },
 
-  redBadgeLabel: { 
-    backgroundColor: '#8B0000', 
-    paddingVertical: 12, 
-    borderRadius: 50, 
-    alignItems: 'center', 
-    marginBottom: 25,
-    elevation: 2 
-  },
-  redBadgeLabelText: { color: 'white', fontWeight: 'bold', fontSize: 10, letterSpacing: 2 },
-
-  // Carte Blanche (Remplaçant la carte rose pour plus de lisibilité sur fond rose)
   mainCard: { 
     backgroundColor: 'white', 
     borderRadius: 35, 
     padding: 20, 
-    borderWidth: 1, 
-    borderColor: '#FCE7F3', 
-    elevation: 3 
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#FCE7F3'
   },
-  inputGroup: { marginBottom: 18 },
-  label: { 
-    fontSize: 9, 
-    fontWeight: '900', 
-    color: '#1A237E', 
-    textTransform: 'uppercase', 
-    letterSpacing: 1.2, 
-    marginBottom: 8, 
-    marginLeft: 10 
-  },
-  input: { 
-    backgroundColor: '#F8F9FB', 
-    borderRadius: 20, 
-    paddingVertical: 14, 
-    paddingHorizontal: 20, 
-    color: '#374151', 
-    fontWeight: 'bold', 
-    borderWidth: 1, 
-    borderColor: '#EDF0F5' 
-  },
-  readOnlyInput: { 
-    backgroundColor: '#F1F5F9', 
-    borderRadius: 20, 
-    paddingVertical: 14, 
-    paddingHorizontal: 20, 
-    borderWidth: 1, 
-    borderColor: '#E2E8F0' 
-  },
-  readOnlyText: { color: '#64748B', fontWeight: 'bold' },
-  selectInput: { 
-    backgroundColor: '#F8F9FB', 
-    borderRadius: 20, 
-    paddingVertical: 14, 
-    paddingHorizontal: 20, 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    borderWidth: 1, 
-    borderColor: '#EDF0F5' 
-  },
-  inputText: { color: '#374151', fontWeight: 'bold' },
-  row: { flexDirection: 'row', marginBottom: 18 },
-  flex1: { flex: 1 },
-  textArea: { height: 100, textAlignVertical: 'top' },
-  photoBox: { 
-    width: '100%', 
-    height: 100, 
-    borderRadius: 25, 
-    borderStyle: 'dashed', 
-    borderWidth: 2, 
-    borderColor: '#1A237E33', 
-    backgroundColor: '#F8FAFC', 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
-  photoText: { fontSize: 10, fontWeight: 'bold', color: '#1A237E', marginTop: 8 },
+  inputGroup: { marginBottom: 15 },
+  label: { fontSize: 9, fontWeight: '900', color: '#1A237E', textTransform: 'uppercase', letterSpacing: 1.5, marginLeft: 10, marginBottom: 5 },
+  input: { backgroundColor: '#F8F9FB', borderRadius: 20, paddingVertical: 12, paddingHorizontal: 20, fontSize: 14, fontWeight: '700', color: '#374151', borderWidth: 1, borderColor: '#EDF0F5' },
+  readOnlyInput: { backgroundColor: '#F1F5F9', borderRadius: 20, paddingVertical: 12, paddingHorizontal: 20, borderWidth: 1, borderColor: '#E2E8F0' },
+  readOnlyText: { color: '#64748B', fontWeight: '900', fontSize: 14 },
+  row: { flexDirection: 'row', gap: 10 },
+  selectWrapper: { position: 'relative', justifyContent: 'center' },
+  selectIcon: { position: 'absolute', right: 15 },
   
-  saveBtn: { 
-    backgroundColor: '#1A237E', 
-    paddingVertical: 22, 
-    borderRadius: 50, 
-    marginTop: 35, 
-    alignItems: 'center', 
-    elevation: 8 
-  },
-  saveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13, letterSpacing: 2 }
+  photoBtn: { backgroundColor: '#F8FAFC', height: 100, borderRadius: 25, borderWidth: 2, borderColor: 'rgba(26, 35, 126, 0.1)', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
+  photoBtnText: { fontSize: 10, fontWeight: '900', color: '#1A237E', marginTop: 8 },
+  textArea: { height: 80, textAlignVertical: 'top' },
+
+  saveBtn: { backgroundColor: '#1A237E', paddingVertical: 18, borderRadius: 30, marginTop: 30, alignItems: 'center', elevation: 10 },
+  saveBtnText: { color: 'white', fontWeight: '900', fontSize: 13, letterSpacing: 2.5 }
 });
