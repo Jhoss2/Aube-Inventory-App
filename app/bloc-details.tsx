@@ -15,12 +15,12 @@ import { useAppContext } from '@/lib/app-context';
 
 export default function BlocDetailsScreen() {
   const router = useRouter();
-  const { blocId } = useLocalSearchParams<{ blocId: string }>();
+  const { blockId } = useLocalSearchParams<{ blockId: string }>();
   const { appData } = useAppContext() as any;
 
-  const bloc = appData?.blocs?.[blocId as string];
+  const bloc = appData?.blocs?.[blockId as string];
 
-  if (!blocId || !bloc) {
+  if (!blockId || !bloc) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centered}>
@@ -33,13 +33,6 @@ export default function BlocDetailsScreen() {
     );
   }
 
-  const handleSubBlocPress = (subId: string) => {
-    router.push({
-      pathname: '/room-profiles',
-      params: { subId, blocId },
-    });
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
@@ -47,55 +40,64 @@ export default function BlocDetailsScreen() {
         
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* HEADER ROUGE PILL SHAPE : RETOUR + TITRE */}
+          {/* HEADER ROUGE PILL SHAPE */}
           <View style={styles.redHeaderPill}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
               <ChevronLeft size={28} color="white" />
             </TouchableOpacity>
             <Text style={styles.headerTitleText}>
-              BLOC {blocId.toUpperCase()}
+              BLOC {blockId.toUpperCase()}
             </Text>
             <View style={{ width: 40 }} /> 
           </View>
 
-          {/* IMAGE PRINCIPALE DU BLOC */}
-          <View style={styles.mainCard}>
+          {/* 1. VUE DE DESSUS (Pointe vers l'affichage plein écran) */}
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: '/fullscreen-view', params: { imageUri: bloc.mainImage, title: `VUE DE DESSUS - BLOC ${blockId}` } })}
+            style={styles.imageCard}
+            activeOpacity={0.9}
+          >
             <Image
               source={{ uri: bloc.mainImage }}
-              style={styles.mainImage}
+              style={styles.landscapeImage}
               resizeMode="cover"
             />
-            <View style={styles.imageCaption}>
-              <Text style={styles.captionText}>VUE D'ENSEMBLE DU BLOC {blocId}</Text>
+            <View style={styles.imageLabelContainer}>
+              <Text style={styles.imageLabelText}>VUE DE DESSUS</Text>
             </View>
-          </View>
+          </TouchableOpacity>
 
-          {/* LISTE DES SOUS-BLOCS */}
-          <View style={styles.subBlocsContainer}>
-            {bloc.subBlocs && (bloc.subBlocs as any[]).map((subBloc: any, index: number) => (
-              <TouchableOpacity
-                key={subBloc.id || index}
-                onPress={() => handleSubBlocPress(subBloc.id)}
-                style={styles.subBlocWrapper}
-                activeOpacity={0.9}
-              >
-                <View style={styles.subBlocHeader}>
-                  <Text style={styles.subBlocTitle}>{subBloc.title.toUpperCase()}</Text>
-                </View>
+          {/* 2. SECTION SALLES (Pointe vers subdivision) */}
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: '/subdivision', params: { blockId, type: 'salles' } })}
+            style={styles.imageCard}
+            activeOpacity={0.9}
+          >
+            <Image
+              source={{ uri: bloc.sallesImage || bloc.mainImage }}
+              style={styles.landscapeImage}
+              resizeMode="cover"
+            />
+            <View style={styles.imageLabelContainer}>
+              <Text style={styles.imageLabelText}>SALLES</Text>
+            </View>
+          </TouchableOpacity>
 
-                <View style={styles.subBlocCard}>
-                  <Image
-                    source={{ uri: subBloc.image }}
-                    style={styles.subImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.subCaption}>
-                    <Text style={styles.subCaptionText}>{subBloc.imageTitle}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {/* 3. SECTION BUREAUX (Pointe vers subdivision) */}
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: '/subdivision', params: { blockId, type: 'bureaux' } })}
+            style={styles.imageCard}
+            activeOpacity={0.9}
+          >
+            <Image
+              source={{ uri: bloc.bureauxImage || bloc.mainImage }}
+              style={styles.landscapeImage}
+              resizeMode="cover"
+            />
+            <View style={styles.imageLabelContainer}>
+              <Text style={styles.imageLabelText}>BUREAUX</Text>
+            </View>
+          </TouchableOpacity>
 
         </ScrollView>
       </View>
@@ -107,9 +109,8 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
   container: { flex: 1 },
   scrollContent: { padding: 25, paddingTop: 30, paddingBottom: 40 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  // Header Rouge Pill
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
     paddingVertical: 12, 
@@ -119,62 +120,40 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     justifyContent: 'space-between',
     marginBottom: 25,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8
+    elevation: 6
   },
   backBtn: { padding: 5 },
-  headerTitleText: { 
-    color: 'white', 
-    fontWeight: 'bold', 
-    fontSize: 14, 
-    letterSpacing: 2,
-    textTransform: 'uppercase'
-  },
+  headerTitleText: { color: 'white', fontWeight: 'bold', fontSize: 14, letterSpacing: 2 },
 
-  // Carte Image Principale
-  mainCard: { 
-    backgroundColor: 'white', 
-    borderRadius: 35, 
-    overflow: 'hidden', 
-    elevation: 4, 
-    marginBottom: 30,
-    borderWidth: 1,
-    borderColor: '#FCE7F3'
-  },
-  mainImage: { width: '100%', height: 180 },
-  imageCaption: { padding: 12, backgroundColor: 'white', alignItems: 'center' },
-  captionText: { color: '#64748B', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
-
-  // Sous-Blocs
-  subBlocsContainer: { gap: 25 },
-  subBlocWrapper: { marginBottom: 10 },
-  subBlocHeader: { marginBottom: 10, alignItems: 'center' },
-  subBlocTitle: { 
-    color: '#1A237E', 
-    fontWeight: '900', 
-    fontSize: 16, 
-    letterSpacing: 1.5 
-  },
-  subBlocCard: { 
+  imageCard: { 
     backgroundColor: 'white', 
     borderRadius: 30, 
     overflow: 'hidden', 
-    elevation: 3,
+    elevation: 4, 
+    marginBottom: 20,
+    height: 180, 
     borderWidth: 1,
-    borderColor: '#FCE7F3'
+    borderColor: '#FCE7F3',
+    position: 'relative'
   },
-  subImage: { width: '100%', height: 160 },
-  subCaption: { padding: 10, alignItems: 'center' },
-  subCaptionText: { 
-    color: '#64748B', 
-    fontSize: 10, 
-    fontStyle: 'italic', 
-    fontWeight: '600' 
+  landscapeImage: { width: '100%', height: '100%' },
+  
+  imageLabelContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(26, 35, 126, 0.8)', 
+    paddingVertical: 8,
+    alignItems: 'center'
+  },
+  imageLabelText: { 
+    color: 'white', 
+    fontWeight: '900', 
+    fontSize: 12, 
+    letterSpacing: 3 
   },
 
-  // Utils
   emptyText: { color: '#8B0000', fontWeight: 'bold', marginBottom: 20 },
   saveBtn: { backgroundColor: '#1A237E', paddingHorizontal: 30, paddingVertical: 15, borderRadius: 50 },
   saveBtnText: { color: 'white', fontWeight: 'bold' }
