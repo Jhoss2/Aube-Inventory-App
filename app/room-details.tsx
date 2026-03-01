@@ -4,7 +4,7 @@ import {
   ScrollView, Dimensions, SafeAreaView 
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Box } from 'lucide-react-native'; // Utilisation de la version Native
+import { ChevronLeft, Box } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
 
 const { width } = Dimensions.get('window');
@@ -14,14 +14,14 @@ export default function RoomDetailsScreen() {
   const { roomId } = useLocalSearchParams();
   const { appData } = useAppContext() as any;
 
-  // Récupération des données de la salle via la BDD/Context
-  const room = (appData.rooms || []).find((r: any) => r.id.toString() === roomId);
+  // Récupération des données dans le tableau "salles" (nom utilisé dans ton add-room)
+  const room = (appData.salles || []).find((r: any) => r.id.toString() === roomId);
 
-  // Si pas de salle trouvée, on affiche des valeurs par défaut ou "Vzzt" comme dans ton exemple
-  const roomName = room?.name || "Vzzt";
+  // Fallback sur les valeurs de ta maquette si la salle n'est pas trouvée
+  const roomName = room?.nom || "Vzzt";
   const capacity = room?.capacity || "2695";
-  const surface = room?.surface || "52622";
-  const planUrl = room?.image; // L'image enregistrée sert de plan
+  const area = room?.area || "52622";
+  const planUrl = room?.image; 
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -32,15 +32,15 @@ export default function RoomDetailsScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <ChevronLeft size={28} color="black" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{roomName}</Text>
+          <h1 style={styles.headerTitle}>{roomName}</h1>
           <View style={{ width: 40 }} /> 
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* 1. BOUTON HEADER ROUGE (PILL SHAPE) - STATIQUE */}
+          {/* 1. BOUTON HEADER ROUGE (PILL SHAPE) */}
           <View style={styles.redPill}>
-            <Text style={styles.redPillText}>DÉTAILS DE {roomName}</Text>
+            <Text style={styles.redPillText}>DÉTAILS DE {roomName.toUpperCase()}</Text>
           </View>
 
           {/* 2. CARTE BLANCHE (CARD) */}
@@ -54,7 +54,7 @@ export default function RoomDetailsScreen() {
             {/* Superficie */}
             <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
               <Text style={styles.infoLabel}>Superficie :</Text>
-              <Text style={styles.infoValue}>{surface}</Text>
+              <Text style={styles.infoValue}>{area}</Text>
             </View>
 
             {/* Encadré Plan 3D */}
@@ -63,7 +63,9 @@ export default function RoomDetailsScreen() {
                 <Box size={22} color="#2563EB" />
                 <Text style={styles.planText}>Plan 3D / Architecture</Text>
               </View>
-              <TouchableOpacity onPress={() => planUrl && router.push({ pathname: '/image-viewer', params: { imageUrl: planUrl } })}>
+              <TouchableOpacity 
+                onPress={() => planUrl && router.push({ pathname: '/image-viewer', params: { imageUrl: planUrl } })}
+              >
                 <Text style={styles.planLink}>Voir le plan</Text>
               </TouchableOpacity>
             </View>
@@ -73,14 +75,14 @@ export default function RoomDetailsScreen() {
           <View style={styles.actionContainer}>
             <TouchableOpacity 
               style={styles.actionBtn}
-              onPress={() => router.push({ pathname: '/inventory-list', params: { roomId } })}
+              onPress={() => router.push({ pathname: '/room-contents', params: { roomId } })}
             >
               <Text style={styles.actionBtnText}>AFFICHER LE MATÉRIEL</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={styles.actionBtn}
-              onPress={() => router.push({ pathname: '/inventory-form', params: { roomId } })}
+              onPress={() => router.push({ pathname: '/add-material', params: { roomId } })}
             >
               <Text style={styles.actionBtnText}>AJOUTER DU MATÉRIEL</Text>
             </TouchableOpacity>
@@ -88,7 +90,7 @@ export default function RoomDetailsScreen() {
 
         </ScrollView>
 
-        {/* Barre de navigation Android simulée (Design uniquement) */}
+        {/* Barre de navigation Android simulée */}
         <View style={styles.androidNav}>
            <View style={styles.navSquare} />
            <View style={styles.navCircle} />
