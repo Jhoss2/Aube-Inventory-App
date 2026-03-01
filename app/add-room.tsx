@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { 
   View, Text, TouchableOpacity, TextInput, ScrollView, 
-  StyleSheet, StatusBar, Alert, Image
+  StyleSheet, StatusBar, Alert, Image, SafeAreaView
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router'; // Ajout de useLocalSearchParams
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { ChevronLeft, Camera, Box } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppContext } from '@/lib/app-context';
 
 export default function AddRoomScreen() {
   const router = useRouter();
-  const { blocId, type } = useLocalSearchParams(); // On récupère le Bloc (A, B...) et le Type (SALLES, BUREAUX)
-  const context = useAppContext();
-  const { addSalle } = context as any;
+  const { blocId, type } = useLocalSearchParams<{ blocId: string, type: string }>(); 
+  const { addSalle } = useAppContext() as any;
   
   const [nom, setNom] = useState('');
   const [emplacement, setEmplacement] = useState('');
@@ -48,98 +47,234 @@ export default function AddRoomScreen() {
 
     const newRoom = {
       id: `room-${Date.now()}`,
-      blocId: blocId, // CRUCIAL : Lie la salle au Bloc
-      type: type,     // CRUCIAL : Lie au type (SALLES ou BUREAUX)
+      blocId: blocId,
+      type: type,
       name: nom.trim(),
       location: emplacement.trim(),
       level: niveau.trim(),
       capacity: capacity.trim(),
-      surface: area.trim(), // On utilise "surface" pour correspondre à l'écran de détails
+      surface: area.trim(),
       image: image,
     };
 
     try {
-      if (addSalle) {
-        await addSalle(newRoom); 
-        Alert.alert("Succès", "Enregistrée avec succès !", [
-          { text: "OK", onPress: () => router.back() }
-        ]);
-      }
+      await addSalle(newRoom); 
+      Alert.alert("Succès", "Enregistrée avec succès !", [
+        { text: "OK", onPress: () => router.back() }
+      ]);
     } catch (err) {
       Alert.alert("Erreur", "Impossible de sauvegarder.");
     }
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={26} color="#4b5563" />
-        </TouchableOpacity>
-        {/* Rappel du contexte en haut pour l'utilisateur */}
-        <Text style={styles.subHeaderText}>{type} - BLOC {blocId}</Text>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.redBadge}>
-          <Text style={styles.redBadgeText}>ENREGISTRER : {type}</Text>
-        </View>
-
-        <TouchableOpacity style={styles.photoZone} activeOpacity={0.9} onPress={pickImage}>
-          {image ? (
-            <Image source={{ uri: image }} style={styles.imagePreview} />
-          ) : (
-            <>
-              <Feather name="camera" size={48} color="white" />
-              <Text style={styles.photoText}>Photo de la salle</Text>
-            </>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.form}>
-          <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholder="Nom (ex: Salle 102)" placeholderTextColor="#9ca3af" />
-          <TextInput style={styles.input} value={emplacement} onChangeText={setEmplacement} placeholder="Bâtiment / Aile" placeholderTextColor="#9ca3af" />
-          <TextInput style={styles.input} value={niveau} onChangeText={setNiveau} placeholder="Niveau (ex: RDC, Étage 1)" placeholderTextColor="#9ca3af" />
-          <View style={styles.row}>
-            <TextInput style={[styles.input, { flex: 1, marginRight: 8 }]} value={capacity} onChangeText={setCapacity} placeholder="Capacité" keyboardType="numeric" placeholderTextColor="#9ca3af" />
-            <TextInput style={[styles.input, { flex: 1, marginLeft: 8 }]} value={area} onChangeText={setArea} placeholder="Superficie (m²)" keyboardType="numeric" placeholderTextColor="#9ca3af" />
+      <View style={styles.container}>
+        
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* HEADER ROUGE PILL SHAPE (RETOUR + TITRE) */}
+          <View style={styles.redHeaderPill}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <ChevronLeft size={28} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText}>
+              {type} - BLOC {blocId}
+            </Text>
+            <View style={{ width: 40 }} /> 
           </View>
-        </View>
 
-        {/* Bouton Plan 3D (Optionnel pour l'instant) */}
-        <TouchableOpacity style={styles.planZone}>
-          <Feather name="box" size={42} color="#9ca3af" />
-          <Text style={styles.planText}>Ajouter Plan 3D / Architecture</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <View style={styles.redBadgeLabel}>
+            <Text style={styles.redBadgeLabelText}>ENREGISTRER UNE NOUVELLE UNITÉ</Text>
+          </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveRoom}>
-          <Text style={styles.saveBtnText}>ENREGISTRER</Text>
-        </TouchableOpacity>
+          {/* ZONE PHOTO (DESIGN PILL) */}
+          <TouchableOpacity style={styles.photoZone} activeOpacity={0.9} onPress={pickImage}>
+            {image ? (
+              <Image source={{ uri: image }} style={styles.imagePreview} />
+            ) : (
+              <View style={styles.photoPlaceholder}>
+                <Camera size={40} color="white" />
+                <Text style={styles.photoText}>AJOUTER UNE PHOTO</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* FORMULAIRE DANS CARTE BLANCHE */}
+          <View style={styles.mainCard}>
+            <Text style={styles.label}>NOM DE L'ESPACE</Text>
+            <TextInput 
+              style={styles.input} 
+              value={nom} 
+              onChangeText={setNom} 
+              placeholder="Ex: Salle 102" 
+              placeholderTextColor="#94A3B8" 
+            />
+
+            <Text style={styles.label}>EMPLACEMENT / AILE</Text>
+            <TextInput 
+              style={styles.input} 
+              value={emplacement} 
+              onChangeText={setEmplacement} 
+              placeholder="Ex: Bâtiment A, Aile Est" 
+              placeholderTextColor="#94A3B8" 
+            />
+
+            <Text style={styles.label}>NIVEAU / ÉTAGE</Text>
+            <TextInput 
+              style={styles.input} 
+              value={niveau} 
+              onChangeText={setNiveau} 
+              placeholder="Ex: RDC, Étage 1" 
+              placeholderTextColor="#94A3B8" 
+            />
+
+            <View style={styles.row}>
+              <View style={styles.flex1}>
+                <Text style={styles.label}>CAPACITÉ</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={capacity} 
+                  onChangeText={setCapacity} 
+                  placeholder="Pers." 
+                  keyboardType="numeric" 
+                  placeholderTextColor="#94A3B8" 
+                />
+              </View>
+              <View style={[styles.flex1, { marginLeft: 15 }]}>
+                <Text style={styles.label}>SUPERFICIE</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={area} 
+                  onChangeText={setArea} 
+                  placeholder="m²" 
+                  keyboardType="numeric" 
+                  placeholderTextColor="#94A3B8" 
+                />
+              </View>
+            </View>
+
+            {/* SECTION PLAN 3D */}
+            <TouchableOpacity style={styles.planBox}>
+              <Box size={24} color="#1A237E" />
+              <Text style={styles.planText}>AJOUTER PLAN 3D / ARCHI</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* BOUTON ENREGISTRER */}
+          <TouchableOpacity style={styles.saveBtn} onPress={handleSaveRoom}>
+            <Text style={styles.saveBtnText}>VALIDER L'ENREGISTREMENT</Text>
+          </TouchableOpacity>
+
+        </ScrollView>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FB' },
-  header: { paddingHorizontal: 20, paddingTop: 50, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backBtn: { width: 40, height: 40, justifyContent: 'center' },
-  subHeaderText: { color: '#9ca3af', fontWeight: 'bold', fontSize: 12 },
-  scrollContent: { paddingHorizontal: 24, paddingBottom: 120 },
-  redBadge: { backgroundColor: '#8B0000', paddingVertical: 16, borderRadius: 50, marginVertical: 10 },
-  redBadgeText: { color: 'white', textAlign: 'center', fontWeight: 'bold', fontSize: 16, letterSpacing: 1 },
-  photoZone: { backgroundColor: '#1D3583', borderRadius: 40, height: 180, justifyContent: 'center', alignItems: 'center', marginTop: 15, overflow: 'hidden' },
+  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
+  container: { flex: 1 },
+  scrollContent: { padding: 25, paddingTop: 30, paddingBottom: 60 },
+  
+  // Header Rouge Pill
+  redHeaderPill: { 
+    backgroundColor: '#8B0000', 
+    paddingVertical: 12, 
+    paddingHorizontal: 15, 
+    borderRadius: 50, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    elevation: 6
+  },
+  backBtn: { padding: 5 },
+  headerTitleText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 12, 
+    letterSpacing: 1.5,
+    textTransform: 'uppercase'
+  },
+
+  redBadgeLabel: { 
+    backgroundColor: '#8B0000', 
+    paddingVertical: 12, 
+    borderRadius: 50, 
+    alignItems: 'center', 
+    marginBottom: 25 
+  },
+  redBadgeLabelText: { color: 'white', fontWeight: 'bold', fontSize: 10, letterSpacing: 2 },
+
+  // Zone Photo
+  photoZone: { 
+    backgroundColor: '#1A237E', 
+    borderRadius: 35, 
+    height: 180, 
+    overflow: 'hidden', 
+    marginBottom: 25,
+    elevation: 4
+  },
+  photoPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  photoText: { color: 'white', fontWeight: 'bold', fontSize: 11, marginTop: 10, letterSpacing: 1 },
   imagePreview: { width: '100%', height: '100%' },
-  photoText: { color: 'white', fontWeight: 'bold', fontSize: 16, marginTop: 10 },
-  form: { marginTop: 20 },
-  input: { backgroundColor: 'white', borderWidth: 1, borderColor: '#f3f4f6', borderRadius: 50, paddingHorizontal: 25, paddingVertical: 16, marginBottom: 15, color: '#000', fontWeight: '500' },
+
+  // Carte Formulaire
+  mainCard: { 
+    backgroundColor: 'white', 
+    borderRadius: 35, 
+    padding: 22, 
+    elevation: 3, 
+    borderWidth: 1, 
+    borderColor: '#FCE7F3' 
+  },
+  label: { 
+    fontSize: 9, 
+    fontWeight: '900', 
+    color: '#1A237E', 
+    letterSpacing: 1, 
+    marginBottom: 8, 
+    marginLeft: 10 
+  },
+  input: { 
+    backgroundColor: '#F8F9FB', 
+    borderRadius: 20, 
+    paddingVertical: 14, 
+    paddingHorizontal: 20, 
+    marginBottom: 18, 
+    color: '#374151', 
+    fontWeight: 'bold', 
+    borderWidth: 1, 
+    borderColor: '#EDF0F5' 
+  },
   row: { flexDirection: 'row' },
-  planZone: { borderWidth: 2, borderStyle: 'dashed', borderColor: '#d1d5db', borderRadius: 40, paddingVertical: 40, alignItems: 'center', marginTop: 10 },
-  planText: { color: '#9ca3af', fontWeight: 'bold', marginTop: 8 },
-  footer: { position: 'absolute', bottom: 30, left: 24, right: 24 },
-  saveBtn: { backgroundColor: '#1D3583', paddingVertical: 20, borderRadius: 50, alignItems: 'center', elevation: 4 },
-  saveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16, letterSpacing: 2 }
+  flex1: { flex: 1 },
+
+  planBox: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    gap: 12,
+    borderWidth: 2, 
+    borderStyle: 'dashed', 
+    borderColor: '#E2E8F0', 
+    borderRadius: 25, 
+    paddingVertical: 20, 
+    marginTop: 5,
+    backgroundColor: '#F8FAFC'
+  },
+  planText: { color: '#1A237E', fontWeight: 'bold', fontSize: 11, letterSpacing: 0.5 },
+
+  // Bouton Save
+  saveBtn: { 
+    backgroundColor: '#1A237E', 
+    paddingVertical: 22, 
+    borderRadius: 50, 
+    marginTop: 35, 
+    alignItems: 'center', 
+    elevation: 8 
+  },
+  saveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13, letterSpacing: 2 }
 });
