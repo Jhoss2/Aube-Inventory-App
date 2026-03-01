@@ -1,64 +1,61 @@
-import React from 'react';
-import { 
-  View, 
-  Image, 
-  TouchableOpacity, 
-  StyleSheet, 
-  StatusBar, 
-  Dimensions 
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Image, TouchableOpacity, StyleSheet, StatusBar, Dimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+
+// Tentative d'importation sécurisée
+let ScreenOrientation: any = null;
+try {
+  ScreenOrientation = require('expo-screen-orientation');
+} catch (e) {
+  console.log("Orientation non supportée sur ce support");
+}
 
 export default function FullscreenViewScreen() {
   const router = useRouter();
   const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
 
+  useEffect(() => {
+    // Force le paysage uniquement si le module est présent
+    if (ScreenOrientation && ScreenOrientation.lockAsync) {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    }
+    
+    return () => {
+      if (ScreenOrientation && ScreenOrientation.unlockAsync) {
+        ScreenOrientation.unlockAsync();
+      }
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
-      {/* Cacher la barre d'état pour une immersion totale */}
       <StatusBar hidden />
-
-      {/* BOUTON FERMER */}
-      <TouchableOpacity 
-        style={styles.closeButton} 
-        onPress={() => router.back()}
-      >
-        <Feather name="x" size={30} color="white" />
+      <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
+        <Feather name="x" size={32} color="white" />
       </TouchableOpacity>
-
-      {/* AFFICHAGE DE L'IMAGE EN PLEIN ÉCRAN */}
-      {imageUri ? (
+      
+      {imageUri && (
         <Image 
           source={{ uri: imageUri }} 
-          style={styles.fullscreenImage} 
+          style={styles.img} 
           resizeMode="contain" 
         />
-      ) : null}
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: 'black', 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
-  fullscreenImage: { 
-    width: Dimensions.get('window').width, 
-    height: Dimensions.get('window').height,
-    // Note : Le resizeMode "contain" assure que toute l'image est visible 
-    // sans être rognée, peu importe le ratio de la tablette.
-  },
-  closeButton: { 
+  container: { flex: 1, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center' },
+  img: { width: '100%', height: '100%' },
+  closeBtn: { 
     position: 'absolute', 
     top: 40, 
-    right: 20, 
+    right: 40, 
     zIndex: 10, 
     backgroundColor: 'rgba(0,0,0,0.5)', 
-    padding: 10, 
-    borderRadius: 30 
+    padding: 12, 
+    borderRadius: 35 
   }
 });
