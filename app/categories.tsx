@@ -74,21 +74,21 @@ export default function CategoriesScreen() {
       <StatusBar barStyle="dark-content" />
       <View style={styles.container}>
         
-        {/* HEADER ROUGE PILL SHAPE */}
-        <View style={styles.headerWrapper}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* HEADER ROUGE PILL SHAPE : SANS WRAPPER BLANC */}
           <View style={styles.redHeaderPill}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
               <ChevronLeft size={28} color="white" />
             </TouchableOpacity>
+            
             <Text style={styles.headerTitleText}>CATÉGORIES</Text>
+            
             <TouchableOpacity onPress={toggleAddInput} style={styles.addIconBtn}>
-              {showAddInput ? <X size={24} color="white" /> : <Plus size={24} color="white" />}
+              {showAddInput ? <X size={26} color="white" /> : <Plus size={26} color="white" />}
             </TouchableOpacity>
           </View>
-        </View>
 
-        <View style={styles.content}>
-          
           {/* INPUT D'AJOUT DYNAMIQUE */}
           {showAddInput && (
             <View style={styles.addContainer}>
@@ -110,7 +110,7 @@ export default function CategoriesScreen() {
           <View style={styles.searchSection}>
             <Search size={20} color="#94A3B8" style={styles.searchIcon} />
             <TextInput
-              placeholder="RECHERCHER..."
+              placeholder="RECHERCHER UNE CATÉGORIE..."
               value={searchTerm}
               onChangeText={setSearchTerm}
               style={styles.searchInput}
@@ -119,10 +119,7 @@ export default function CategoriesScreen() {
           </View>
 
           {/* LISTE DES BOUTONS (PILL SHAPE) */}
-          <ScrollView 
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollPadding}
-          >
+          <View style={styles.listContainer}>
             {filteredCategories.length > 0 ? (
               filteredCategories.map((category, index) => (
                 <TouchableOpacity 
@@ -139,34 +136,44 @@ export default function CategoriesScreen() {
             ) : (
               <Text style={styles.emptyText}>AUCUNE CATÉGORIE TROUVÉE</Text>
             )}
-          </ScrollView>
-        </View>
+          </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: 'white' },
-  container: { flex: 1, backgroundColor: '#F8F9FB' },
-  headerWrapper: { paddingVertical: 10, alignItems: 'center', backgroundColor: 'white' },
+  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
+  container: { flex: 1 },
+  scrollContent: { padding: 25, paddingTop: 30 },
+  
+  // Header Rouge unifié (Pill)
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
-    width: '92%', 
     paddingVertical: 12, 
     paddingHorizontal: 15, 
     borderRadius: 50, 
     flexDirection: 'row', 
     alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 4
+    marginBottom: 30,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8
   },
   backBtn: { padding: 5 },
   addIconBtn: { padding: 5 },
-  headerTitleText: { color: 'white', fontWeight: 'bold', fontSize: 14, letterSpacing: 2 },
+  headerTitleText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 14, 
+    letterSpacing: 2,
+    textTransform: 'uppercase'
+  },
   
-  content: { flex: 1, paddingHorizontal: 25, paddingTop: 15 },
-  
+  // Ajout dynamique
   addContainer: { flexDirection: 'row', marginBottom: 20, gap: 10 },
   addInput: { 
     flex: 1, 
@@ -174,8 +181,7 @@ const styles = StyleSheet.create({
     borderRadius: 50, 
     paddingHorizontal: 20, 
     height: 55, 
-    borderWidth: 1, 
-    borderColor: '#8B0000',
+    elevation: 2,
     fontWeight: 'bold',
     color: '#1A237E'
   },
@@ -189,18 +195,22 @@ const styles = StyleSheet.create({
     elevation: 2 
   },
 
+  // Barre de recherche
   searchSection: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    backgroundColor: '#E2E8F0', 
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', 
     borderRadius: 50, 
     paddingHorizontal: 15, 
-    marginBottom: 25 
+    marginBottom: 25,
+    borderWidth: 1,
+    borderColor: 'white'
   },
   searchIcon: { marginRight: 10 },
   searchInput: { flex: 1, height: 50, fontWeight: 'bold', color: '#1A237E' },
 
-  scrollPadding: { paddingBottom: 40 },
+  // Liste
+  listContainer: { paddingBottom: 40 },
   catBtn: { 
     backgroundColor: '#1A237E', 
     paddingVertical: 18, 
@@ -209,6 +219,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 3
   },
-  catBtnText: { color: 'white', fontWeight: 'bold', fontSize: 13, letterSpacing: 1.5 },
-  emptyText: { textAlign: 'center', color: '#94A3B8', marginTop: 50, fontWeight: 'bold', letterSpacing: 1 },
+  catBtnText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 13, 
+    letterSpacing: 1.5 
+  },
+  emptyText: { 
+    textAlign: 'center', 
+    color: '#94A3B8', 
+    marginTop: 50, 
+    fontWeight: 'bold', 
+    letterSpacing: 1 
+  },
 });
