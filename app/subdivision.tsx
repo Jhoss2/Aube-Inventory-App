@@ -1,11 +1,20 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView, 
+  StyleSheet, 
+  SafeAreaView, 
+  StatusBar 
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 
 export default function SubdivisionScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams(); // 'A', 'B', etc.
+  // On récupère le bloc et le type (salles/bureaux)
+  const { blockId, type } = useLocalSearchParams<{ blockId: string, type: string }>();
 
   const niveaux = [
     "· Sous-sol ·", 
@@ -16,67 +25,136 @@ export default function SubdivisionScreen() {
     "· Quatrième Niveau ·"
   ];
 
+  const handleLevelPress = (niveau: string) => {
+    router.push({
+      pathname: '/room-profiles',
+      params: { blockId, type, level: niveau }
+    });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      <View style={styles.container}>
+      
+      {/* HEADER ROUGE AVEC RETOUR INTÉGRÉ */}
+      <View style={styles.headerPadding}>
+        <View style={styles.redHeaderPill}>
+          <TouchableOpacity 
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
+            <ChevronLeft size={28} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitleText}>
+            BLOC {blockId}{type === 'salles' ? '1' : '2'}
+          </Text>
+          <View style={{ width: 44 }} /> 
+        </View>
+      </View>
+
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         
-        {/* HEADER ROUGE AVEC RETOUR INTÉGRÉ */}
-        <View style={styles.headerContainer}>
-          <View style={styles.redHeaderPill}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <ChevronLeft size={28} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>BLOC {id}1</Text>
-            <View style={{ width: 40 }} /> 
+        {/* TITRE SECTION : PILL BLANCHE TEXTE BLEU */}
+        <View style={styles.sectionTitleWrapper}>
+          <View style={styles.whitePill}>
+            <Text style={styles.sectionTitleText}>
+              · NIVEAUX DE SUBDIVISION ·
+            </Text>
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.subTitleContainer}>
-            <Text style={styles.subTitleText}>· NIVEAUX DE SUBDIVISION ·</Text>
-          </View>
+        {/* LISTE DES BOUTONS - BLEU MARINE */}
+        <View style={styles.buttonList}>
+          {niveaux.map((niveau, index) => (
+            <TouchableOpacity 
+              key={index} 
+              onPress={() => handleLevelPress(niveau)}
+              style={styles.levelButton}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.levelButtonText}>
+                {niveau}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-          <View style={styles.listContainer}>
-            {niveaux.map((niveau, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={styles.levelBtn}
-                onPress={() => router.push({
-                  pathname: '/room-profiles',
-                  params: { blocId: id, niveau: niveau }
-                })}
-              >
-                <Text style={styles.levelBtnText}>{niveau}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: 'white' },
-  container: { flex: 1, backgroundColor: '#F8F9FB' },
-  headerContainer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 10, backgroundColor: 'white' },
+  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
+  container: { flex: 1 },
+  headerPadding: { px: 20, paddingTop: 15, paddingHorizontal: 20 },
+  scrollContent: { paddingTop: 20, paddingBottom: 40, alignItems: 'center' },
+  
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
+    height: 55, 
+    borderRadius: 28, 
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'space-between',
-    paddingVertical: 15, 
     paddingHorizontal: 10,
-    borderRadius: 50,
-    elevation: 4
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8
   },
-  backBtn: { padding: 5 },
-  headerTitleText: { color: 'white', fontWeight: '900', fontSize: 16, letterSpacing: 3, flex: 1, textAlign: 'center' },
-  scrollContent: { paddingTop: 20, paddingBottom: 40 },
-  subTitleContainer: { alignItems: 'center', marginBottom: 25 },
-  subTitleText: { color: '#9CA3AF', fontSize: 11, fontWeight: 'bold', letterSpacing: 2.5 },
-  listContainer: { paddingHorizontal: 24, gap: 15 },
-  levelBtn: { backgroundColor: '#1A237E', paddingVertical: 18, borderRadius: 50, alignItems: 'center', elevation: 2 },
-  levelBtnText: { color: 'white', fontWeight: 'bold', fontSize: 14 }
+  backBtn: { padding: 8 },
+  headerTitleText: { 
+    color: 'white', 
+    fontWeight: '900', 
+    fontSize: 16, 
+    letterSpacing: 4, 
+    textAlign: 'center',
+    flex: 1
+  },
+
+  sectionTitleWrapper: { marginBottom: 30, alignItems: 'center' },
+  whitePill: { 
+    backgroundColor: 'white', 
+    paddingHorizontal: 24, 
+    paddingVertical: 10, 
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    elevation: 12, // Lueur noire (shadow) pour tablette
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 }
+  },
+  sectionTitleText: { 
+    color: '#1A237E', 
+    fontSize: 11, 
+    fontWeight: '900', 
+    letterSpacing: 2 
+  },
+
+  buttonList: { width: '100%', paddingHorizontal: 25, gap: 16, maxWidth: 600 },
+  levelButton: { 
+    backgroundColor: '#1A237E', 
+    height: 55, 
+    borderRadius: 28, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4
+  },
+  levelButtonText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 14, 
+    letterSpacing: 2,
+    textTransform: 'uppercase'
+  }
 });
