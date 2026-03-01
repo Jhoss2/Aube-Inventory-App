@@ -1,41 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  View, Text, TouchableOpacity, TextInput, FlatList, 
-  Image, ImageBackground, KeyboardAvoidingView, 
-  Platform, ActivityIndicator, StyleSheet 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  TextInput, 
+  FlatList, 
+  Image, 
+  ImageBackground, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ActivityIndicator, 
+  StyleSheet,
+  StatusBar
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { ChevronLeft, Send, CheckCheck } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
 // @ts-ignore
 import { chatWithAubeStream } from '@/lib/aube-engine';
 
-// Correctif global pour autoriser className dans ce fichier sans erreur TS
-declare global {
-  namespace JSX {
-    interface IntrinsicAttributes {
-      className?: string;
-    }
-  }
-}
-
 export default function ChatAubeScreen() {
   const router = useRouter();
-  const context = useAppContext();
-  const { appData } = context as any;
+  const { appData } = useAppContext() as any;
   const flatListRef = useRef<FlatList>(null);
 
   const assistantName = appData?.settings?.assistantName || "Aube";
-  const assistantAvatar = appData?.settings?.assistantAvatar || "https://api.dicebear.com/7.x/bottts/svg?seed=Aube&backgroundColor=f472b6";
+  const assistantAvatar = appData?.settings?.assistantAvatar || "https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6";
   const systemPrompt = appData?.settings?.aubePrompt || "Tu es Aube, assistant expert de l'Université AUBEN.";
 
   const [messages, setMessages] = useState([
     {
       id: '1',
       sender: 'aube',
-      text: `Bonjour ! Je suis ${assistantName}. Comment puis-je vous aider ?`,
-      time: "20:14"
+      text: `Bonjour ! Je suis ${assistantName}. Comment puis-je vous aider aujourd'hui ?`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
   
@@ -89,77 +88,83 @@ export default function ChatAubeScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FDF2F8' }}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
       
-      {/* Header */}
-      <View {...({ className: "px-3 pt-2 pb-2" } as any)}>
-        <View {...({ className: "bg-[#B21F18] rounded-full py-2 px-4 flex-row items-center shadow-lg" } as any)}>
-          <TouchableOpacity onPress={() => router.back()} {...({ className: "p-1" } as any)}>
-            <Ionicons name="chevron-back" size={24} color="white" />
+      {/* HEADER ROUGE PILL SHAPE */}
+      <View style={styles.headerPadding}>
+        <View style={styles.redHeaderPill}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <ChevronLeft size={28} color="white" />
           </TouchableOpacity>
           
-          <View {...({ className: "w-10 h-10 rounded-full bg-pink-300 overflow-hidden border-2 border-white/20 ml-2" } as any)}>
-            <Image source={{ uri: assistantAvatar }} {...({ className: "w-full h-full" } as any)} />
+          <View style={styles.avatarContainer}>
+            <Image source={{ uri: assistantAvatar }} style={styles.avatarImg} />
           </View>
 
-          <View {...({ className: "flex-1 ml-3" } as any)}>
-            <Text {...({ className: "font-black text-sm text-white uppercase" } as any)}>{assistantName}</Text>
-            <View {...({ className: "flex-row items-center" } as any)}>
-              <View {...({ className: "w-1.5 h-1.5 rounded-full bg-green-400 mr-1" } as any)} />
-              <Text {...({ className: "text-[10px] font-bold text-white/80" } as any)}>En ligne</Text>
+          <View style={styles.headerInfo}>
+            <Text style={styles.assistantTitle}>{assistantName.toUpperCase()}</Text>
+            <View style={styles.statusRow}>
+              <View style={styles.statusDot} />
+              <Text style={styles.statusText}>EN LIGNE</Text>
             </View>
           </View>
+          <View style={{ width: 20 }} />
         </View>
       </View>
 
       <ImageBackground 
         source={{ uri: 'https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png' }}
-        imageStyle={{ opacity: 0.05 }}
-        style={{ flex: 1 }}
+        imageStyle={{ opacity: 0.03 }}
+        style={styles.chatBackground}
       >
         <FlatList
           ref={flatListRef}
           data={messages}
           keyExtractor={item => item.id}
-          contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View style={[styles.row, item.sender === 'user' ? styles.userRow : styles.aubeRow]}>
+            <View style={[styles.messageRow, item.sender === 'user' ? styles.userRow : styles.aubeRow]}>
               <View style={[styles.bubble, item.sender === 'user' ? styles.userBubble : styles.aubeBubble]}>
                 <Text style={styles.messageText}>{item.text}</Text>
-                <View {...({ className: "flex-row justify-end items-center mt-1" } as any)}>
+                <View style={styles.messageFooter}>
                   <Text style={styles.timeText}>{item.time}</Text>
-                  {item.sender === 'user' && <Ionicons name="checkmark-done" size={14} color="#000" style={{opacity: 0.5}} />}
+                  {item.sender === 'user' && <CheckCheck size={14} color="#1A237E" style={{opacity: 0.6}} />}
                 </View>
-                <View style={[styles.triangle, item.sender === 'user' ? styles.userTriangle : styles.aubeTriangle]} />
               </View>
             </View>
           )}
         />
         {isTyping && (
-           <View {...({ className: "ml-6 mb-4" } as any)}>
-              <ActivityIndicator size="small" color="#B21F18" />
+           <View style={styles.typingIndicator}>
+              <ActivityIndicator size="small" color="#8B0000" />
            </View>
         )}
       </ImageBackground>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
-        <View {...({ className: "flex-row items-center px-4 py-6" } as any)}>
-          <View {...({ className: "flex-1 bg-white rounded-full px-5 py-3 shadow-lg border border-pink-100" } as any)}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+      >
+        <View style={styles.inputContainer}>
+          <View style={styles.textInputWrapper}>
             <TextInput 
               placeholder={`Écrire à ${assistantName}...`}
-              {...({ className: "text-black text-sm font-bold" } as any)}
+              style={styles.textInput}
               value={inputValue}
               onChangeText={setInputValue}
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#94A3B8"
+              multiline={false}
             />
           </View>
           
           <TouchableOpacity 
             onPress={handleSendMessage}
             disabled={isTyping || !inputValue.trim()}
-            {...({ className: "w-14 h-14 bg-[#1D3583] rounded-full items-center justify-center ml-2 shadow-xl" } as any)}
+            style={[styles.sendBtn, (!inputValue.trim() || isTyping) && styles.sendBtnDisabled]}
           >
-            <Ionicons name="send" size={22} color="white" style={{ marginLeft: 4 }} />
+            <Send size={22} color="white" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -169,18 +174,102 @@ export default function ChatAubeScreen() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', marginBottom: 15 },
+  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
+  headerPadding: { paddingHorizontal: 20, paddingTop: 10, marginBottom: 10 },
+  
+  redHeaderPill: { 
+    backgroundColor: '#8B0000', 
+    borderRadius: 50, 
+    paddingVertical: 10, 
+    paddingHorizontal: 15, 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8
+  },
+  backBtn: { padding: 5 },
+  avatarContainer: { 
+    width: 42, 
+    height: 42, 
+    borderRadius: 21, 
+    backgroundColor: 'white', 
+    borderWidth: 2, 
+    borderColor: 'rgba(255,255,255,0.3)',
+    overflow: 'hidden',
+    marginLeft: 10
+  },
+  avatarImg: { width: '100%', height: '100%' },
+  headerInfo: { flex: 1, marginLeft: 12 },
+  assistantTitle: { color: 'white', fontWeight: '900', fontSize: 13, letterSpacing: 1.5 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ADE80', marginRight: 5 },
+  statusText: { color: 'rgba(255,255,255,0.7)', fontSize: 9, fontWeight: 'bold' },
+
+  chatBackground: { flex: 1 },
+  listContent: { padding: 20, paddingBottom: 30 },
+  
+  messageRow: { flexDirection: 'row', marginBottom: 18 },
   userRow: { justifyContent: 'flex-end' },
   aubeRow: { justifyContent: 'flex-start' },
-  bubble: {
-    maxWidth: '80%', padding: 12, borderRadius: 18, position: 'relative',
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2, elevation: 2
+  
+  bubble: { 
+    maxWidth: '85%', 
+    padding: 15, 
+    borderRadius: 25, 
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 5
   },
-  userBubble: { backgroundColor: '#E9D5FF', borderTopRightRadius: 0 },
-  aubeBubble: { backgroundColor: '#FBCFE8', borderTopLeftRadius: 0 },
-  messageText: { fontSize: 14, fontWeight: '700', color: '#000' },
-  timeText: { fontSize: 9, fontWeight: '700', opacity: 0.5, marginRight: 4 },
-  triangle: { position: 'absolute', top: 0, width: 10, height: 10 },
-  userTriangle: { right: -5, backgroundColor: '#E9D5FF', borderBottomLeftRadius: 10 },
-  aubeTriangle: { left: -5, backgroundColor: '#FBCFE8', borderBottomRightRadius: 10 }
+  userBubble: { 
+    backgroundColor: '#E0E7FF', 
+    borderBottomRightRadius: 4, 
+    borderWidth: 1, 
+    borderColor: '#C7D2FE' 
+  },
+  aubeBubble: { 
+    backgroundColor: 'white', 
+    borderBottomLeftRadius: 4, 
+    borderWidth: 1, 
+    borderColor: '#F1F5F9' 
+  },
+  
+  messageText: { fontSize: 14, fontWeight: '600', color: '#1E293B', lineHeight: 20 },
+  messageFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 6, gap: 5 },
+  timeText: { fontSize: 9, fontWeight: 'bold', color: '#64748B' },
+  
+  typingIndicator: { marginLeft: 25, marginBottom: 20 },
+
+  inputContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 20, 
+    paddingVertical: 15,
+    backgroundColor: 'transparent'
+  },
+  textInputWrapper: { 
+    flex: 1, 
+    backgroundColor: 'white', 
+    borderRadius: 50, 
+    paddingHorizontal: 20, 
+    height: 55, 
+    justifyContent: 'center',
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#FCE7F3'
+  },
+  textInput: { color: '#1A237E', fontWeight: 'bold', fontSize: 14 },
+  sendBtn: { 
+    width: 55, 
+    height: 55, 
+    backgroundColor: '#1A237E', 
+    borderRadius: 27.5, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginLeft: 12,
+    elevation: 6
+  },
+  sendBtnDisabled: { backgroundColor: '#94A3B8', elevation: 0 }
 });
