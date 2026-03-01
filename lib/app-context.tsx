@@ -5,70 +5,70 @@ const AppContext = createContext<any>(null);
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [appData, setAppData] = useState({
-    salles: [],
-    materiels: [], // Liste plate de tout le matériel
+    materiels: [], // Stockage central de tout le matériel (Salles + Bureaux)
     notes: [],
     settings: {
       assistantName: "Aube",
       assistantAvatar: "https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6",
       aubePrompt: "Tu es Aube, assistant expert de l'Université AUBEN.",
-      // Ajout des clés attendues par ton HomeScreen
       univImage: null, 
       bgImage: null,
       menuBg: null,
       menuLogo: null
     },
+    // Structure renforcée pour la navigation par Blocs
     blocs: {
       "A": {
         mainImage: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1000",
-        subBlocs: [
-          { id: "A1", title: "Bloc A - Niveau 1", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000", imageTitle: "Couloir A1" }
-        ]
-      }
-      // Les autres blocs se rajoutent ici...
+        sallesImage: "https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80",
+        bureauxImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80",
+        subdivisions: {
+          salles: ["Amphi A", "Salle 101", "Salle 102"],
+          bureaux: ["Secrétariat", "Comptabilité"]
+        }
+      },
+      "B": {
+        mainImage: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=1000",
+        sallesImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80",
+        bureauxImage: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80",
+        subdivisions: {
+          salles: ["Salle B1", "Salle B2", "Labo Info"],
+          bureaux: ["Direction", "Scolarité"]
+        }
+      },
+      // Ajoute C, D, E, F sur le même modèle...
     }
   });
 
-  // Charger les données au démarrage
+  // --- PERSISTENCE ---
   useEffect(() => {
     const loadData = async () => {
       try {
         const savedData = await AsyncStorage.getItem('@auben_data');
         if (savedData) {
           const parsed = JSON.parse(savedData);
-          // Fusionner avec l'état initial pour ne pas perdre les nouvelles clés (settings)
           setAppData(prev => ({ ...prev, ...parsed }));
         }
-      } catch (e) {
-        console.error("Erreur de chargement", e);
-      }
+      } catch (e) { console.error("Erreur chargement", e); }
     };
     loadData();
   }, []);
 
-  // Sauvegarder automatiquement
   const saveToStorage = async (newData: any) => {
-    try {
-      await AsyncStorage.setItem('@auben_data', JSON.stringify(newData));
-    } catch (e) {
-      console.error("Erreur de sauvegarde", e);
-    }
+    try { await AsyncStorage.setItem('@auben_data', JSON.stringify(newData)); } 
+    catch (e) { console.error("Erreur sauvegarde", e); }
   };
 
-  // --- ACTIONS PARAMÈTRES (Pour index.tsx) ---
+  // --- ACTIONS ---
   const updateSettings = (newSettings: any) => {
     const newData = { ...appData, settings: { ...appData.settings, ...newSettings } };
     setAppData(newData);
     saveToStorage(newData);
   };
 
-  // --- ACTIONS MATÉRIEL (Interconnecté avec add-material.tsx) ---
+  // Gestion du Matériel (Ajout/Suppression)
   const addMateriel = (item: any) => {
-    const newItem = { 
-      ...item, 
-      id: `mat-${Date.now()}`,
-      createdAt: new Date().toISOString() 
-    };
+    const newItem = { ...item, id: `mat-${Date.now()}`, createdAt: new Date().toISOString() };
     const newData = { ...appData, materiels: [...appData.materiels, newItem] };
     setAppData(newData);
     saveToStorage(newData);
@@ -80,7 +80,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     saveToStorage(newData);
   };
 
-  // --- ACTIONS NOTES ---
+  // Gestion des Notes
   const addNote = (note: any) => {
     const newData = { ...appData, notes: [{ ...note, id: `note-${Date.now()}` }, ...appData.notes] };
     setAppData(newData);
@@ -110,7 +110,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       deleteMateriel, 
       addNote, 
       updateNote, 
-      deleteNote 
+      deleteNote,
     }}>
       {children}
     </AppContext.Provider>
