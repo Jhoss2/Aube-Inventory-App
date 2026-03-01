@@ -5,8 +5,8 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   ScrollView, 
-  SafeAreaView, 
-  StatusBar 
+  StatusBar,
+  Dimensions
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Box } from 'lucide-react-native';
@@ -14,91 +14,91 @@ import { useAppContext } from '@/lib/app-context';
 
 export default function RoomDetailsScreen() {
   const router = useRouter();
-  const { roomId } = useLocalSearchParams();
+  const { roomId } = useLocalSearchParams<{ roomId: string }>();
   const { appData } = useAppContext() as any;
 
-  // Récupération de la salle via le roomId
+  // Récupération de la salle (nom de propriété 'name' pour matcher add-room)
   const room = (appData.salles || []).find((s: any) => s.id.toString() === roomId);
-  const roomName = room?.nom || "Détails";
+  const roomName = room?.name || "DÉTAILS";
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+    <View style={styles.container}>
+      {/* Barre d'état translucide pour que le rose monte tout en haut */}
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        {/* HEADER ROUGE PILL - AVEC LUEUR */}
+        <View style={styles.redHeaderPill}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <ChevronLeft size={28} color="white" />
+          </TouchableOpacity>
           
-          {/* HEADER ROUGE (PILL SHAPE) : NAV + TITRE SANS BANDEAU BLANC AU-DESSUS */}
-          <View style={styles.redHeaderPill}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <ChevronLeft size={28} color="white" />
-            </TouchableOpacity>
-            
-            <Text style={styles.redHeaderText} numberOfLines={1}>
-              DÉTAILS DE {roomName.toUpperCase()}
-            </Text>
-            
-            {/* Spacer pour l'équilibre visuel du titre centré */}
-            <View style={{ width: 40 }} /> 
+          <Text style={styles.redHeaderText} numberOfLines={1}>
+            {roomName.toUpperCase()}
+          </Text>
+          
+          <View style={{ width: 40 }} /> 
+        </View>
+
+        {/* INFOS SECTION - AVEC LUEUR SUR LES PILLULES */}
+        <View style={styles.infoSection}>
+          <View style={[styles.infoRow, styles.glowEffect]}>
+            <Text style={styles.infoLabel}>CAPACITÉ :</Text>
+            <Text style={styles.infoValue}>{room?.capacity || "N/A"}</Text>
+          </View>
+          
+          <View style={[styles.infoRow, styles.glowEffect]}>
+            <Text style={styles.infoLabel}>SUPERFICIE :</Text>
+            <Text style={styles.infoValue}>{room?.surface || "N/A"} m²</Text>
           </View>
 
-          {/* CARTE BLANCHE (DETAILS) */}
-          <View style={styles.whiteCard}>
-            {/* Capacité */}
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Capacité :</Text>
-              <Text style={styles.infoValue}>{room?.capacity || "N/A"}</Text>
-            </View>
-            
-            {/* Superficie */}
-            <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
-              <Text style={styles.infoLabel}>Superficie :</Text>
-              <Text style={styles.infoValue}>{room?.area || "N/A"}</Text>
-            </View>
-
-            {/* Encadré Plan 3D */}
-            <View style={styles.planBox}>
-              <View style={styles.planLeft}>
-                <Box size={24} color="#2563EB" />
-                <Text style={styles.planText}>Plan 3D / Architecture</Text>
-              </View>
-              <TouchableOpacity 
-                onPress={() => room?.image && router.push({ pathname: '/image-viewer', params: { imageUrl: room.image } })}
-              >
-                <Text style={styles.planLink}>Voir le plan</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={[styles.infoRow, styles.glowEffect]}>
+            <Text style={styles.infoLabel}>EMPLACEMENT :</Text>
+            <Text style={styles.infoValue}>{room?.location || "N/A"}</Text>
           </View>
 
-          {/* BOUTONS D'ACTION (BLEU MARINE) */}
-          <View style={styles.actionContainer}>
-            <TouchableOpacity 
-              style={styles.actionBtn} 
-              onPress={() => router.push({ pathname: '/room-contents', params: { roomId, roomName } })}
-            >
-              <Text style={styles.actionBtnText}>AFFICHER LE MATÉRIEL</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.actionBtn} 
-              onPress={() => router.push({ pathname: '/categories', params: { roomId, roomName } })}
-            >
-              <Text style={styles.actionBtnText}>AJOUTER DU MATÉRIEL</Text>
-            </TouchableOpacity>
-          </View>
+          {/* SECTION PLAN 3D - AVEC LUEUR */}
+          <TouchableOpacity 
+            style={[styles.planBox, styles.glowEffect]}
+            onPress={() => room?.image && router.push({ pathname: '/fullscreen-view', params: { imageUri: room.image } })}
+          >
+            <Box size={24} color="#1A237E" />
+            <Text style={styles.planText}>VOIR LE PLAN 3D / ARCHI</Text>
+          </TouchableOpacity>
+        </View>
 
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+        {/* BOUTONS D'ACTION (BLEU MARINE) */}
+        <View style={styles.actionContainer}>
+          <TouchableOpacity 
+            style={styles.actionBtn} 
+            onPress={() => router.push({ pathname: '/room-contents', params: { roomId, roomName } })}
+          >
+            <Text style={styles.actionBtnText}>AFFICHER LE MATÉRIEL</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.actionBtn} 
+            onPress={() => router.push({ pathname: '/categories', params: { roomId, roomName } })}
+          >
+            <Text style={styles.actionBtnText}>AJOUTER DU MATÉRIEL</Text>
+          </TouchableOpacity>
+        </View>
+
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFE4E8' }, // Le fond rose commence dès le haut
-  container: { flex: 1 },
-  scrollContent: { padding: 25, paddingTop: 30 },
+  container: { flex: 1, backgroundColor: '#FFE4E8' },
+  scrollContent: { 
+    padding: 25, 
+    paddingTop: 55, // Padding pour compenser l'absence de SafeAreaView
+    paddingBottom: 40 
+  },
   
-  // Header Rouge unifié (Bouton Retour + Titre)
+  // Header Rouge Pill
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
     paddingVertical: 15, 
@@ -107,81 +107,80 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'space-between',
-    marginBottom: 35,
-    elevation: 6,
+    marginBottom: 40,
+    // Lueur noire sur le header
+    elevation: 8, 
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 }
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 }
   },
-  backBtn: { 
-    width: 40, 
-    height: 40, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
+  backBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   redHeaderText: { 
-    color: 'white', 
-    flex: 1, 
-    textAlign: 'center', 
-    fontWeight: 'bold', 
-    letterSpacing: 1.8, 
-    fontSize: 12,
-    textTransform: 'uppercase'
+    color: 'white', flex: 1, textAlign: 'center', fontWeight: '900', 
+    letterSpacing: 2, fontSize: 13, textTransform: 'uppercase' 
   },
 
-  // Carte Blanche
-  whiteCard: { 
-    backgroundColor: 'white', 
-    borderRadius: 35, 
-    padding: 25, 
-    elevation: 3, 
-    borderWidth: 1, 
-    borderColor: '#fce7f3' 
-  },
+  // Section Infos Flottantes
+  infoSection: { width: '100%', gap: 12 },
   infoRow: { 
+    backgroundColor: 'white', 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    paddingVertical: 20, 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#F9FAFB' 
+    paddingVertical: 18, 
+    paddingHorizontal: 25,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: '#FCE7F3',
   },
-  infoLabel: { color: '#6B7280', fontWeight: 'bold', fontSize: 13 },
-  infoValue: { fontWeight: '900', fontSize: 18, color: 'black' },
+  infoLabel: { color: '#1A237E', fontWeight: '900', fontSize: 10, letterSpacing: 1 },
+  infoValue: { fontWeight: 'bold', fontSize: 16, color: 'black' },
 
   // Encadré Plan 3D
   planBox: { 
-    marginTop: 20, 
-    backgroundColor: '#F8FAFC', 
-    borderRadius: 20, 
-    padding: 15, 
+    marginTop: 15, 
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', 
+    borderRadius: 25, 
+    padding: 20, 
     flexDirection: 'row', 
-    justifyContent: 'space-between', 
+    justifyContent: 'center', 
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#f1f5f9'
+    gap: 15,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#1A237E',
+    
   },
-  planLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  planText: { fontWeight: 'bold', fontStyle: 'italic', fontSize: 13, color: '#374151' },
-  planLink: { color: '#2563EB', fontWeight: 'bold', textDecorationLine: 'underline', fontSize: 13 },
+  planText: { fontWeight: '900', fontSize: 11, color: '#1A237E', letterSpacing: 1 },
+
+  // Effet de Lueur Noire (Glow)
+  glowEffect: {
+    elevation: 6, // Plus faible pour les petites pilules
+    shadowColor: '#000',
+    shadowOpacity: 0.2, // Lueur noire subtile
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 }
+  },
 
   // Boutons Bleu Marine
-  actionContainer: { marginTop: 40, gap: 18, paddingBottom: 40 },
+  actionContainer: { marginTop: 45, gap: 20 },
   actionBtn: { 
     backgroundColor: '#1A237E', 
     paddingVertical: 22, 
     borderRadius: 50, 
     alignItems: 'center', 
-    elevation: 4,
-    shadowColor: '#1A237E',
-    shadowOpacity: 0.3,
-    shadowRadius: 6
+    // Lueur bleue pour les boutons (shadowColor hérité)
+    elevation: 5,
+    shadowColor: '#000', 
+    shadowOpacity: 0.15, 
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 }
   },
   actionBtnText: { 
     color: 'white', 
-    fontWeight: 'bold', 
-    letterSpacing: 2.2, 
-    fontSize: 11 
+    fontWeight: '900', 
+    letterSpacing: 2.5, 
+    fontSize: 12 
   }
 });
