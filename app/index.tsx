@@ -40,7 +40,7 @@ export default function HomeScreen() {
               {[
                 { label: "Guide d'utilisation", path: '/guide-viewer' },
                 { label: "À propos du développeur", path: '/about-dev' },
-                { label: "Gestion des Salles", path: '/room-profiles' },
+                { label: "Gestion des Salles", path: '/bloc-details' }, // Correction : mène au début de la chaîne
                 { label: "Paramètres", path: '/settings' }
               ].map((option, index) => (
                 <TouchableOpacity 
@@ -81,7 +81,7 @@ export default function HomeScreen() {
             <TouchableOpacity onPress={() => setIsMenuOpen(true)}>
               <Feather name="menu" size={24} color="white" />
             </TouchableOpacity>
-            <Text style={{ color: 'white', fontWeight: 'bold' }}>ACCUEIL</Text>
+            <Text style={{ color: 'white', fontWeight: 'bold' }}></Text>
             <TouchableOpacity onPress={() => router.push('/settings')}>
               <MaterialCommunityIcons name="tune" size={24} color="white" />
             </TouchableOpacity>
@@ -96,24 +96,24 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Sélecteur de Blocs */}
+          {/* Sélecteur de Blocs - CORRIGÉ pour pointer vers bloc-details */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blockSelector}>
             {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
               <TouchableOpacity 
                 key={block} 
                 style={styles.blockButton}
-                onPress={() => router.push({ pathname: '/room-profiles', params: { blockId: block } })}
+                onPress={() => router.push({ pathname: '/bloc-details', params: { blockId: block } })}
               >
                 <Text style={styles.blockButtonText}>Bloc {block}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          {/* Section Université / Accès aux Profils */}
+          {/* Section Université / Accès aux Profils - CORRIGÉ pour pointer vers bloc-details */}
           <TouchableOpacity 
             style={styles.univSection} 
             activeOpacity={0.9}
-            onPress={() => router.push('/room-profiles')}
+            onPress={() => router.push('/bloc-details')}
           >
             <View style={styles.imageContainer}>
               {univImage ? (
@@ -121,11 +121,10 @@ export default function HomeScreen() {
               ) : (
                 <View style={styles.placeholderBlue}>
                   <Feather name="image" size={50} color="rgba(255,255,255,0.3)" />
-                  <Text style={styles.placeholderText}>Cliquer pour voir les salles</Text>
+                  <Text style={styles.placeholderText}>Cliquer pour voir les blocs</Text>
                 </View>
               )}
             </View>
-            {/* Le badge est maintenant séparé de l'image (pas de chevauchement) */}
             <View style={styles.titleBadgeUnder}>
               <Text style={styles.titleText}>UNIVERSITÉ AUBE NOUVELLE</Text>
             </View>
@@ -182,7 +181,6 @@ const styles = StyleSheet.create({
   placeholderBlue: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   placeholderText: { color: 'white', fontWeight: 'bold', marginTop: 10 },
 
-  // J'ai supprimé le marginTop négatif (-30) pour mettre 20 (espace positif en dessous)
   titleBadgeUnder: { backgroundColor: '#263d7e', paddingHorizontal: 25, paddingVertical: 12, borderRadius: 15, marginTop: 20, elevation: 5, borderWidth: 1, borderColor: '#fceef5' },
   titleText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
 
