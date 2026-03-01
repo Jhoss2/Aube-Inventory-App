@@ -1,110 +1,102 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 1. Structure complète et synchronisée
-interface AppSettings {
-  // Images Générales
-  univImage?: string;
-  bgImage?: string;
-  menuBg?: string;   
-  menuLogo?: string; 
+const AppContext = createContext<any>(null);
 
-  // Sécurité & Authentification (Nouveau)
-  authBgImage?: string;
-  authBlur?: number;
-
-  // Affiches (Remplacent les PDF)
-  guidePoster?: string;
-  aboutPoster?: string;
-
-  // Images des Blocs (A à F) - Utilisées par l'écran dynamique [id].tsx
-  [key: string]: any; // Permet l'accès dynamique blocA_aerial, etc.
-}
-
-interface AppData {
-  settings: AppSettings;
-  notes: any[];
-}
-
-interface AppContextType {
-  appData: AppData;
-  updateSettings: (newSettings: Partial<AppSettings>) => Promise<void>;
-  addNote: (note: any) => Promise<void>;
-  updateNote: (id: string, updatedNote: any) => Promise<void>;
-  deleteNote: (id: string) => Promise<void>;
-}
-
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [appData, setAppData] = useState<AppData>({
+export const AppProvider = ({ children }: { children: React.ReactNode }) => {
+  const [appData, setAppData] = useState({
+    salles: [],
+    materiels: [],
+    notes: [],
     settings: {
-      authBlur: 20, // Valeur par défaut
+      assistantName: "Aube",
+      assistantAvatar: "https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6",
+      aubePrompt: "Tu es Aube, assistant expert de l'Université AUBEN."
     },
-    notes: []
+    blocs: {
+      "A": {
+        mainImage: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1000",
+        subBlocs: [
+          { id: "A1", title: "Bloc A - Niveau 1", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000", imageTitle: "Couloir A1" }
+        ]
+      },
+      // Ajoute tes autres blocs ici...
+    }
   });
 
+  // Charger les données au démarrage
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const savedData = await AsyncStorage.getItem('@auben_data');
+        if (savedData) {
+          setAppData(JSON.parse(savedData));
+        }
+      } catch (e) {
+        console.error("Erreur de chargement", e);
+      }
+    };
     loadData();
   }, []);
 
-  const loadData = async () => {
+  // Sauvegarder automatiquement à chaque modification
+  const saveToStorage = async (newData: any) => {
     try {
-      const savedData = await AsyncStorage.getItem('aube_inventory_data');
-      if (savedData) {
-        setAppData(JSON.parse(savedData));
-      }
-    } catch (e) {
-      console.error("Erreur de chargement", e);
-    }
-  };
-
-  const saveData = async (newData: AppData) => {
-    try {
-      await AsyncStorage.setItem('aube_inventory_data', JSON.stringify(newData));
+      await AsyncStorage.setItem('@auben_data', JSON.stringify(newData));
     } catch (e) {
       console.error("Erreur de sauvegarde", e);
     }
   };
 
-  const updateSettings = async (newSettings: Partial<AppSettings>) => {
-    const updatedData = {
+  // --- ACTIONS SALLES ---
+  const addSalle = (salle: any) => {
+    const newData = { ...appData, salles: [...appData.salles, salle] };
+    setAppData(newData);
+    saveToStorage(newData);
+  };
+
+  // --- ACTIONS MATÉRIEL ---
+  const addMateriel = (item: any) => {
+    const newItem = { ...item, id: `mat-${Date.now()}` };
+    const newData = { ...appData, materiels: [...appData.materiels, newItem] };
+    setAppData(newData);
+    saveToStorage(newData);
+  };
+
+  const deleteMateriel = (id: string) => {
+    const newData = { ...appData, materiels: appData.materiels.filter((m: any) => m.id !== id) };
+    setAppData(newData);
+    saveToStorage(newData);
+  };
+
+  // --- ACTIONS NOTES ---
+  const addNote = (note: any) => {
+    const newData = { ...appData, notes: [note, ...appData.notes] };
+    setAppData(newData);
+    saveToStorage(newData);
+  };
+
+  const updateNote = (id: string, updatedNote: any) => {
+    const newData = {
       ...appData,
-      settings: { ...appData.settings, ...newSettings }
+      notes: appData.notes.map((n: any) => (n.id === id ? { ...n, ...updatedNote } : n))
     };
-    setAppData(updatedData);
-    await saveData(updatedData);
+    setAppData(newData);
+    saveToStorage(newData);
   };
 
-  const addNote = async (note: any) => {
-    const updatedData = {
-      ...appData,
-      notes: [note, ...appData.notes]
-    };
-    setAppData(updatedData);
-    await saveData(updatedData);
-  };
-
-  const updateNote = async (id: string, updatedFields: any) => {
-    const updatedNotes = appData.notes.map(note => 
-      note.id === id ? { ...note, ...updatedFields } : note
-    );
-    const updatedData = { ...appData, notes: updatedNotes };
-    setAppData(updatedData);
-    await saveData(updatedData);
-  };
-
-  const deleteNote = async (id: string) => {
-    const updatedNotes = appData.notes.filter(note => note.id !== id);
-    const updatedData = { ...appData, notes: updatedNotes };
-    setAppData(updatedData);
-    await saveData(updatedData);
+  const deleteNote = (id: string) => {
+    const newData = { ...appData, notes: appData.notes.filter((n: any) => n.id !== id) };
+    setAppData(newData);
+    saveToStorage(newData);
   };
 
   return (
     <AppContext.Provider value={{ 
       appData, 
-      updateSettings, 
+      addSalle, 
+      addMateriel, 
+      deleteMateriel, 
       addNote, 
       updateNote, 
       deleteNote 
@@ -112,12 +104,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AppContext.Provider>
   );
-}
+};
 
-export function useAppContext() {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
-  return context;
-}
+export const useAppContext = () => useContext(AppContext);
