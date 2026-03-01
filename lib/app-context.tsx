@@ -6,12 +6,17 @@ const AppContext = createContext<any>(null);
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [appData, setAppData] = useState({
     salles: [],
-    materiels: [],
+    materiels: [], // Liste plate de tout le matériel
     notes: [],
     settings: {
       assistantName: "Aube",
       assistantAvatar: "https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6",
-      aubePrompt: "Tu es Aube, assistant expert de l'Université AUBEN."
+      aubePrompt: "Tu es Aube, assistant expert de l'Université AUBEN.",
+      // Ajout des clés attendues par ton HomeScreen
+      univImage: null, 
+      bgImage: null,
+      menuBg: null,
+      menuLogo: null
     },
     blocs: {
       "A": {
@@ -19,8 +24,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         subBlocs: [
           { id: "A1", title: "Bloc A - Niveau 1", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000", imageTitle: "Couloir A1" }
         ]
-      },
-      // Ajoute tes autres blocs ici...
+      }
+      // Les autres blocs se rajoutent ici...
     }
   });
 
@@ -30,7 +35,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const savedData = await AsyncStorage.getItem('@auben_data');
         if (savedData) {
-          setAppData(JSON.parse(savedData));
+          const parsed = JSON.parse(savedData);
+          // Fusionner avec l'état initial pour ne pas perdre les nouvelles clés (settings)
+          setAppData(prev => ({ ...prev, ...parsed }));
         }
       } catch (e) {
         console.error("Erreur de chargement", e);
@@ -39,7 +46,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     loadData();
   }, []);
 
-  // Sauvegarder automatiquement à chaque modification
+  // Sauvegarder automatiquement
   const saveToStorage = async (newData: any) => {
     try {
       await AsyncStorage.setItem('@auben_data', JSON.stringify(newData));
@@ -48,16 +55,20 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // --- ACTIONS SALLES ---
-  const addSalle = (salle: any) => {
-    const newData = { ...appData, salles: [...appData.salles, salle] };
+  // --- ACTIONS PARAMÈTRES (Pour index.tsx) ---
+  const updateSettings = (newSettings: any) => {
+    const newData = { ...appData, settings: { ...appData.settings, ...newSettings } };
     setAppData(newData);
     saveToStorage(newData);
   };
 
-  // --- ACTIONS MATÉRIEL ---
+  // --- ACTIONS MATÉRIEL (Interconnecté avec add-material.tsx) ---
   const addMateriel = (item: any) => {
-    const newItem = { ...item, id: `mat-${Date.now()}` };
+    const newItem = { 
+      ...item, 
+      id: `mat-${Date.now()}`,
+      createdAt: new Date().toISOString() 
+    };
     const newData = { ...appData, materiels: [...appData.materiels, newItem] };
     setAppData(newData);
     saveToStorage(newData);
@@ -71,7 +82,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   // --- ACTIONS NOTES ---
   const addNote = (note: any) => {
-    const newData = { ...appData, notes: [note, ...appData.notes] };
+    const newData = { ...appData, notes: [{ ...note, id: `note-${Date.now()}` }, ...appData.notes] };
     setAppData(newData);
     saveToStorage(newData);
   };
@@ -94,7 +105,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AppContext.Provider value={{ 
       appData, 
-      addSalle, 
+      updateSettings,
       addMateriel, 
       deleteMateriel, 
       addNote, 
