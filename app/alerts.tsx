@@ -1,15 +1,17 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons, Feather } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ChevronLeft, MapPin, AlertTriangle, CheckCircle } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
 
 export default function AlertsScreen() {
   const router = useRouter();
-  const { materiels, salles } = useAppContext() as any;
+  const { appData } = useAppContext() as any;
 
-  // Filtrage en temps réel des alertes (Matériel endommagé ou en panne)
+  // Extraction sécurisée des données depuis appData
+  const materiels = appData?.materiels || [];
+  const salles = appData?.salles || [];
+
   const alerts = useMemo(() => {
     return materiels
       .filter((m: any) => m.etat === 'Endommagé' || m.etat === 'En panne')
@@ -20,26 +22,28 @@ export default function AlertsScreen() {
           salleNom: salle ? salle.nom : 'Salle inconnue',
         };
       })
-      .sort((a: any, b: any) => b.id - a.id); // Les plus récents en premier
+      .sort((a: any, b: any) => b.id - a.id);
   }, [materiels, salles]);
 
   const renderAlertItem = ({ item }: { item: any }) => (
     <View style={styles.alertCard}>
-      <View style={[styles.statusIndicator, { backgroundColor: item.etat === 'En panne' ? '#B21F18' : '#F59E0B' }]} />
+      {/* Barre d'état latérale */}
+      <View style={[styles.statusIndicator, { backgroundColor: item.etat === 'En panne' ? '#8B0000' : '#F59E0B' }]} />
       
       <View style={styles.alertContent}>
         <View style={styles.alertHeader}>
-          <Text style={styles.itemName}>{item.nom}</Text>
+          <Text style={styles.itemName}>{item.nom.toUpperCase()}</Text>
           <Text style={styles.alertDate}>{new Date(parseInt(item.id)).toLocaleDateString()}</Text>
         </View>
         
-        <Text style={styles.salleInfo}>
-          <Feather name="map-pin" size={12} color="#6b7280" /> {item.salleNom}
-        </Text>
+        <View style={styles.salleRow}>
+          <MapPin size={12} color="#64748B" />
+          <Text style={styles.salleInfo}>{item.salleNom}</Text>
+        </View>
 
         <View style={styles.badgeContainer}>
-          <View style={[styles.stateBadge, { backgroundColor: item.etat === 'En panne' ? '#FEE2E2' : '#FEF3C7' }]}>
-            <Text style={[styles.stateText, { color: item.etat === 'En panne' ? '#B91C1C' : '#92400E' }]}>
+          <View style={[styles.stateBadge, { backgroundColor: item.etat === 'En panne' ? '#FFE4E8' : '#FEF3C7' }]}>
+            <Text style={[styles.stateText, { color: item.etat === 'En panne' ? '#8B0000' : '#92400E' }]}>
               {item.etat.toUpperCase()}
             </Text>
           </View>
@@ -49,90 +53,106 @@ export default function AlertsScreen() {
 
       <TouchableOpacity 
         style={styles.detailsBtn}
-        onPress={() => router.push({ pathname: '/room-contents', params: { id: item.salleId } })}
+        onPress={() => router.push({ pathname: '/room-profiles', params: { id: item.salleId } })}
       >
-        <Ionicons name="arrow-forward-circle" size={30} color="#1D3583" />
+        <AlertTriangle size={24} color="#1A237E" />
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={28} color="#4b5563" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>CENTRE D'ALERTES</Text>
-        <View style={styles.badgeCount}>
-          <Text style={styles.badgeCountText}>{alerts.length}</Text>
+      <View style={styles.container}>
+        {/* HEADER ROUGE PILL SHAPE */}
+        <View style={styles.headerPadding}>
+            <View style={styles.redHeaderPill}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <ChevronLeft size={28} color="white" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitleText}>CENTRE D'ALERTES</Text>
+                <View style={styles.badgeCount}>
+                    <Text style={styles.badgeCountText}>{alerts.length}</Text>
+                </View>
+            </View>
         </View>
-      </View>
 
-      <View style={styles.content}>
-        {alerts.length > 0 ? (
-          <FlatList
-            data={alerts}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderAlertItem}
-            contentContainerStyle={styles.listPadding}
-            showsVerticalScrollIndicator={false}
-          />
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Feather name="check-circle" size={80} color="#d1d5db" />
-            <Text style={styles.emptyText}>Aucune alerte critique</Text>
-            <Text style={styles.emptySubText}>Tout votre matériel est opérationnel.</Text>
-          </View>
-        )}
+        <View style={styles.content}>
+          {alerts.length > 0 ? (
+            <FlatList
+              data={alerts}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderAlertItem}
+              contentContainerStyle={styles.listPadding}
+              showsVerticalScrollIndicator={false}
+            />
+          ) : (
+            <View style={styles.emptyContainer}>
+              <CheckCircle size={80} color="#8B0000" strokeWidth={1} />
+              <Text style={styles.emptyText}>AUCUNE ALERTE CRITIQUE</Text>
+              <Text style={styles.emptySubText}>Tout votre matériel est opérationnel.</Text>
+            </View>
+          )}
+        </View>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FB' },
-  header: { 
+  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
+  container: { flex: 1 },
+  headerPadding: { paddingHorizontal: 20, paddingTop: 20, marginBottom: 10 },
+  redHeaderPill: { 
+    backgroundColor: '#8B0000', 
+    paddingVertical: 12, 
+    paddingHorizontal: 15, 
+    borderRadius: 50, 
     flexDirection: 'row', 
     alignItems: 'center', 
-    paddingHorizontal: 20, 
-    paddingVertical: 15, 
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6'
+    justifyContent: 'space-between',
+    elevation: 6
   },
-  headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '900', color: '#1D3583', letterSpacing: 1 },
-  backBtn: { p: 5 },
-  badgeCount: { backgroundColor: '#B21F18', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeCountText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
+  backBtn: { padding: 5 },
+  headerTitleText: { 
+    color: 'white', 
+    fontWeight: '900', 
+    fontSize: 13, 
+    letterSpacing: 1.5,
+    textTransform: 'uppercase'
+  },
+  badgeCount: { backgroundColor: 'white', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 2 },
+  badgeCountText: { color: '#8B0000', fontWeight: '900', fontSize: 12 },
+  
   content: { flex: 1 },
-  listPadding: { padding: 20 },
+  listPadding: { padding: 20, paddingBottom: 40 },
+  
   alertCard: { 
     flexDirection: 'row', 
     backgroundColor: 'white', 
-    borderRadius: 20, 
+    borderRadius: 25, 
     marginBottom: 15, 
     overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
     alignItems: 'center'
   },
   statusIndicator: { width: 6, height: '100%' },
-  alertContent: { flex: 1, padding: 15 },
+  alertContent: { flex: 1, padding: 18 },
   alertHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  itemName: { fontWeight: 'bold', fontSize: 16, color: '#1f2937' },
-  alertDate: { fontSize: 11, color: '#9ca3af' },
-  salleInfo: { fontSize: 13, color: '#6b7280', marginBottom: 10 },
+  itemName: { fontWeight: '900', fontSize: 14, color: '#1A237E' },
+  alertDate: { fontSize: 10, fontWeight: 'bold', color: '#94A3B8' },
+  salleRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 },
+  salleInfo: { fontSize: 12, color: '#64748B', fontWeight: '600' },
   badgeContainer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  stateBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  stateText: { fontSize: 10, fontWeight: 'bold' },
-  categoryText: { fontSize: 12, color: '#9ca3af', fontStyle: 'italic' },
+  stateBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  stateText: { fontSize: 9, fontWeight: '900' },
+  categoryText: { fontSize: 11, color: '#94A3B8', fontStyle: 'italic', fontWeight: '600' },
   detailsBtn: { paddingHorizontal: 15 },
+  
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 100 },
-  emptyText: { marginTop: 20, fontSize: 18, fontWeight: 'bold', color: '#374151' },
-  emptySubText: { marginTop: 8, color: '#9ca3af' }
+  emptyText: { marginTop: 20, fontSize: 16, fontWeight: '900', color: '#1A237E', letterSpacing: 1 },
+  emptySubText: { marginTop: 8, color: '#64748B', fontSize: 13, fontWeight: '500' }
 });
