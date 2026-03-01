@@ -40,7 +40,7 @@ export default function HomeScreen() {
               {[
                 { label: "Guide d'utilisation", path: '/guide-viewer' },
                 { label: "À propos du développeur", path: '/about-dev' },
-                { label: "Gestion des Salles", path: '/room-profiles' }, // Correction chemin
+                { label: "Gestion des Salles", path: '/room-profiles' },
                 { label: "Paramètres", path: '/settings' }
               ].map((option, index) => (
                 <TouchableOpacity 
@@ -125,15 +125,15 @@ export default function HomeScreen() {
                 </View>
               )}
             </View>
+            {/* Le badge est maintenant séparé de l'image (pas de chevauchement) */}
             <View style={styles.titleBadgeUnder}>
-              <Text style={styles.titleText}>VOIR LES PROFILS DES SALLES</Text>
+              <Text style={styles.titleText}>UNIVERSITÉ AUBE NOUVELLE</Text>
             </View>
           </TouchableOpacity> 
         </ScrollView>
 
         {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
-          {/* Correction : mène maintenant aux Alertes */}
           <TouchableOpacity onPress={() => router.push('/alerts')}>
             <Feather name="bell" size={24} color="white" />
           </TouchableOpacity>
@@ -175,12 +175,16 @@ const styles = StyleSheet.create({
   blockSelector: { marginHorizontal: 12, marginTop: 20, backgroundColor: '#263d7e', borderRadius: 30, padding: 6, maxHeight: 60 },
   blockButton: { backgroundColor: '#385598', paddingHorizontal: 16, paddingVertical: 7, borderRadius: 6, marginRight: 6, justifyContent: 'center' },
   blockButtonText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
+  
   univSection: { marginHorizontal: 12, marginTop: 30, alignItems: 'center' },
   imageContainer: { width: '100%', height: 400, borderWidth: 3, borderColor: '#fceef5', borderRadius: 60, overflow: 'hidden', backgroundColor: '#4184f4', elevation: 10 },
   univImage: { width: '100%', height: '100%' },
   placeholderBlue: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   placeholderText: { color: 'white', fontWeight: 'bold', marginTop: 10 },
-  titleBadgeUnder: { backgroundColor: '#263d7e', paddingHorizontal: 25, paddingVertical: 12, borderRadius: 15, marginTop: -30, elevation: 5, borderWidth: 1, borderColor: '#fceef5' },
+
+  // J'ai supprimé le marginTop négatif (-30) pour mettre 20 (espace positif en dessous)
+  titleBadgeUnder: { backgroundColor: '#263d7e', paddingHorizontal: 25, paddingVertical: 12, borderRadius: 15, marginTop: 20, elevation: 5, borderWidth: 1, borderColor: '#fceef5' },
   titleText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
+
   bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 65, borderRadius: 35, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 40, elevation: 10 }
 });
