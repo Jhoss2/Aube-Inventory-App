@@ -1,20 +1,30 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, FlatList, Alert, StyleSheet, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  TextInput, 
+  FlatList, 
+  Alert, 
+  StyleSheet, 
+  KeyboardAvoidingView, 
+  Platform, 
+  Keyboard, 
+  SafeAreaView, 
+  StatusBar 
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { ScreenContainer } from '@/components/screen-container';
+import { ChevronLeft, Trash2, StickyNote } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
-import { Ionicons } from '@expo/vector-icons';
 
 export default function NoteEditorScreen() {
   const router = useRouter();
-  const context = useAppContext();
-  const { appData, addNote, updateNote, deleteNote } = context as any;
+  const { appData, addNote, updateNote, deleteNote } = useAppContext() as any;
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
-  // Récupération sécurisée des notes
   const notes = useMemo(() => {
     const list = appData?.notes || [];
     return [...list].sort((a: any, b: any) => 
@@ -30,7 +40,6 @@ export default function NoteEditorScreen() {
     
     try {
       if (editingId) {
-        // MISE À JOUR : On passe un nouvel objet complet
         await updateNote(editingId, { 
           title: title.trim(), 
           content: content.trim(), 
@@ -38,7 +47,6 @@ export default function NoteEditorScreen() {
         });
         Alert.alert("Succès", "Note mise à jour");
       } else {
-        // AJOUT
         await addNote({ 
           id: `note-${Date.now()}`, 
           title: title.trim(), 
@@ -49,7 +57,7 @@ export default function NoteEditorScreen() {
       resetForm();
       Keyboard.dismiss();
     } catch (error) {
-      Alert.alert("Erreur", "Impossible d'enregistrer la note.");
+      Alert.alert("Erreur", "Impossible d'enregistrer.");
     }
   };
 
@@ -67,20 +75,16 @@ export default function NoteEditorScreen() {
 
   const confirmDelete = (id: string) => {
     Alert.alert(
-      "Supprimer la note",
-      "Voulez-vous vraiment effacer cette note ?",
+      "SUPPRIMER",
+      "Voulez-vous effacer cette note ?",
       [
-        { text: "Annuler", style: "cancel" },
+        { text: "ANNULER", style: "cancel" },
         { 
-          text: "Supprimer", 
+          text: "SUPPRIMER", 
           style: "destructive", 
           onPress: async () => {
-            try {
-              if (editingId === id) resetForm(); // On vide le formulaire si on supprime la note en cours d'édition
-              await deleteNote(id);
-            } catch (err) {
-              Alert.alert("Erreur", "La suppression a échoué.");
-            }
+            if (editingId === id) resetForm();
+            await deleteNote(id);
           } 
         }
       ]
@@ -88,97 +92,188 @@ export default function NoteEditorScreen() {
   };
 
   return (
-    <ScreenContainer style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={28} color="#1D3583" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>MES NOTES</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-        style={{ flex: 1 }}
-      >
-        {/* Éditeur */}
-        <View style={styles.editorCard}>
-          <View style={styles.editorHeader}>
-            <Text style={styles.editorMode}>{editingId ? "MODIFICATION" : "NOUVELLE NOTE"}</Text>
-            {editingId && (
-              <TouchableOpacity onPress={resetForm}>
-                <Text style={styles.cancelText}>Annuler</Text>
-              </TouchableOpacity>
-            )}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.container}>
+        
+        {/* HEADER ROUGE PILL SHAPE */}
+        <View style={styles.headerPadding}>
+          <View style={styles.redHeaderPill}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <ChevronLeft size={28} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText}>MES NOTES</Text>
+            <View style={{ width: 40 }} /> 
           </View>
-          <TextInput 
-            value={title} 
-            onChangeText={setTitle} 
-            placeholder="Titre de la note..." 
-            style={styles.inputTitle} 
-            placeholderTextColor="#9ca3af"
-          />
-          <TextInput 
-            value={content} 
-            onChangeText={setContent} 
-            placeholder="Écrire quelque chose..." 
-            multiline 
-            style={styles.inputContent} 
-            textAlignVertical="top"
-            placeholderTextColor="#d1d5db"
-          />
-          <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
-            <Text style={styles.saveBtnText}>{editingId ? "METTRE À JOUR" : "ENREGISTRER LA NOTE"}</Text>
-          </TouchableOpacity>
         </View>
 
-        {/* Liste Historique */}
-        <View style={styles.listContainer}>
-          <Text style={styles.listTitle}>Historique ({notes.length})</Text>
-          <FlatList
-            data={notes}
-            keyExtractor={(item) => item.id.toString()}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <TouchableOpacity 
-                style={[styles.noteItem, editingId === item.id && styles.noteItemActive]} 
-                onPress={() => startEdit(item)}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.itemTitle}>{item.title || "Note sans titre"}</Text>
-                  <Text style={styles.itemContent} numberOfLines={1}>{item.content || "Pas de contenu"}</Text>
-                </View>
-                <TouchableOpacity onPress={() => confirmDelete(item.id)} style={styles.deleteBtn}>
-                  <Ionicons name="trash-outline" size={20} color="#ef4444" />
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+          style={{ flex: 1 }}
+        >
+          {/* ÉDITEUR DANS UNE CARTE BLANCHE */}
+          <View style={styles.editorCard}>
+            <View style={styles.editorHeader}>
+              <Text style={styles.editorMode}>
+                {editingId ? "MODIFICATION" : "NOUVELLE NOTE"}
+              </Text>
+              {editingId && (
+                <TouchableOpacity onPress={resetForm}>
+                  <Text style={styles.cancelText}>ANNULER</Text>
                 </TouchableOpacity>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      </KeyboardAvoidingView>
-    </ScreenContainer>
+              )}
+            </View>
+            
+            <TextInput 
+              value={title} 
+              onChangeText={setTitle} 
+              placeholder="Titre..." 
+              style={styles.inputTitle} 
+              placeholderTextColor="#94A3B8"
+            />
+            <TextInput 
+              value={content} 
+              onChangeText={setContent} 
+              placeholder="Écrire ici..." 
+              multiline 
+              style={styles.inputContent} 
+              textAlignVertical="top"
+              placeholderTextColor="#CBD5E1"
+            />
+            
+            <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
+              <Text style={styles.saveBtnText}>
+                {editingId ? "METTRE À JOUR" : "ENREGISTRER"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* LISTE HISTORIQUE */}
+          <View style={styles.listContainer}>
+            <View style={styles.historyHeader}>
+                <StickyNote size={18} color="#1A237E" />
+                <Text style={styles.listTitle}>HISTORIQUE ({notes.length})</Text>
+            </View>
+            
+            <FlatList
+              data={notes}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 40 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={[styles.noteItem, editingId === item.id && styles.noteItemActive]} 
+                  onPress={() => startEdit(item)}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemTitle} numberOfLines={1}>
+                        {item.title || "NOTE SANS TITRE"}
+                    </Text>
+                    <Text style={styles.itemContent} numberOfLines={1}>
+                        {item.content || "Pas de contenu"}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => confirmDelete(item.id)} style={styles.deleteBtn}>
+                    <Trash2 size={20} color="#8B0000" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FB' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  backBtn: { paddingHorizontal: 16 },
-  headerTitle: { flex: 1, textAlign: 'center', fontWeight: '900', color: '#1D3583', fontSize: 18, letterSpacing: 1 },
-  editorCard: { backgroundColor: 'white', margin: 16, borderRadius: 25, padding: 20, elevation: 5, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
-  editorHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  editorMode: { fontSize: 11, fontWeight: 'bold', color: '#B21F18', letterSpacing: 1 },
-  cancelText: { fontSize: 11, fontWeight: 'bold', color: '#6b7280' },
-  inputTitle: { fontSize: 18, fontWeight: 'bold', borderBottomWidth: 1, borderBottomColor: '#f3f4f6', paddingVertical: 10, color: '#1f2937' },
-  inputContent: { fontSize: 15, minHeight: 100, maxHeight: 180, paddingTop: 15, color: '#4b5563' },
-  saveBtn: { backgroundColor: '#1D3583', borderRadius: 50, paddingVertical: 16, alignItems: 'center', marginTop: 15 },
-  saveBtnText: { color: 'white', fontWeight: 'bold', letterSpacing: 1 },
-  listContainer: { flex: 1, paddingHorizontal: 16 },
-  listTitle: { fontSize: 15, fontWeight: 'bold', color: '#6b7280', marginBottom: 12, marginLeft: 5 },
-  noteItem: { backgroundColor: 'white', borderRadius: 20, padding: 18, marginBottom: 12, flexDirection: 'row', alignItems: 'center', elevation: 2 },
-  noteItemActive: { borderColor: '#1D3583', borderWidth: 2 },
-  itemTitle: { fontWeight: 'bold', color: '#1f2937', fontSize: 15, marginBottom: 4 },
-  itemContent: { color: '#9ca3af', fontSize: 13 },
+  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
+  container: { flex: 1 },
+  headerPadding: { paddingHorizontal: 25, paddingTop: 30, marginBottom: 20 },
+  
+  redHeaderPill: { 
+    backgroundColor: '#8B0000', 
+    paddingVertical: 12, 
+    paddingHorizontal: 15, 
+    borderRadius: 50, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    elevation: 6
+  },
+  backBtn: { padding: 5 },
+  headerTitleText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 13, 
+    letterSpacing: 2,
+    textTransform: 'uppercase'
+  },
+
+  // Éditeur
+  editorCard: { 
+    backgroundColor: 'white', 
+    marginHorizontal: 25, 
+    borderRadius: 35, 
+    padding: 22, 
+    elevation: 4, 
+    borderWidth: 1, 
+    borderColor: '#FCE7F3',
+    marginBottom: 25
+  },
+  editorHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
+  editorMode: { fontSize: 10, fontWeight: '900', color: '#8B0000', letterSpacing: 1.5 },
+  cancelText: { fontSize: 10, fontWeight: 'bold', color: '#64748B', textDecorationLine: 'underline' },
+  
+  inputTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#F1F5F9', 
+    paddingVertical: 10, 
+    color: '#1A237E' 
+  },
+  inputContent: { 
+    fontSize: 15, 
+    minHeight: 80, 
+    maxHeight: 150, 
+    paddingTop: 15, 
+    color: '#475569',
+    fontWeight: '500'
+  },
+  
+  saveBtn: { 
+    backgroundColor: '#1A237E', 
+    borderRadius: 50, 
+    paddingVertical: 18, 
+    alignItems: 'center', 
+    marginTop: 10,
+    elevation: 4
+  },
+  saveBtnText: { color: 'white', fontWeight: 'bold', letterSpacing: 2, fontSize: 11 },
+
+  // Liste
+  listContainer: { flex: 1, paddingHorizontal: 25 },
+  historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15, marginLeft: 10 },
+  listTitle: { fontSize: 11, fontWeight: '900', color: '#1A237E', letterSpacing: 1.5 },
+  
+  noteItem: { 
+    backgroundColor: 'rgba(255, 255, 255, 0.6)', 
+    borderRadius: 25, 
+    padding: 20, 
+    marginBottom: 12, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderColor: 'white' 
+  },
+  noteItemActive: { 
+    backgroundColor: 'white', 
+    borderColor: '#1A237E', 
+    borderWidth: 2,
+    elevation: 3
+  },
+  itemTitle: { fontWeight: 'bold', color: '#1A237E', fontSize: 14, marginBottom: 4, textTransform: 'uppercase' },
+  itemContent: { color: '#64748B', fontSize: 12, fontWeight: '500' },
   deleteBtn: { padding: 10, marginLeft: 5 }
 });
