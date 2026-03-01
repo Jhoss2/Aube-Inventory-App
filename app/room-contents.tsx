@@ -1,20 +1,30 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, SafeAreaView, StatusBar, Alert } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView, 
+  Image, 
+  StyleSheet, 
+  SafeAreaView, 
+  StatusBar, 
+  Alert 
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Pencil, Trash2, Plus } from 'lucide-react-native';
+import { ChevronLeft, Pencil, Trash2, Plus } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
 
 export default function RoomContentsScreen() {
   const router = useRouter();
-  const { roomId, roomName } = useLocalSearchParams();
+  const { roomId, roomName } = useLocalSearchParams<{ roomId: string, roomName: string }>();
   const { appData, deleteMateriel } = useAppContext() as any;
 
   const inventory = (appData.materiels || []).filter((m: any) => m.roomId === roomId);
 
   const handleDelete = (id: string) => {
-    Alert.alert("Supprimer", "Confirmer la suppression ?", [
-      { text: "Annuler", style: "cancel" },
-      { text: "Supprimer", style: "destructive", onPress: () => deleteMateriel(id) }
+    Alert.alert("SUPPRIMER", "Voulez-vous vraiment supprimer cet objet ?", [
+      { text: "ANNULER", style: "cancel" },
+      { text: "SUPPRIMER", style: "destructive", onPress: () => deleteMateriel(id) }
     ]);
   };
 
@@ -23,18 +33,19 @@ export default function RoomContentsScreen() {
       <StatusBar barStyle="dark-content" />
       <View style={styles.container}>
         
-        {/* HEADER ROUGE : Retour et Titre intégrés */}
-        <View style={styles.headerWrapper}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* HEADER ROUGE PILL SHAPE : RETOUR + TITRE */}
           <View style={styles.redHeaderPill}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <ArrowLeft size={28} color="white" />
+              <ChevronLeft size={28} color="white" />
             </TouchableOpacity>
-            <Text style={styles.headerTitleText} numberOfLines={1}>Matériel de {roomName}</Text>
-            <View style={{ width: 44 }} /> 
+            <Text style={styles.headerTitleText} numberOfLines={1}>
+              MATÉRIEL DE {roomName?.toUpperCase()}
+            </Text>
+            <View style={{ width: 40 }} /> 
           </View>
-        </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {inventory.map((item: any) => (
             <View key={item.id} style={styles.materialCard}>
               <View style={styles.imageBox}>
@@ -46,18 +57,30 @@ export default function RoomContentsScreen() {
 
               <View style={styles.detailsRow}>
                 <View style={styles.infoCol}>
-                  <Text style={styles.txt}><Text style={styles.labelBlue}>Nom :</Text> {item.nom}</Text>
-                  <Text style={styles.txt}><Text style={styles.labelBlue}>Marque :</Text> {item.marque || "-"}</Text>
-                  <Text style={styles.txt}><Text style={styles.labelBlue}>Quantité :</Text> {item.quantite}</Text>
-                  <Text style={styles.txt}><Text style={styles.labelBlue}>Etat :</Text> <Text style={styles.greenVal}>{item.etat}</Text></Text>
+                  <Text style={styles.mainTitle}>{item.nom.toUpperCase()}</Text>
+                  
+                  <View style={styles.infoLine}>
+                    <Text style={styles.labelBlue}>MARQUE :</Text> 
+                    <Text style={styles.valueTxt}>{item.marque || "-"}</Text>
+                  </View>
+                  
+                  <View style={styles.infoLine}>
+                    <Text style={styles.labelBlue}>QUANTITÉ :</Text> 
+                    <Text style={styles.valueTxt}>{item.quantite}</Text>
+                  </View>
+                  
+                  <View style={styles.infoLine}>
+                    <Text style={styles.labelBlue}>ÉTAT :</Text> 
+                    <Text style={styles.greenVal}>{item.etat.toUpperCase()}</Text>
+                  </View>
                 </View>
 
                 <View style={styles.actionCol}>
                   <TouchableOpacity style={styles.editBtn}>
-                    <Pencil size={22} color="#2563EB" />
+                    <Pencil size={20} color="#1A237E" />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item.id)}>
-                    <Trash2 size={22} color="#DC2626" />
+                    <Trash2 size={20} color="#8B0000" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -65,10 +88,13 @@ export default function RoomContentsScreen() {
           ))}
           
           {inventory.length === 0 && (
-            <Text style={styles.emptyText}>Aucun matériel enregistré.</Text>
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyText}>AUCUN MATÉRIEL ENREGISTRÉ.</Text>
+            </View>
           )}
         </ScrollView>
 
+        {/* FAB BOUTON AJOUTER (BLEU MARINE) */}
         <TouchableOpacity 
           style={styles.fab} 
           onPress={() => router.push({ pathname: '/categories', params: { roomId, roomName } })}
@@ -81,32 +107,87 @@ export default function RoomContentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: 'white' },
-  container: { flex: 1, backgroundColor: 'white' },
-  headerWrapper: { paddingVertical: 10, alignItems: 'center' },
+  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
+  container: { flex: 1 },
+  scrollContent: { padding: 25, paddingTop: 30, paddingBottom: 120 },
+  
+  // Header Rouge Pill
   redHeaderPill: { 
-    backgroundColor: '#B22222', 
-    width: '92%', 
-    paddingVertical: 15, 
+    backgroundColor: '#8B0000', 
+    paddingVertical: 12, 
     paddingHorizontal: 15, 
     borderRadius: 50, 
     flexDirection: 'row', 
-    alignItems: 'center' 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    marginBottom: 30,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8
   },
   backBtn: { padding: 5 },
-  headerTitleText: { color: 'white', fontWeight: 'bold', fontSize: 16, flex: 1, textAlign: 'center' },
-  scrollContent: { padding: 20, paddingBottom: 100 },
-  materialCard: { backgroundColor: 'white', borderRadius: 30, marginBottom: 30, elevation: 6, padding: 15, borderWidth: 1, borderColor: '#f1f5f9' },
+  headerTitleText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 12, 
+    flex: 1, 
+    textAlign: 'center', 
+    letterSpacing: 1.5 
+  },
+
+  // Carte Matériel (Design épuré)
+  materialCard: { 
+    backgroundColor: 'white', 
+    borderRadius: 35, 
+    marginBottom: 25, 
+    elevation: 4, 
+    padding: 15, 
+    borderWidth: 1, 
+    borderColor: '#FCE7F3' 
+  },
   imageBox: { marginBottom: 15 },
-  materialImg: { width: '100%', aspectRatio: 1, borderRadius: 20, backgroundColor: '#f3f4f6' },
-  detailsRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  materialImg: { 
+    width: '100%', 
+    height: 180, 
+    borderRadius: 25, 
+    backgroundColor: '#F1F5F9' 
+  },
+  detailsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 5 },
   infoCol: { flex: 1 },
-  actionCol: { gap: 12, marginLeft: 10 },
-  txt: { fontSize: 15, marginBottom: 5 },
-  labelBlue: { color: '#1A237E', fontWeight: '900' },
-  greenVal: { color: '#059669', fontWeight: 'bold' },
-  editBtn: { backgroundColor: '#EFF6FF', padding: 12, borderRadius: 12 },
-  deleteBtn: { backgroundColor: '#FEF2F2', padding: 12, borderRadius: 12 },
-  emptyText: { textAlign: 'center', color: '#ccc', fontStyle: 'italic', marginTop: 50 },
-  fab: { position: 'absolute', bottom: 30, right: 30, width: 64, height: 64, backgroundColor: '#B22222', borderRadius: 32, justifyContent: 'center', alignItems: 'center', elevation: 8 }
+  mainTitle: { 
+    color: '#1A237E', 
+    fontWeight: '900', 
+    fontSize: 16, 
+    marginBottom: 10, 
+    letterSpacing: 1 
+  },
+  infoLine: { flexDirection: 'row', marginBottom: 4, alignItems: 'center' },
+  labelBlue: { color: '#64748B', fontWeight: 'bold', fontSize: 10, width: 75 },
+  valueTxt: { color: '#374151', fontWeight: 'bold', fontSize: 13 },
+  greenVal: { color: '#059669', fontWeight: '900', fontSize: 13 },
+
+  actionCol: { justifyContent: 'space-around', marginLeft: 10 },
+  editBtn: { backgroundColor: '#F1F5F9', padding: 12, borderRadius: 20 },
+  deleteBtn: { backgroundColor: '#FFE4E8', padding: 12, borderRadius: 20 },
+
+  emptyBox: { marginTop: 60, alignItems: 'center' },
+  emptyText: { color: '#94A3B8', fontWeight: 'bold', letterSpacing: 1, fontSize: 12 },
+
+  // FAB (Bleu Marine pour contraster avec le fond rose/rouge)
+  fab: { 
+    position: 'absolute', 
+    bottom: 30, 
+    right: 30, 
+    width: 65, 
+    height: 65, 
+    backgroundColor: '#1A237E', 
+    borderRadius: 32.5, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    elevation: 8,
+    shadowColor: '#1A237E',
+    shadowOpacity: 0.4,
+    shadowRadius: 10
+  }
 });
