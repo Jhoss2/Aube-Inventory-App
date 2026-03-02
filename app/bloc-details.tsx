@@ -1,5 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, SafeAreaView, StatusBar, Platform } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView, 
+  Image, 
+  StyleSheet, 
+  SafeAreaView, 
+  StatusBar,
+  Platform
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAppContext } from '@/lib/app-context';
@@ -91,16 +101,66 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 20, paddingTop: 20, paddingBottom: 60 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  redHeaderPill: { backgroundColor: '#8B0000', height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15, marginBottom: 35 },
+  redHeaderPill: { 
+    backgroundColor: '#8B0000', 
+    height: 60, 
+    borderRadius: 30, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 15, 
+    marginBottom: 35 
+  },
   backBtn: { width: 40, alignItems: 'center' },
-  headerTitleText: { color: 'white', fontWeight: 'bold', fontSize: 13, letterSpacing: 1.5, fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif-medium' },
+  // STYLE SIDEBAR (Titre Principal)
+  headerTitleText: { 
+    color: 'white', 
+    fontWeight: '900', 
+    fontSize: 14, 
+    letterSpacing: 4, 
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+    textTransform: 'uppercase'
+  },
   sectionContainer: { marginBottom: 40, alignItems: 'center' },
   imageCard: { width: '100%', height: 200, backgroundColor: 'white', borderRadius: 40, overflow: 'hidden', borderWidth: 2, borderColor: 'white' },
   landscapeImage: { width: '100%', height: '100%' },
-  titleSupport: { backgroundColor: '#263d7e', paddingHorizontal: 25, paddingVertical: 10, borderRadius: 50, marginTop: -20, borderWidth: 1.5, borderColor: '#fceef5', alignSelf: 'center', zIndex: 10 },
-  titleText: { color: 'white', fontSize: 12, fontWeight: '900', letterSpacing: 2 },
-  emptyText: { color: '#8B0000', fontWeight: 'bold', marginBottom: 20 },
+  titleSupport: { 
+    backgroundColor: '#263d7e', 
+    paddingHorizontal: 25, 
+    paddingVertical: 10, 
+    borderRadius: 50, 
+    marginTop: -20, 
+    borderWidth: 1.5, 
+    borderColor: '#fceef5', 
+    alignSelf: 'center', 
+    zIndex: 10 
+  },
+  // STYLE GUIDE / À PROPOS (Textes dans les pilules bleues)
+  titleText: { 
+    color: 'white', 
+    fontSize: 13, 
+    fontWeight: '700', 
+    letterSpacing: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+    textTransform: 'uppercase'
+  },
+  emptyText: { 
+    color: '#8B0000', 
+    fontWeight: '900', 
+    marginBottom: 20,
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif' 
+  },
   errorBtn: { backgroundColor: '#8B0000', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 25 },
-  errorBtnText: { color: 'white', fontWeight: 'bold' },
-  glow: { elevation: 10, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 5 } }
+  errorBtnText: { 
+    color: 'white', 
+    fontWeight: '900',
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif'
+  },
+  glow: { 
+    elevation: 10, 
+    shadowColor: '#000', 
+    shadowOpacity: 0.3, 
+    shadowRadius: 8, 
+    shadowOffset: { width: 0, height: 5 } 
+  }
 });
