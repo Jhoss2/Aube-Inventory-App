@@ -4,7 +4,7 @@ import {
   StyleSheet, StatusBar, Alert, Image, Platform 
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Camera, Box } from 'lucide-react-native';
+import { ChevronLeft, Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppContext } from '@/lib/app-context';
 
@@ -15,13 +15,12 @@ export default function AddRoomScreen() {
   
   const [nom, setNom] = useState('');
   const [emplacement, setEmplacement] = useState('');
-  const [niveau, setNiveau] = useState(level || '');
   const [capacity, setCapacity] = useState('');
   const [area, setArea] = useState('');
   const [image, setImage] = useState<string | null>(null);
 
-  // FORMATEUR : Majuscule au début, reste en minuscule
-  const formatText = (txt: string) => {
+  // Formate le texte : "Nom" au lieu de "NOM" ou "nom"
+  const formatLabel = (txt: string) => {
     if (!txt) return "";
     return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
   };
@@ -29,7 +28,7 @@ export default function AddRoomScreen() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert("Permission refusée", "L'accès à la galerie est nécessaire.");
+      Alert.alert("Permission", "Accès galerie requis.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -50,12 +49,12 @@ export default function AddRoomScreen() {
       type: type,
       name: nom.trim(),
       location: emplacement.trim(),
-      level: niveau.trim(),
+      level: level,
       capacity, surface: area, image,
     };
     try {
       await addSalle(newRoom); 
-      Alert.alert("Succès", "Enregistrée avec succès !", [{ text: "OK", onPress: () => router.back() }]);
+      router.back();
     } catch (err) { Alert.alert("Erreur", "Sauvegarde échouée."); }
   };
 
@@ -64,18 +63,18 @@ export default function AddRoomScreen() {
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* HEADER - MAJUSCULES + LUEUR NOIRE */}
+        {/* HEADER - MAJUSCULES + LUEUR */}
         <View style={[styles.redHeaderPill, styles.blackGlow]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <ChevronLeft size={28} color="white" />
           </TouchableOpacity>
           <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>
-            {(formatText(type) + " - BLOC " + blocId).toUpperCase()}
+            {(type + " - BLOC " + blocId).toUpperCase()}
           </Text>
           <View style={{ width: 40 }} />
         </View>
 
-        {/* ZONE PHOTO - LUEUR NOIRE */}
+        {/* ZONE PHOTO - LUEUR */}
         <TouchableOpacity style={[styles.photoZone, styles.blackGlow]} onPress={pickImage}>
           {image ? (
             <Image source={{ uri: image }} style={styles.imagePreview} />
@@ -83,67 +82,50 @@ export default function AddRoomScreen() {
             <View style={styles.photoPlaceholder}>
               <Camera size={40} color="white" />
               <Text style={[styles.photoText, styles.boldSerifItalic]}>
-                {formatText("Ajouter une image")}
+                {formatLabel("Ajouter une image")}
               </Text>
             </View>
           )}
         </TouchableOpacity>
 
         <View style={styles.formContainer}>
-          {/* CHAMP NOM - PILULE BLANCHE + LUEUR NOIRE */}
-          <Text style={[styles.label, styles.boldSerifItalic]}>{formatText("Nom")}</Text>
-          <TextInput 
-            style={[styles.input, styles.boldSerifItalic, styles.blackGlow]} 
-            value={nom} 
-            onChangeText={setNom} 
-            placeholder="Ex: Salle 102" 
-          />
+          {/* NOM */}
+          <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Nom")}</Text>
+          <View style={[styles.inputWrapper, styles.blackGlow]}>
+            <TextInput style={[styles.input, styles.boldSerifItalic]} value={nom} onChangeText={setNom} placeholder="Ex: Salle 102" />
+          </View>
 
-          {/* CHAMP EMPLACEMENT - PILULE BLANCHE + LUEUR NOIRE */}
-          <Text style={[styles.label, styles.boldSerifItalic]}>{formatText("Emplacement")}</Text>
-          <TextInput 
-            style={[styles.input, styles.boldSerifItalic, styles.blackGlow]} 
-            value={emplacement} 
-            onChangeText={setEmplacement} 
-            placeholder="Ex: Aile est" 
-          />
+          {/* EMPLACEMENT */}
+          <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Emplacement")}</Text>
+          <View style={[styles.inputWrapper, styles.blackGlow]}>
+            <TextInput style={[styles.input, styles.boldSerifItalic]} value={emplacement} onChangeText={setEmplacement} placeholder="Ex: Aile est" />
+          </View>
 
-          {/* CHAMP NIVEAU (RÉTABLI) - LUEUR NOIRE */}
-          <Text style={[styles.label, styles.boldSerifItalic]}>{formatText("Niveau")}</Text>
-          <TextInput 
-            style={[styles.input, styles.boldSerifItalic, styles.blackGlow, { backgroundColor: '#F8FAFC' }]} 
-            value={niveau} 
-            editable={false} 
-          />
+          {/* NIVEAU (CHAMP RÉTABLI) */}
+          <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Niveau")}</Text>
+          <View style={[styles.inputWrapper, styles.blackGlow, { backgroundColor: '#F1F5F9' }]}>
+            <TextInput style={[styles.input, styles.boldSerifItalic]} value={level} editable={false} />
+          </View>
 
           <View style={styles.row}>
             <View style={styles.flex1}>
-              <Text style={[styles.label, styles.boldSerifItalic]}>{formatText("Capacité")}</Text>
-              <TextInput 
-                style={[styles.input, styles.boldSerifItalic, styles.blackGlow]} 
-                value={capacity} 
-                onChangeText={setCapacity} 
-                placeholder="Pers." 
-                keyboardType="numeric" 
-              />
+              <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Capacité")}</Text>
+              <View style={[styles.inputWrapper, styles.blackGlow]}>
+                <TextInput style={[styles.input, styles.boldSerifItalic]} value={capacity} onChangeText={setCapacity} placeholder="Pers." keyboardType="numeric" />
+              </View>
             </View>
             <View style={[styles.flex1, { marginLeft: 15 }]}>
-              <Text style={[styles.label, styles.boldSerifItalic]}>{formatText("Superficie")}</Text>
-              <TextInput 
-                style={[styles.input, styles.boldSerifItalic, styles.blackGlow]} 
-                value={area} 
-                onChangeText={setArea} 
-                placeholder="m²" 
-                keyboardType="numeric" 
-              />
+              <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Superficie")}</Text>
+              <View style={[styles.inputWrapper, styles.blackGlow]}>
+                <TextInput style={[styles.input, styles.boldSerifItalic]} value={area} onChangeText={setArea} placeholder="m²" keyboardType="numeric" />
+              </View>
             </View>
           </View>
         </View>
 
-        {/* BOUTON ENREGISTRER - LUEUR NOIRE */}
         <TouchableOpacity style={[styles.saveBtn, styles.blackGlow]} onPress={handleSaveRoom}>
           <Text style={[styles.saveBtnText, styles.boldSerifItalic]}>
-            {formatText("Enregistrer la salle")}
+            {formatLabel("Enregistrer la salle")}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -154,8 +136,7 @@ export default function AddRoomScreen() {
 const styles = StyleSheet.create({
   boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
-    fontWeight: '900',
-    fontStyle: 'italic',
+    fontWeight: '900', fontStyle: 'italic',
   },
   container: { flex: 1, backgroundColor: '#FFE4E8' },
   scrollContent: { padding: 25, paddingTop: 50, paddingBottom: 60 },
@@ -163,13 +144,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#8B0000', paddingVertical: 12, paddingHorizontal: 15, 
     borderRadius: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 25 
   },
-  // LUEUR NOIRE PRONONCÉE
   blackGlow: {
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 }
+    shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 }, elevation: 12,
   },
   headerTitleText: { color: 'white', fontSize: 14, letterSpacing: 1 },
   photoZone: { backgroundColor: '#1A237E', borderRadius: 35, height: 180, overflow: 'hidden', marginBottom: 25 },
@@ -178,10 +155,8 @@ const styles = StyleSheet.create({
   imagePreview: { width: '100%', height: '100%', resizeMode: 'cover' },
   formContainer: { width: '100%' },
   label: { fontSize: 11, color: '#1A237E', marginBottom: 8, marginLeft: 10 },
-  input: { 
-    backgroundColor: 'white', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, 
-    marginBottom: 18, color: '#374151', borderWidth: 1, borderColor: '#FCE7F3' 
-  },
+  inputWrapper: { backgroundColor: 'white', borderRadius: 20, marginBottom: 18, borderWidth: 1, borderColor: '#FCE7F3' },
+  input: { paddingVertical: 14, paddingHorizontal: 20, color: '#374151' },
   row: { flexDirection: 'row' },
   flex1: { flex: 1 },
   saveBtn: { backgroundColor: '#1A237E', paddingVertical: 22, borderRadius: 50, marginTop: 35, alignItems: 'center' },
