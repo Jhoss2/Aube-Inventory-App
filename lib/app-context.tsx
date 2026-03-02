@@ -6,9 +6,9 @@ const AppContext = createContext<any>(null);
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [appData, setAppData] = useState({
     materiels: [],
-    salles: [], // AJOUT : Initialisation du tableau des salles
+    salles: [], // Stockage des salles créées via add-room.tsx
     notes: [],
-    customCategories: [], // AJOUT : Pour ton écran de catégories
+    customCategories: [], // Pour CategoriesScreen
     settings: {
       assistantName: "Aube",
       assistantAvatar: "https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6",
@@ -19,16 +19,12 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       menuLogo: null
     },
     blocs: {
-      "A": {
-        mainImage: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1000",
-        sallesImage: "https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80",
-        bureauxImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80"
-      },
-      "B": {
-        mainImage: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=1000",
-        sallesImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80",
-        bureauxImage: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80"
-      }
+      "A": { mainImage: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1000" },
+      "B": { mainImage: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=1000" },
+      "C": { mainImage: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1000" },
+      "D": { mainImage: "https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?q=80&w=1000" },
+      "E": { mainImage: "https://images.unsplash.com/photo-1525921429624-479b6a26d84d?q=80&w=1000" },
+      "F": { mainImage: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1000" },
     }
   });
 
@@ -50,20 +46,19 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     catch (e) { console.error("Erreur sauvegarde", e); }
   };
 
+  // --- ACTIONS ---
   const updateSettings = (newSettings: any) => {
     const newData = { ...appData, settings: { ...appData.settings, ...newSettings } };
     setAppData(newData);
     saveToStorage(newData);
   };
 
-  // --- ACTIONS SALLES (Ce qui bloquait ta sauvegarde) ---
   const addSalle = (salle: any) => {
     const newData = { ...appData, salles: [...(appData.salles || []), salle] };
     setAppData(newData);
     saveToStorage(newData);
   };
 
-  // --- ACTIONS MATÉRIELS & NOTES ---
   const addMateriel = (item: any) => {
     const newItem = { ...item, id: `mat-${Date.now()}`, createdAt: new Date().toISOString() };
     const newData = { ...appData, materiels: [...(appData.materiels || []), newItem] };
@@ -79,12 +74,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AppContext.Provider value={{ 
-      appData, 
-      setAppData, // EXPORT CRUCIAL pour catégories et suppressions
-      updateSettings,
-      addSalle,   // EXPORT CRUCIAL pour add-room
-      addMateriel, 
-      deleteMateriel
+      appData, setAppData, updateSettings, addSalle, addMateriel, deleteMateriel 
     }}>
       {children}
     </AppContext.Provider>
