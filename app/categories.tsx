@@ -7,7 +7,8 @@ import {
   TextInput, 
   StyleSheet, 
   StatusBar,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Plus, X, Search, Check } from 'lucide-react-native';
@@ -24,7 +25,7 @@ export default function CategoriesScreen() {
   const [newCategoryName, setNewCategoryName] = useState('');
 
   // Catégories par défaut
-  const defaultCategories = ['AMPOULES', 'PROJECTEURS', 'CHAISES', 'TABLES', 'CLIMATISATION'];
+  const defaultCategories = ['FOURNITURES BUREAUTIQUES', 'FOURNITURES PÉDAGOGIQUES', 'RESSOURCES LOGISTIQUES', 'VERDURE', 'NETTOYAGE'];
 
   const allCategories = useMemo(() => {
     const userCats = appData.customCategories || [];
@@ -64,20 +65,20 @@ export default function CategoriesScreen() {
       
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* HEADER ROUGE PILL AVEC LUEUR NOIRE */}
+        {/* HEADER ROUGE PILL (Style Sidebar) */}
         <View style={[styles.redHeaderPill, styles.glowBlack]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <ChevronLeft size={28} color="white" />
           </TouchableOpacity>
           
-          <Text style={styles.headerTitleText}>CATÉGORIES</Text>
+          <Text style={[styles.headerTitleText, styles.boldSerif]}>CATÉGORIES</Text>
           
           <TouchableOpacity onPress={() => setShowAddInput(!showAddInput)} style={styles.backBtn}>
             {showAddInput ? <X size={26} color="white" /> : <Plus size={26} color="white" />}
           </TouchableOpacity>
         </View>
 
-        {/* INPUT D'AJOUT DYNAMIQUE */}
+        {/* INPUT D'AJOUT DYNAMIQUE (TOUT EN GRAS) */}
         {showAddInput && (
           <View style={styles.addContainer}>
             <TextInput
@@ -86,7 +87,7 @@ export default function CategoriesScreen() {
               value={newCategoryName}
               onChangeText={setNewCategoryName}
               placeholderTextColor="#94A3B8"
-              style={[styles.addInput, styles.glowBlack]}
+              style={[styles.addInput, styles.glowBlack, styles.boldSerif]}
             />
             <TouchableOpacity 
               onPress={handleAddCategory}
@@ -105,11 +106,11 @@ export default function CategoriesScreen() {
             value={searchTerm}
             onChangeText={setSearchTerm}
             placeholderTextColor="#94A3B8"
-            style={styles.searchInput}
+            style={[styles.searchInput, styles.boldSerif]}
           />
         </View>
 
-        {/* LISTE DES BOUTONS (REDIRECT VERS ADD-MATERIAL) */}
+        {/* LISTE DES BOUTONS (GRAS MAXIMUM) */}
         <View style={styles.listContainer}>
           {filteredCategories.length > 0 ? (
             filteredCategories.map((category, index) => (
@@ -117,15 +118,15 @@ export default function CategoriesScreen() {
                 key={index}
                 style={[styles.catBtn, styles.glowBlack]}
                 onPress={() => router.push({
-                  pathname: '/add-material', // Chemin mis à jour vers ton nouvel écran
+                  pathname: '/add-material',
                   params: { roomId, roomName, category }
                 })}
               >
-                <Text style={styles.catBtnText}>{category}</Text>
+                <Text style={[styles.catBtnText, styles.boldSerif]}>{category}</Text>
               </TouchableOpacity>
             ))
           ) : (
-            <Text style={styles.emptyText}>AUCUNE CATÉGORIE TROUVÉE</Text>
+            <Text style={[styles.emptyText, styles.boldSerif]}>AUCUNE CATÉGORIE TROUVÉE</Text>
           )}
         </View>
 
@@ -138,6 +139,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFE4E8' },
   scrollContent: { padding: 25, paddingTop: 55, paddingBottom: 40 },
   
+  // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
+  boldSerif: {
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+    fontWeight: '900',
+  },
+
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
     height: 55, 
@@ -151,9 +158,9 @@ const styles = StyleSheet.create({
   backBtn: { padding: 5 },
   headerTitleText: { 
     color: 'white', 
-    fontWeight: '900', 
     fontSize: 14, 
-    letterSpacing: 2.5 
+    letterSpacing: 3,
+    textTransform: 'uppercase'
   },
 
   addContainer: { flexDirection: 'row', gap: 10, marginBottom: 25 },
@@ -163,7 +170,7 @@ const styles = StyleSheet.create({
     borderRadius: 50, 
     paddingHorizontal: 20, 
     height: 55, 
-    fontWeight: 'bold', 
+    fontSize: 14,
     color: '#1A237E' 
   },
   checkBtn: { 
@@ -186,7 +193,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white'
   },
-  searchInput: { flex: 1, fontWeight: 'bold', color: '#1A237E' },
+  searchInput: { flex: 1, color: '#1A237E', fontSize: 13 },
 
   listContainer: { gap: 18 },
   catBtn: { 
@@ -199,17 +206,17 @@ const styles = StyleSheet.create({
   },
   catBtnText: { 
     color: '#1A237E', 
-    fontWeight: '900', 
     fontSize: 13, 
-    letterSpacing: 2 
+    letterSpacing: 2.5,
+    textTransform: 'uppercase'
   },
   emptyText: { 
     textAlign: 'center', 
     color: '#94A3B8', 
-    fontWeight: '900', 
     marginTop: 40, 
     fontSize: 11, 
-    letterSpacing: 1.5 
+    letterSpacing: 1.5,
+    textTransform: 'uppercase'
   },
 
   glowBlack: {
