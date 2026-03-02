@@ -75,12 +75,12 @@ export default function NoteEditorScreen() {
 
   const confirmDelete = (id: string) => {
     Alert.alert(
-      "SUPPRIMER",
+      "Supprimer",
       "Voulez-vous effacer cette note ?",
       [
-        { text: "ANNULER", style: "cancel" },
+        { text: "Annuler", style: "cancel" },
         { 
-          text: "SUPPRIMER", 
+          text: "Supprimer", 
           style: "destructive", 
           onPress: async () => {
             if (editingId === id) resetForm();
@@ -98,11 +98,11 @@ export default function NoteEditorScreen() {
         
         {/* HEADER ROUGE PILL SHAPE */}
         <View style={styles.headerPadding}>
-          <View style={styles.redHeaderPill}>
+          <View style={[styles.redHeaderPill, styles.glow]}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
               <ChevronLeft size={28} color="white" />
             </TouchableOpacity>
-            <Text style={styles.headerTitleText}>MES NOTES</Text>
+            <Text style={[styles.headerTitleText, styles.boldSerif]}>Mes Notes</Text>
             <View style={{ width: 40 }} /> 
           </View>
         </View>
@@ -112,14 +112,14 @@ export default function NoteEditorScreen() {
           style={{ flex: 1 }}
         >
           {/* ÉDITEUR DANS UNE CARTE BLANCHE */}
-          <View style={styles.editorCard}>
+          <View style={[styles.editorCard, styles.glow]}>
             <View style={styles.editorHeader}>
-              <Text style={styles.editorMode}>
-                {editingId ? "MODIFICATION" : "NOUVELLE NOTE"}
+              <Text style={[styles.editorMode, styles.boldSerif]}>
+                {editingId ? "Modification" : "Nouvelle Note"}
               </Text>
               {editingId && (
                 <TouchableOpacity onPress={resetForm}>
-                  <Text style={styles.cancelText}>ANNULER</Text>
+                  <Text style={[styles.cancelText, styles.boldSerif]}>Annuler</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -128,7 +128,7 @@ export default function NoteEditorScreen() {
               value={title} 
               onChangeText={setTitle} 
               placeholder="Titre..." 
-              style={styles.inputTitle} 
+              style={[styles.inputTitle, styles.boldSerif]} 
               placeholderTextColor="#94A3B8"
             />
             <TextInput 
@@ -136,14 +136,14 @@ export default function NoteEditorScreen() {
               onChangeText={setContent} 
               placeholder="Écrire ici..." 
               multiline 
-              style={styles.inputContent} 
+              style={[styles.inputContent, styles.boldSerif]} 
               textAlignVertical="top"
               placeholderTextColor="#CBD5E1"
             />
             
-            <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
-              <Text style={styles.saveBtnText}>
-                {editingId ? "METTRE À JOUR" : "ENREGISTRER"}
+            <TouchableOpacity onPress={handleSave} style={[styles.saveBtn, styles.glow]}>
+              <Text style={[styles.saveBtnText, styles.boldSerif]}>
+                {editingId ? "Mettre à jour" : "Enregistrer"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -152,7 +152,7 @@ export default function NoteEditorScreen() {
           <View style={styles.listContainer}>
             <View style={styles.historyHeader}>
                 <StickyNote size={18} color="#1A237E" />
-                <Text style={styles.listTitle}>HISTORIQUE ({notes.length})</Text>
+                <Text style={[styles.listTitle, styles.boldSerif]}>Historique ({notes.length})</Text>
             </View>
             
             <FlatList
@@ -166,10 +166,10 @@ export default function NoteEditorScreen() {
                   onPress={() => startEdit(item)}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.itemTitle} numberOfLines={1}>
-                        {item.title || "NOTE SANS TITRE"}
+                    <Text style={[styles.itemTitle, styles.boldSerif]} numberOfLines={1}>
+                        {item.title || "Note sans titre"}
                     </Text>
-                    <Text style={styles.itemContent} numberOfLines={1}>
+                    <Text style={[styles.itemContent, styles.boldSerif]} numberOfLines={1}>
                         {item.content || "Pas de contenu"}
                     </Text>
                   </View>
@@ -189,8 +189,14 @@ export default function NoteEditorScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
   container: { flex: 1 },
-  headerPadding: { paddingHorizontal: 25, paddingTop: 30, marginBottom: 20 },
   
+  // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
+  boldSerif: {
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+    fontWeight: '900',
+  },
+
+  headerPadding: { paddingHorizontal: 25, paddingTop: 30, marginBottom: 20 },
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
     paddingVertical: 12, 
@@ -199,16 +205,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'space-between',
-    elevation: 6
   },
   backBtn: { padding: 5 },
-  headerTitleText: { 
-    color: 'white', 
-    fontWeight: 'bold', 
-    fontSize: 13, 
-    letterSpacing: 2,
-    textTransform: 'uppercase'
-  },
+  headerTitleText: { color: 'white', fontSize: 14, letterSpacing: 1 },
 
   // Éditeur
   editorCard: { 
@@ -216,18 +215,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 25, 
     borderRadius: 35, 
     padding: 22, 
-    elevation: 4, 
     borderWidth: 1, 
     borderColor: '#FCE7F3',
     marginBottom: 25
   },
   editorHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
-  editorMode: { fontSize: 10, fontWeight: '900', color: '#8B0000', letterSpacing: 1.5 },
-  cancelText: { fontSize: 10, fontWeight: 'bold', color: '#64748B', textDecorationLine: 'underline' },
+  editorMode: { fontSize: 11, color: '#8B0000', letterSpacing: 1 },
+  cancelText: { fontSize: 11, color: '#64748B', textDecorationLine: 'underline' },
   
   inputTitle: { 
     fontSize: 18, 
-    fontWeight: 'bold', 
     borderBottomWidth: 1, 
     borderBottomColor: '#F1F5F9', 
     paddingVertical: 10, 
@@ -239,7 +236,6 @@ const styles = StyleSheet.create({
     maxHeight: 150, 
     paddingTop: 15, 
     color: '#475569',
-    fontWeight: '500'
   },
   
   saveBtn: { 
@@ -248,17 +244,16 @@ const styles = StyleSheet.create({
     paddingVertical: 18, 
     alignItems: 'center', 
     marginTop: 10,
-    elevation: 4
   },
-  saveBtnText: { color: 'white', fontWeight: 'bold', letterSpacing: 2, fontSize: 11 },
+  saveBtnText: { color: 'white', letterSpacing: 1.5, fontSize: 12 },
 
   // Liste
   listContainer: { flex: 1, paddingHorizontal: 25 },
   historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15, marginLeft: 10 },
-  listTitle: { fontSize: 11, fontWeight: '900', color: '#1A237E', letterSpacing: 1.5 },
+  listTitle: { fontSize: 12, color: '#1A237E', letterSpacing: 1 },
   
   noteItem: { 
-    backgroundColor: 'rgba(255, 255, 255, 0.6)', 
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', 
     borderRadius: 25, 
     padding: 20, 
     marginBottom: 12, 
@@ -273,7 +268,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     elevation: 3
   },
-  itemTitle: { fontWeight: 'bold', color: '#1A237E', fontSize: 14, marginBottom: 4, textTransform: 'uppercase' },
-  itemContent: { color: '#64748B', fontSize: 12, fontWeight: '500' },
-  deleteBtn: { padding: 10, marginLeft: 5 }
+  itemTitle: { color: '#1A237E', fontSize: 14, marginBottom: 4 },
+  itemContent: { color: '#64748B', fontSize: 12 },
+  deleteBtn: { padding: 10, marginLeft: 5 },
+
+  glow: { 
+    elevation: 6, shadowColor: '#000', shadowOpacity: 0.2, 
+    shadowRadius: 8, shadowOffset: { width: 0, height: 4 } 
+  }
 });
