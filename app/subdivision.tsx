@@ -6,7 +6,8 @@ import {
   ScrollView, 
   StyleSheet, 
   SafeAreaView, 
-  StatusBar 
+  StatusBar,
+  Platform 
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -19,7 +20,7 @@ export default function SubdivisionScreen() {
   const niveaux = [
     "· Sous-sol ·", 
     "· Rez-de-chaussée ·", 
-    "· Premier Niveau ·",
+    "· Premier Niveau ·", 
     "· Deuxième Niveau ·", 
     "· Troisième Niveau ·", 
     "· Quatrième Niveau ·"
@@ -45,8 +46,8 @@ export default function SubdivisionScreen() {
           >
             <ChevronLeft size={28} color="white" />
           </TouchableOpacity>
-          <Text style={styles.headerTitleText}>
-            BLOC {blockId}{type === 'salles' ? '1' : '2'}
+          <Text style={[styles.headerTitleText, styles.boldSerif]}>
+            Bloc {blockId}{type === 'salles' ? '1' : '2'}
           </Text>
           <View style={{ width: 44 }} /> 
         </View>
@@ -61,8 +62,8 @@ export default function SubdivisionScreen() {
         {/* TITRE SECTION : PILL BLANCHE TEXTE BLEU */}
         <View style={styles.sectionTitleWrapper}>
           <View style={styles.whitePill}>
-            <Text style={styles.sectionTitleText}>
-              · NIVEAUX DE SUBDIVISION ·
+            <Text style={[styles.sectionTitleText, styles.boldSerif]}>
+              · Niveaux de subdivision ·
             </Text>
           </View>
         </View>
@@ -76,7 +77,7 @@ export default function SubdivisionScreen() {
               style={styles.levelButton}
               activeOpacity={0.8}
             >
-              <Text style={styles.levelButtonText}>
+              <Text style={[styles.levelButtonText, styles.boldSerif]}>
                 {niveau}
               </Text>
             </TouchableOpacity>
@@ -90,8 +91,15 @@ export default function SubdivisionScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
+  
+  // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
+  boldSerif: {
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+    fontWeight: '900',
+  },
+
   container: { flex: 1 },
-  headerPadding: { px: 20, paddingTop: 15, paddingHorizontal: 20 },
+  headerPadding: { paddingTop: 15, paddingHorizontal: 20 },
   scrollContent: { paddingTop: 20, paddingBottom: 40, alignItems: 'center' },
   
   redHeaderPill: { 
@@ -110,9 +118,8 @@ const styles = StyleSheet.create({
   backBtn: { padding: 8 },
   headerTitleText: { 
     color: 'white', 
-    fontWeight: '900', 
     fontSize: 16, 
-    letterSpacing: 4, 
+    letterSpacing: 1.5, 
     textAlign: 'center',
     flex: 1
   },
@@ -125,7 +132,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
-    elevation: 12, // Lueur noire (shadow) pour tablette
+    elevation: 12,
     shadowColor: '#000',
     shadowOpacity: 0.35,
     shadowRadius: 12,
@@ -133,9 +140,8 @@ const styles = StyleSheet.create({
   },
   sectionTitleText: { 
     color: '#1A237E', 
-    fontSize: 11, 
-    fontWeight: '900', 
-    letterSpacing: 2 
+    fontSize: 12, 
+    letterSpacing: 1 
   },
 
   buttonList: { width: '100%', paddingHorizontal: 25, gap: 16, maxWidth: 600 },
@@ -152,9 +158,7 @@ const styles = StyleSheet.create({
   },
   levelButtonText: { 
     color: 'white', 
-    fontWeight: 'bold', 
     fontSize: 14, 
-    letterSpacing: 2,
-    textTransform: 'uppercase'
+    letterSpacing: 1,
   }
 });
