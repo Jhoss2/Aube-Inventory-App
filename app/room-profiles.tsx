@@ -13,7 +13,7 @@ const COLUMN_WIDTH = (width - 60) / 4;
 export default function RoomProfilesScreen() {
   const router = useRouter();
   const { blockId, type, level } = useLocalSearchParams();
-  const { appData } = useAppContext();
+  const { appData } = useAppContext() as any;
 
   const rooms = useMemo(() => {
     return (appData.salles || []).filter((s: any) => 
@@ -51,7 +51,7 @@ export default function RoomProfilesScreen() {
         </ScrollView>
         <TouchableOpacity 
           style={[styles.fab, styles.blackGlow]} 
-          onPress={() => router.push({ pathname: '/add-room', params: { blocId, type, level } })}
+          onPress={() => router.push({ pathname: '/add-room', params: { blockId, type, level } })}
         >
           <Plus size={32} color="white" />
         </TouchableOpacity>
