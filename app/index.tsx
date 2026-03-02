@@ -9,6 +9,7 @@ export default function HomeScreen() {
   const { appData } = useAppContext() as any;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // RÉCUPÉRATION DE L'IMAGE DEPUIS LES PARAMÈTRES
   const univImage = appData?.settings?.univImage;
   const backgroundImage = appData?.settings?.bgImage;
   const menuBg = appData?.settings?.menuBg;
@@ -52,14 +53,14 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.sidebarFooter}>
-              <Text style={styles.versionText}>· Version 1.1.1 ·</Text>
-              <View style={styles.logoCircle}>
+              <Text style={styles.versionText}>· VERSION 1.1.1 ·</Text>
+              <div style={styles.logoCircle}>
                 {menuLogo ? (
                   <Image source={{ uri: menuLogo }} style={styles.logoImg} />
                 ) : (
                   <View style={styles.logoPlaceholder}><Text style={styles.logoPText}>LOGO</Text></View>
                 )}
-              </View>
+              </div>
             </View>
           </View>
           <TouchableOpacity style={{ flex: 1 }} onPress={() => setIsMenuOpen(false)} />
@@ -74,7 +75,6 @@ export default function HomeScreen() {
       >
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 150 }} showsVerticalScrollIndicator={false}>
           
-          {/* Header Rouge Pill */}
           <View style={[styles.headerRed, styles.glow]}>
             <TouchableOpacity onPress={() => setIsMenuOpen(true)}>
               <Feather name="menu" size={24} color="white" />
@@ -84,54 +84,51 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Recherche */}
           <View style={styles.searchContainer}>
             <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
-            <TextInput placeholder="Que cherchez vous ?" style={[styles.searchInput, styles.glow]} />
+            <TextInput 
+                placeholder="Que cherchez vous ?" 
+                style={[styles.searchInput, styles.glow, { fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif' }]} 
+            />
             <TouchableOpacity style={styles.botButton} onPress={() => router.push('/chat-aube')}>
               <MaterialCommunityIcons name="robot" size={24} color="#3169e6" />
             </TouchableOpacity>
           </View>
 
-          {/* Sélecteur de Blocs - Maillon de chaîne uniforme */}
           <View style={[styles.blockSelectorContainer, styles.glow]}>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false} 
-              contentContainerStyle={styles.blockScrollContent}
-            >
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.blockScrollContent}>
               {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
                 <TouchableOpacity 
                   key={block} 
                   style={styles.blockButton}
                   onPress={() => router.push({ pathname: '/bloc-details', params: { blockId: block } })}
                 >
-                  <Text style={styles.blockButtonText}>Bloc {block}</Text>
+                  <Text style={styles.blockButtonText}>BLOC {block}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
 
-          {/* Section Université - Image avec titre support décollé */}
+          {/* SECTION IMAGE - EFFET BOSSE VIOLETTE LUISANTE */}
           <View style={styles.univSection}>
-            <View style={[styles.imageContainer, styles.glow]}>
-              {univImage ? (
-                <Image source={{ uri: univImage }} style={styles.univImage} resizeMode="cover" />
-              ) : (
-                <View style={styles.placeholderBlue}>
-                  <Feather name="image" size={50} color="rgba(255,255,255,0.3)" />
-                </View>
-              )}
+            <View style={[styles.imageContainerBosse, styles.intenseGlow]}>
+              <View style={styles.innerPadding}>
+                {univImage ? (
+                  <Image source={{ uri: univImage }} style={styles.univImage} resizeMode="cover" />
+                ) : (
+                  <View style={styles.placeholderBlue}>
+                    <Feather name="image" size={50} color="rgba(255,255,255,0.3)" />
+                  </View>
+                )}
+              </View>
             </View>
 
-            {/* Support ajustable à la taille du texte */}
             <View style={[styles.titleSupport, styles.glow]}>
               <Text style={styles.titleText}>UNIVERSITÉ AUBE NOUVELLE</Text>
             </View>
           </View> 
         </ScrollView>
 
-        {/* Bottom Navigation */}
         <View style={[styles.bottomNav, styles.glow]}>
           <TouchableOpacity onPress={() => router.push('/alerts')}>
             <Feather name="bell" size={24} color="white" />
@@ -151,76 +148,63 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   sidebarContainer: { flex: 1, flexDirection: 'row' },
   blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
-  sidebarDrawer: { 
-    width: '50%', 
-    height: '100%', 
-    backgroundColor: 'rgba(139, 0, 0, 0.92)', 
-    padding: 20, 
-    paddingTop: 60 
-  },
-  sidebarHeader: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)', paddingBottom: 20, marginBottom: 40 },
-  sidebarTitle: { 
-    color: 'white', fontWeight: '900', fontSize: 28, lineHeight: 32,
-    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase'
-  },
+  sidebarDrawer: { width: '50%', height: '100%', backgroundColor: 'rgba(139, 0, 0, 0.92)', padding: 20, paddingTop: 60 },
+  sidebarTitle: { color: 'white', fontWeight: '900', fontSize: 22, letterSpacing: 4, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase' },
   sidebarNav: { flex: 1, alignItems: 'center', paddingTop: 20 },
   sidebarBtn: { marginBottom: 50, width: '100%' },
-  sidebarBtnText: { 
-    color: 'white', fontWeight: 'bold', fontSize: 22, textAlign: 'center',
-    fontStyle: 'italic', fontFamily: Platform.OS === 'ios' ? 'Snell Roundhand' : 'serif'
-  },
+  sidebarBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16, letterSpacing: 2, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase' },
   sidebarFooter: { alignItems: 'center', marginBottom: 30 },
-  versionText: { color: 'white', fontSize: 14, fontWeight: 'bold', marginBottom: 15 },
-  logoCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, justifyContent: 'center', alignItems: 'center' },
+  versionText: { color: 'white', fontSize: 12, fontWeight: 'bold', letterSpacing: 1.5, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif' },
+  logoCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   logoImg: { width: '100%', height: '100%', borderRadius: 40 },
   logoPlaceholder: { width: '100%', height: '100%', borderRadius: 40, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center' },
-  logoPText: { fontSize: 12, fontWeight: 'bold', color: '#8B0000' },
+  logoPText: { fontSize: 10, fontWeight: 'bold', color: '#8B0000', fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif' },
 
   headerRed: { marginHorizontal: 12, marginTop: 20, height: 60, backgroundColor: '#8B0000', borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
   searchContainer: { marginHorizontal: 12, marginTop: 30, flexDirection: 'row', alignItems: 'center' },
-  searchInput: { flex: 1, height: 60, backgroundColor: 'white', borderRadius: 30, paddingLeft: 44, paddingRight: 48, fontSize: 16 },
+  searchInput: { flex: 1, height: 60, backgroundColor: 'white', borderRadius: 30, paddingLeft: 44, paddingRight: 48, fontSize: 14, fontWeight: '700' },
   searchIcon: { position: 'absolute', left: 16, zIndex: 1 },
   botButton: { position: 'absolute', right: 12, zIndex: 1 },
   
-  // Conteneur des Blocs corrigé pour la symétrie
-  blockSelectorContainer: { 
-    marginHorizontal: 12, 
-    marginTop: 20, 
-    backgroundColor: '#263d7e', 
-    borderRadius: 30, 
-    height: 60, 
-    overflow: 'hidden' 
-  },
-  blockScrollContent: { 
-    paddingHorizontal: 15, // Espace constant bord-bouton
-    alignItems: 'center',
-    gap: 15 // Espace constant entre CHAQUE bouton
-  },
-  blockButton: { 
-    backgroundColor: '#385598', 
-    paddingHorizontal: 18, 
-    height: 38, 
-    borderRadius: 15, 
-    justifyContent: 'center' 
-  },
-  blockButtonText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
-  
-  univSection: { marginHorizontal: 12, marginTop: 30, alignItems: 'center' },
-  imageContainer: { width: '100%', height: 380, borderWidth: 3, borderColor: '#fceef5', borderRadius: 60, overflow: 'hidden', backgroundColor: '#4184f4' },
-  univImage: { width: '100%', height: '100%' },
-  placeholderBlue: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  blockSelectorContainer: { marginHorizontal: 12, marginTop: 20, backgroundColor: '#263d7e', borderRadius: 30, height: 60, overflow: 'hidden' },
+  blockScrollContent: { paddingHorizontal: 15, alignItems: 'center', gap: 15 },
+  blockButton: { backgroundColor: '#385598', paddingHorizontal: 18, height: 38, borderRadius: 15, justifyContent: 'center' },
+  blockButtonText: { color: 'white', fontSize: 13, fontWeight: 'bold', letterSpacing: 1, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase' },
 
-  titleSupport: { 
-    backgroundColor: '#263d7e', 
-    paddingHorizontal: 22, 
-    paddingVertical: 12, 
-    borderRadius: 50, 
-    marginTop: 18, 
-    borderWidth: 1.5, 
-    borderColor: '#fceef5',
-    alignSelf: 'center'
+  univSection: { marginHorizontal: 12, marginTop: 30, alignItems: 'center' },
+
+  // EFFET BOSSE VIOLETTE (GOMME / 3D)
+  imageContainerBosse: { 
+    width: '100%', 
+    height: 380, 
+    borderRadius: 80,
+    backgroundColor: '#C97EFD', // Couleur violette dominante
+    padding: 18,                // L'épaisseur de la "bosse"
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)', // Reflet très discret sur l'arête
   },
-  titleText: { color: 'white', fontSize: 13, fontWeight: '900', letterSpacing: 1.5 },
+  innerPadding: {
+    flex: 1,
+    borderRadius: 62,
+    overflow: 'hidden',
+    backgroundColor: '#C97EFD',
+    borderWidth: 4,             // Ombre interne
+    borderColor: 'rgba(0,0,0,0.15)',
+  },
+  univImage: { width: '100%', height: '100%' },
+  placeholderBlue: { flex: 1, backgroundColor: '#4184f4', justifyContent: 'center', alignItems: 'center' },
+
+  // LUEUR INTENSE VIOLETTE
+  intenseGlow: {
+    elevation: 30,
+    shadowColor: '#C97EFD',
+    shadowOpacity: 0.9,
+    shadowRadius: 25,
+    shadowOffset: { width: 0, height: 15 }
+  },
+
+  titleSupport: { backgroundColor: '#263d7e', paddingHorizontal: 22, paddingVertical: 12, borderRadius: 50, marginTop: 18, borderWidth: 1.5, borderColor: '#fceef5', alignSelf: 'center' },
+  titleText: { color: 'white', fontSize: 14, fontWeight: '900', letterSpacing: 4, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase' },
 
   bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 65, borderRadius: 35, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 40 },
   glow: { elevation: 15, shadowColor: '#000', shadowOpacity: 0.45, shadowRadius: 12, shadowOffset: { width: 0, height: 8 } }
