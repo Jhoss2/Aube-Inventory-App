@@ -9,7 +9,6 @@ export default function HomeScreen() {
   const { appData } = useAppContext() as any;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // RÉCUPÉRATION DE L'IMAGE DEPUIS LES PARAMÈTRES
   const univImage = appData?.settings?.univImage;
   const backgroundImage = appData?.settings?.bgImage;
   const menuBg = appData?.settings?.menuBg;
@@ -31,7 +30,7 @@ export default function HomeScreen() {
 
           <View style={styles.sidebarDrawer}>
             <View style={styles.sidebarHeader}>
-              <Text style={styles.sidebarTitle}>U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER</Text>
+              <Text style={[styles.sidebarTitle, styles.boldSerif]}>U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER</Text>
               <TouchableOpacity onPress={() => setIsMenuOpen(false)}>
                 <Feather name="x" size={32} color="white" />
               </TouchableOpacity>
@@ -47,20 +46,20 @@ export default function HomeScreen() {
                   style={styles.sidebarBtn}
                   onPress={() => { setIsMenuOpen(false); router.push(option.path as any); }}
                 >
-                  <Text style={styles.sidebarBtnText}>· {option.label} ·</Text>
+                  <Text style={[styles.sidebarBtnText, styles.boldSerif]}>· {option.label} ·</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             <View style={styles.sidebarFooter}>
-              <Text style={styles.versionText}>· VERSION 1.1.1 ·</Text>
-              <div style={styles.logoCircle}>
+              <Text style={[styles.versionText, styles.boldSerif]}>· VERSION 1.1.1 ·</Text>
+              <View style={styles.logoCircle}>
                 {menuLogo ? (
                   <Image source={{ uri: menuLogo }} style={styles.logoImg} />
                 ) : (
-                  <View style={styles.logoPlaceholder}><Text style={styles.logoPText}>LOGO</Text></View>
+                  <View style={styles.logoPlaceholder}><Text style={[styles.logoPText, styles.boldSerif]}>LOGO</Text></View>
                 )}
-              </div>
+              </View>
             </View>
           </View>
           <TouchableOpacity style={{ flex: 1 }} onPress={() => setIsMenuOpen(false)} />
@@ -88,7 +87,8 @@ export default function HomeScreen() {
             <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
             <TextInput 
                 placeholder="Que cherchez vous ?" 
-                style={[styles.searchInput, styles.glow, { fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif' }]} 
+                placeholderTextColor="#9ca3af"
+                style={[styles.searchInput, styles.glow, styles.boldSerif]} 
             />
             <TouchableOpacity style={styles.botButton} onPress={() => router.push('/chat-aube')}>
               <MaterialCommunityIcons name="robot" size={24} color="#3169e6" />
@@ -103,7 +103,7 @@ export default function HomeScreen() {
                   style={styles.blockButton}
                   onPress={() => router.push({ pathname: '/bloc-details', params: { blockId: block } })}
                 >
-                  <Text style={styles.blockButtonText}>BLOC {block}</Text>
+                  <Text style={[styles.blockButtonText, styles.boldSerif]}>BLOC {block}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -124,7 +124,7 @@ export default function HomeScreen() {
             </View>
 
             <View style={[styles.titleSupport, styles.glow]}>
-              <Text style={styles.titleText}>UNIVERSITÉ AUBE NOUVELLE</Text>
+              <Text style={[styles.titleText, styles.boldSerif]}>UNIVERSITÉ AUBE NOUVELLE</Text>
             </View>
           </View> 
         </ScrollView>
@@ -146,55 +146,59 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // CLASSE GÉNÉRALE POUR LE GRAS ET LE SERIF
+  boldSerif: {
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+    fontWeight: '900', // Gras Maximum
+  },
+
   sidebarContainer: { flex: 1, flexDirection: 'row' },
   blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
   sidebarDrawer: { width: '50%', height: '100%', backgroundColor: 'rgba(139, 0, 0, 0.92)', padding: 20, paddingTop: 60 },
-  sidebarTitle: { color: 'white', fontWeight: '900', fontSize: 22, letterSpacing: 4, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase' },
+  sidebarTitle: { color: 'white', fontSize: 22, letterSpacing: 4, textTransform: 'uppercase' },
   sidebarNav: { flex: 1, alignItems: 'center', paddingTop: 20 },
   sidebarBtn: { marginBottom: 50, width: '100%' },
-  sidebarBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16, letterSpacing: 2, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase' },
+  sidebarBtnText: { color: 'white', fontSize: 16, letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center' },
   sidebarFooter: { alignItems: 'center', marginBottom: 30 },
-  versionText: { color: 'white', fontSize: 12, fontWeight: 'bold', letterSpacing: 1.5, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif' },
+  versionText: { color: 'white', fontSize: 12, letterSpacing: 1.5 },
   logoCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   logoImg: { width: '100%', height: '100%', borderRadius: 40 },
   logoPlaceholder: { width: '100%', height: '100%', borderRadius: 40, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center' },
-  logoPText: { fontSize: 10, fontWeight: 'bold', color: '#8B0000', fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif' },
+  logoPText: { fontSize: 10, color: '#8B0000' },
 
   headerRed: { marginHorizontal: 12, marginTop: 20, height: 60, backgroundColor: '#8B0000', borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
   searchContainer: { marginHorizontal: 12, marginTop: 30, flexDirection: 'row', alignItems: 'center' },
-  searchInput: { flex: 1, height: 60, backgroundColor: 'white', borderRadius: 30, paddingLeft: 44, paddingRight: 48, fontSize: 14, fontWeight: '700' },
+  searchInput: { flex: 1, height: 60, backgroundColor: 'white', borderRadius: 30, paddingLeft: 44, paddingRight: 48, fontSize: 14, color: '#333' },
   searchIcon: { position: 'absolute', left: 16, zIndex: 1 },
   botButton: { position: 'absolute', right: 12, zIndex: 1 },
   
   blockSelectorContainer: { marginHorizontal: 12, marginTop: 20, backgroundColor: '#263d7e', borderRadius: 30, height: 60, overflow: 'hidden' },
   blockScrollContent: { paddingHorizontal: 15, alignItems: 'center', gap: 15 },
   blockButton: { backgroundColor: '#385598', paddingHorizontal: 18, height: 38, borderRadius: 15, justifyContent: 'center' },
-  blockButtonText: { color: 'white', fontSize: 13, fontWeight: 'bold', letterSpacing: 1, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase' },
+  blockButtonText: { color: 'white', fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' },
 
   univSection: { marginHorizontal: 12, marginTop: 30, alignItems: 'center' },
 
-  // EFFET BOSSE VIOLETTE (GOMME / 3D)
   imageContainerBosse: { 
     width: '100%', 
     height: 380, 
     borderRadius: 80,
-    backgroundColor: '#C97EFD', // Couleur violette dominante
-    padding: 18,                // L'épaisseur de la "bosse"
+    backgroundColor: '#C97EFD', 
+    padding: 18,                
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)', // Reflet très discret sur l'arête
+    borderColor: 'rgba(255,255,255,0.2)', 
   },
   innerPadding: {
     flex: 1,
     borderRadius: 62,
     overflow: 'hidden',
     backgroundColor: '#C97EFD',
-    borderWidth: 4,             // Ombre interne
+    borderWidth: 4,             
     borderColor: 'rgba(0,0,0,0.15)',
   },
   univImage: { width: '100%', height: '100%' },
   placeholderBlue: { flex: 1, backgroundColor: '#4184f4', justifyContent: 'center', alignItems: 'center' },
 
-  // LUEUR INTENSE VIOLETTE
   intenseGlow: {
     elevation: 30,
     shadowColor: '#C97EFD',
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
   },
 
   titleSupport: { backgroundColor: '#263d7e', paddingHorizontal: 22, paddingVertical: 12, borderRadius: 50, marginTop: 18, borderWidth: 1.5, borderColor: '#fceef5', alignSelf: 'center' },
-  titleText: { color: 'white', fontSize: 14, fontWeight: '900', letterSpacing: 4, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase' },
+  titleText: { color: 'white', fontSize: 14, letterSpacing: 4, textTransform: 'uppercase' },
 
   bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 65, borderRadius: 35, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 40 },
   glow: { elevation: 15, shadowColor: '#000', shadowOpacity: 0.45, shadowRadius: 12, shadowOffset: { width: 0, height: 8 } }
