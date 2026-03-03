@@ -10,7 +10,7 @@ import { useAppContext } from '@/lib/app-context';
 
 export default function AddRoomScreen() {
   const router = useRouter();
-  const { blocId, type, level } = useLocalSearchParams<{ blocId: string, type: string, level: string }>();
+  const { blockId, type, level } = useLocalSearchParams<{ blockId: string, type: string, level: string }>();
   const { addSalle } = useAppContext();
   
   const [nom, setNom] = useState('');
@@ -39,7 +39,7 @@ export default function AddRoomScreen() {
     }
     addSalle({
       id: Date.now().toString(),
-      blockId: blocId,
+      blockId: blockId,
       type: type,
       name: nom,
       location: emplacement,
@@ -55,7 +55,7 @@ export default function AddRoomScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.redHeaderPill, styles.blackGlow]}>
           <TouchableOpacity onPress={() => router.back()}><ChevronLeft size={28} color="white" /></TouchableOpacity>
-          <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>{(type + " - BLOC " + blocId).toUpperCase()}</Text>
+          <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>{(type + " - BLOC " + blockId).toUpperCase()}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -71,12 +71,12 @@ export default function AddRoomScreen() {
         <View style={styles.formContainer}>
           <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Nom")}</Text>
           <View style={[styles.inputWrapper, styles.blackGlow]}>
-            <TextInput style={[styles.input, styles.boldSerifItalic]} value={nom} onChangeText={setNom} placeholder="Ex: Salle 102" />
+            <TextInput style={[styles.input, styles.boldSerifItalic]} value={nom} onChangeText={setNom} placeholder="Ex: Salle 05" />
           </View>
 
           <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Emplacement")}</Text>
           <View style={[styles.inputWrapper, styles.blackGlow]}>
-            <TextInput style={[styles.input, styles.boldSerifItalic]} value={emplacement} onChangeText={setEmplacement} placeholder="Ex: Aile est" />
+            <TextInput style={[styles.input, styles.boldSerifItalic]} value={emplacement} onChangeText={setEmplacement} placeholder="Ex: Bloc C" />
           </View>
 
           <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Niveau")}</Text>
