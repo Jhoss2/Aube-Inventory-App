@@ -45,7 +45,6 @@ const config: ExpoConfig = {
     "expo-file-system",
     "expo-image-picker",
     "expo-document-picker",
-    "expo-blur",
     "expo-av",
     [
       "expo-build-properties",
