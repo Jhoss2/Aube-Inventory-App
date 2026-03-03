@@ -1,19 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, StatusBar, Image, ImageBackground, Modal, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '@/lib/app-context';
+import { Video, ResizeMode } from 'expo-av';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { appData } = useAppContext() as any;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const videoRef = useRef(null);
 
   const univImage = appData?.settings?.univImage;
   const backgroundImage = appData?.settings?.bgImage;
   const menuBg = appData?.settings?.menuBg;
   const menuLogo = appData?.settings?.menuLogo;
 
+  useEffect(() => {
+    // Sécurité : si la vidéo ne se termine pas, on cache le splash après 5 secondes
+    const timeout = setTimeout(() => setShowSplash(false), 5000);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // --- SPLASH SCREEN ANIMÉ ---
+  if (showSplash) {
+    return (
+      <View style={styles.splashContainer}>
+        <StatusBar hidden />
+        <Video
+          ref={videoRef}
+          source={require('@/assets/animation.mp4')}
+          style={styles.splashVideo}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay
+          isLooping={false}
+          onPlaybackStatusUpdate={(status) => {
+            if (status.isLoaded && status.didJustFinish) {
+              setShowSplash(false);
+            }
+          }}
+        />
+      </View>
+    );
+  }
+
+  // --- ÉCRAN PRINCIPAL ---
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" backgroundColor="black" />
@@ -146,16 +178,28 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // SPLASH
+  splashContainer: {
+    flex: 1,
+    backgroundColor: '#1A237E',
+  },
+  splashVideo: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+
   // CLASSE GÉNÉRALE POUR LE GRAS ET LE SERIF
   boldSerif: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
-    fontWeight: '900', // Gras Maximum
+    fontWeight: '900',
   },
 
   sidebarContainer: { flex: 1, flexDirection: 'row' },
   blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
   sidebarDrawer: { width: '50%', height: '100%', backgroundColor: 'rgba(139, 0, 0, 0.92)', padding: 20, paddingTop: 60 },
   sidebarTitle: { color: 'white', fontSize: 22, letterSpacing: 4, textTransform: 'uppercase' },
+  sidebarHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 },
   sidebarNav: { flex: 1, alignItems: 'center', paddingTop: 20 },
   sidebarBtn: { marginBottom: 50, width: '100%' },
   sidebarBtnText: { color: 'white', fontSize: 16, letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center' },
