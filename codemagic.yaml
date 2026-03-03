@@ -1,6 +1,6 @@
 workflows:
   android-workflow:
-    name: U-Auben Tracker - Production Build
+    name: U-Auben Inventory App - Production Build
     max_build_duration: 60
     environment:
       node: 20.11.0
