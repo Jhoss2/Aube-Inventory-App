@@ -55,7 +55,7 @@ export default function RoomProfilesScreen() {
         </ScrollView>
         <TouchableOpacity 
           style={[styles.fab, styles.blackGlow]} 
-          onPress={() => router.push({ pathname: '/add-room', params: { blocId, type, level } })}
+          onPress={() => router.push({ pathname: '/add-room', params: { blockId, type, level } })}
         >
           <Plus size={32} color="white" />
         </TouchableOpacity>
