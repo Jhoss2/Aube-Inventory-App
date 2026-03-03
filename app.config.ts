@@ -1,42 +1,60 @@
 import type { ExpoConfig } from "expo/config";
 
 const config: ExpoConfig = {
-  name: "UAubenTracker",
+  name: "U-Auben Tracker",
   slug: "uaubentracker",
-  version: "1.0.0",
+  version: "1.0.1",
   orientation: "portrait",
+  icon: "./assets/icon.png",
   userInterfaceStyle: "light",
   assetBundlePatterns: ["**/*"],
+  splash: {
+    image: "./assets/splash.png",
+    resizeMode: "contain",
+    backgroundColor: "#1A237E"
+  },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.uauben.tracker"
+    bundleIdentifier: "com.uauben.tracker",
+    icon: "./assets/icon.png"
   },
   android: {
     package: "com.uauben.tracker",
     versionCode: 1,
+    icon: "./assets/icon.png",
+    adaptiveIcon: {
+      foregroundImage: "./assets/adaptative-icon.png",
+      backgroundColor: "#1A237E"
+    },
     permissions: [
       "android.permission.INTERNET",
       "android.permission.READ_EXTERNAL_STORAGE",
-      "android.permission.WRITE_EXTERNAL_STORAGE"
+      "android.permission.WRITE_EXTERNAL_STORAGE",
+      "android.permission.CAMERA"
     ]
+  },
+  web: {
+    bundler: "metro",
+    favicon: "./assets/icon.png"
   },
   plugins: [
     "expo-router",
     "expo-sqlite",
-    [
-      "expo-font",
-      {
-        "fonts": [
-          "./assets/fonts/Algerian.ttf",
-          "./assets/fonts/MonotypeCorsiva.ttf"
-        ]
-      }
-    ],
+    "expo-font",
+    "expo-asset",
+    "expo-file-system",
+    "expo-image-picker",
+    "expo-document-picker",
+    "expo-blur",
+    "expo-av",
     [
       "expo-build-properties",
       {
-        "android": {
-          "kotlinVersion": "1.9.25"
+        android: {
+          compileSdkVersion: 34,
+          targetSdkVersion: 34,
+          buildToolsVersion: "34.0.0",
+          kotlinVersion: "1.9.25"
         }
       }
     ]
