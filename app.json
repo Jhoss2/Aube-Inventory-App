@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "U-Auben Tracker",
-    "slug": "uaubentracker",
+    "name": "U-Auben Inventory App",
+    "slug": "uaubeninventoryapp",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,11 +14,11 @@
     "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.uauben.tracker",
+      "bundleIdentifier": "com.uauben.inventoryapp",
       "icon": "./assets/icon.png"
     },
     "android": {
-      "package": "com.uauben.tracker",
+      "package": "com.uauben.inventoryapp",
       "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptative-icon.png",
