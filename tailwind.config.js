@@ -6,12 +6,7 @@ module.exports = {
     "./lib/**/*.{js,jsx,ts,tsx}"
   ],
   theme: {
-    extend: {
-      fontFamily: {
-        algerian: ["Algerian"],
-        corsiva: ["Monotype-Corsiva"],
-      },
-    },
+    extend: {},
   },
   plugins: [],
 };
