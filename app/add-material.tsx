@@ -79,13 +79,13 @@ export default function AddMaterialScreen() {
         {/* HEADER PILL AVEC LUEUR NOIRE */}
         <View style={[styles.headerPill, styles.glow]}>
           <TouchableOpacity onPress={() => router.back()}><ChevronLeft size={28} color="white" /></TouchableOpacity>
-          <Text style={styles.headerTitle}>NOUVEL OBJET</Text>
+          <Text style={styles.headerTitle}>NOUVEAU MATÉRIEL</Text>
           <View style={{ width: 28 }} />
         </View>
 
         {/* NOM / TYPE (DÉSORMAIS ÉDITABLE) */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nom ou Type de matériel</Text>
+          <Text style={styles.label}>Nom du matériel</Text>
           <TextInput 
             style={[styles.input, styles.glow]} 
             value={nom} 
@@ -133,14 +133,14 @@ export default function AddMaterialScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Photo de l'équipement</Text>
+          <Text style={styles.label}>Image du matériel</Text>
           <TouchableOpacity style={[styles.photoBox, styles.glow]} onPress={pickImage}>
             {image ? (
               <Image source={{ uri: image }} style={styles.fullImg} />
             ) : (
               <View style={{ alignItems: 'center' }}>
                 <Camera size={32} color="#1A237E" />
-                <Text style={styles.photoText}>AJOUTER UNE PHOTO</Text>
+                <Text style={styles.photoText}>Ajouter une image</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -159,7 +159,7 @@ export default function AddMaterialScreen() {
         </View>
 
         <TouchableOpacity style={[styles.saveBtn, styles.glow]} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>VALIDER L'ENREGISTREMENT</Text>
+          <Text style={styles.saveBtnText}>Enregistrer</Text>
         </TouchableOpacity>
 
       </ScrollView>
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
     paddingHorizontal: 15, marginBottom: 35 
   },
-  headerTitle: { color: 'white', fontWeight: '900', fontSize: 13, letterSpacing: 2 },
+  headerTitle: { color: 'white', fontWeight: '900', fontSize: 20, letterSpacing: 2 },
   
   inputGroup: { marginBottom: 20 },
   label: { fontSize: 9, fontWeight: '900', color: '#1A237E', letterSpacing: 1.5, marginLeft: 10, marginBottom: 8, textTransform: 'uppercase' },
