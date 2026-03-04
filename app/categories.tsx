@@ -71,7 +71,7 @@ export default function CategoriesScreen() {
             <ChevronLeft size={28} color="white" />
           </TouchableOpacity>
           
-          <Text style={[styles.headerTitleText, styles.boldSerif]}>CATÉGORIES</Text>
+          <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>CATÉGORIES</Text>
           
           <TouchableOpacity onPress={() => setShowAddInput(!showAddInput)} style={styles.backBtn}>
             {showAddInput ? <X size={26} color="white" /> : <Plus size={26} color="white" />}
@@ -87,7 +87,7 @@ export default function CategoriesScreen() {
               value={newCategoryName}
               onChangeText={setNewCategoryName}
               placeholderTextColor="#94A3B8"
-              style={[styles.addInput, styles.glowBlack, styles.boldSerif]}
+              style={[styles.addInput, styles.glowBlack, styles.boldSerifItalic]}
             />
             <TouchableOpacity 
               onPress={handleAddCategory}
@@ -106,7 +106,7 @@ export default function CategoriesScreen() {
             value={searchTerm}
             onChangeText={setSearchTerm}
             placeholderTextColor="#94A3B8"
-            style={[styles.searchInput, styles.boldSerif]}
+            style={[styles.searchInput, styles.boldSerifItalic]}
           />
         </View>
 
@@ -122,11 +122,11 @@ export default function CategoriesScreen() {
                   params: { roomId, roomName, category }
                 })}
               >
-                <Text style={[styles.catBtnText, styles.boldSerif]}>{category}</Text>
+                <Text style={[styles.catBtnText, styles.boldSerifItalic]}>{category}</Text>
               </TouchableOpacity>
             ))
           ) : (
-            <Text style={[styles.emptyText, styles.boldSerif]}>AUCUNE CATÉGORIE TROUVÉE</Text>
+            <Text style={[styles.emptyText, styles.boldSerifItalic]}>AUCUNE CATÉGORIE TROUVÉE</Text>
           )}
         </View>
 
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 25, paddingTop: 55, paddingBottom: 40 },
   
   // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
-  boldSerif: {
+  boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
   },
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   backBtn: { padding: 5 },
   headerTitleText: { 
     color: 'white', 
-    fontSize: 14, 
+    fontSize: 20, 
     letterSpacing: 3,
     textTransform: 'uppercase'
   },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     borderRadius: 50, 
     paddingHorizontal: 20, 
     height: 55, 
-    fontSize: 14,
+    fontSize: 16,
     color: '#1A237E' 
   },
   checkBtn: { 
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'white'
   },
-  searchInput: { flex: 1, color: '#1A237E', fontSize: 13 },
+  searchInput: { flex: 1, color: '#1A237E', fontSize: 16 },
 
   listContainer: { gap: 18 },
   catBtn: { 
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   },
   catBtnText: { 
     color: '#1A237E', 
-    fontSize: 13, 
+    fontSize: 16, 
     letterSpacing: 2.5,
     textTransform: 'uppercase'
   },
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     textAlign: 'center', 
     color: '#94A3B8', 
     marginTop: 40, 
-    fontSize: 11, 
+    fontSize: 16, 
     letterSpacing: 1.5,
     textTransform: 'uppercase'
   },
