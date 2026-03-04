@@ -27,7 +27,7 @@ export default function ChatAubeScreen() {
 
   const assistantName = appData?.settings?.assistantName || "Aube";
   const assistantAvatar = appData?.settings?.assistantAvatar || "https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6";
-  const systemPrompt = appData?.settings?.aubePrompt || "Tu es Aube, assistant expert de l'Université AUBEN.";
+  const systemPrompt = appData?.settings?.aubePrompt || "Tu es Aube, assistant expert de l'Université Aube Nouvelle.";
 
   const [messages, setMessages] = useState([
     {
@@ -103,10 +103,10 @@ export default function ChatAubeScreen() {
           </View>
 
           <View style={styles.headerInfo}>
-            <Text style={[styles.assistantTitle, styles.boldSerif]}>{assistantName.toUpperCase()}</Text>
+            <Text style={[styles.assistantTitle, styles.boldSerifItalic]}>{assistantName.toUpperCase()}</Text>
             <View style={styles.statusRow}>
               <View style={styles.statusDot} />
-              <Text style={[styles.statusText, styles.boldSerif]}>EN LIGNE</Text>
+              <Text style={[styles.statusText, styles.boldSerifItalic]}>En ligne</Text>
             </View>
           </View>
           <View style={{ width: 20 }} />
@@ -127,9 +127,9 @@ export default function ChatAubeScreen() {
           renderItem={({ item }) => (
             <View style={[styles.messageRow, item.sender === 'user' ? styles.userRow : styles.aubeRow]}>
               <View style={[styles.bubble, item.sender === 'user' ? styles.userBubble : styles.aubeBubble, styles.glowLight]}>
-                <Text style={[styles.messageText, styles.boldSerif]}>{item.text}</Text>
+                <Text style={[styles.messageText, styles.boldSerifItalic]}>{item.text}</Text>
                 <View style={styles.messageFooter}>
-                  <Text style={[styles.timeText, styles.boldSerif]}>{item.time}</Text>
+                  <Text style={[styles.timeText, styles.boldSerifItalic]}>{item.time}</Text>
                   {item.sender === 'user' && <CheckCheck size={14} color="#1A237E" style={{opacity: 0.8}} />}
                 </View>
               </View>
@@ -150,8 +150,8 @@ export default function ChatAubeScreen() {
         <View style={styles.inputContainer}>
           <View style={[styles.textInputWrapper, styles.glowLight]}>
             <TextInput 
-              placeholder={`ÉCRIRE À ${assistantName.toUpperCase()}...`}
-              style={[styles.textInput, styles.boldSerif]}
+              placeholder={`Écrire à ${assistantName.toUpperCase()}...`}
+              style={[styles.textInput, styles.boldSerifItalic]}
               value={inputValue}
               onChangeText={setInputValue}
               placeholderTextColor="#94A3B8"
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
   
   // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
-  boldSerif: {
+  boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
   },
@@ -204,10 +204,10 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: '100%', height: '100%' },
   headerInfo: { flex: 1, marginLeft: 12 },
-  assistantTitle: { color: 'white', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' },
+  assistantTitle: { color: 'white', fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' },
   statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
   statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ADE80', marginRight: 5 },
-  statusText: { color: 'rgba(255,255,255,0.9)', fontSize: 9, letterSpacing: 1 },
+  statusText: { color: 'rgba(255,255,255,0.9)', fontSize: 14, letterSpacing: 1 },
 
   chatBackground: { flex: 1 },
   listContent: { padding: 20, paddingBottom: 30 },
@@ -234,9 +234,9 @@ const styles = StyleSheet.create({
     borderColor: '#F1F5F9' 
   },
   
-  messageText: { fontSize: 13, color: '#1E293B', lineHeight: 20, letterSpacing: 0.5 },
+  messageText: { fontSize: 16, color: '#1E293B', lineHeight: 20, letterSpacing: 0.5 },
   messageFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 6, gap: 5 },
-  timeText: { fontSize: 9, color: '#64748B' },
+  timeText: { fontSize: 13, color: '#64748B' },
   
   typingIndicator: { marginLeft: 25, marginBottom: 20 },
 
