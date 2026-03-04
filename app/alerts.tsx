@@ -30,22 +30,22 @@ export default function AlertsScreen() {
       
       <View style={styles.alertContent}>
         <View style={styles.alertHeader}>
-          <Text style={[styles.itemName, styles.boldSerif]}>{item.nom.toUpperCase()}</Text>
-          <Text style={[styles.alertDate, styles.boldSerif]}>{new Date().toLocaleDateString()}</Text>
+          <Text style={[styles.itemName, styles.boldSerifItalic]}>{item.nom.toUpperCase()}</Text>
+          <Text style={[styles.alertDate, styles.boldSerifItalic]}>{new Date().toLocaleDateString()}</Text>
         </View>
         
         <View style={styles.salleRow}>
           <MapPin size={12} color="#1A237E" />
-          <Text style={[styles.salleInfo, styles.boldSerif]}>{item.salleNom.toUpperCase()}</Text>
+          <Text style={[styles.salleInfo, styles.boldSerifItalic]}>{item.salleNom.toUpperCase()}</Text>
         </View>
 
         <View style={styles.badgeContainer}>
           <View style={[styles.stateBadge, { backgroundColor: item.etat === 'En panne' ? '#FFE4E8' : '#FEF3C7' }]}>
-            <Text style={[styles.stateText, styles.boldSerif, { color: item.etat === 'En panne' ? '#8B0000' : '#92400E' }]}>
+            <Text style={[styles.stateText, styles.boldSerifItalic, { color: item.etat === 'En panne' ? '#8B0000' : '#92400E' }]}>
               {item.etat.toUpperCase()}
             </Text>
           </View>
-          <Text style={[styles.categoryText, styles.boldSerif]}>{item.category?.toUpperCase()}</Text>
+          <Text style={[styles.categoryText, styles.boldSerifItalic]}>{item.category?.toUpperCase()}</Text>
         </View>
       </View>
 
@@ -68,9 +68,9 @@ export default function AlertsScreen() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                     <ChevronLeft size={28} color="white" />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitleText, styles.boldSerif]}>CENTRE D'ALERTES</Text>
+                <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>CENTRE D'ALERTES</Text>
                 <View style={styles.badgeCount}>
-                    <Text style={[styles.badgeCountText, styles.boldSerif]}>{alerts.length}</Text>
+                    <Text style={[styles.badgeCountText, styles.boldSerifItalic]}>{alerts.length}</Text>
                 </View>
             </View>
         </View>
@@ -87,8 +87,8 @@ export default function AlertsScreen() {
           ) : (
             <View style={styles.emptyContainer}>
               <CheckCircle size={80} color="#8B0000" strokeWidth={1.5} />
-              <Text style={[styles.emptyText, styles.boldSerif]}>AUCUNE ALERTE CRITIQUE</Text>
-              <Text style={[styles.emptySubText, styles.boldSerif]}>TOUT VOTRE MATÉRIEL EST OPÉRATIONNEL.</Text>
+              <Text style={[styles.emptyText, styles.boldSerifItalic]}>AUCUNE ALERTE CRITIQUE</Text>
+              <Text style={[styles.emptySubText, styles.boldSerifItalic]}>LE MATÉRIEL EST OPÉRATIONNEL.</Text>
             </View>
           )}
         </View>
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 
   // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
-  boldSerif: {
+  boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
   },
@@ -118,9 +118,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   backBtn: { padding: 5 },
-  headerTitleText: { color: 'white', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' },
+  headerTitleText: { color: 'white', fontSize: 20, letterSpacing: 2, textTransform: 'uppercase' },
   badgeCount: { backgroundColor: 'white', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 2 },
-  badgeCountText: { color: '#8B0000', fontSize: 12 },
+  badgeCountText: { color: '#8B0000', fontSize: 14 },
   
   content: { flex: 1 },
   listPadding: { padding: 20, paddingBottom: 40 },
@@ -138,19 +138,19 @@ const styles = StyleSheet.create({
   statusIndicator: { width: 8, height: '100%' },
   alertContent: { flex: 1, padding: 18 },
   alertHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  itemName: { fontSize: 14, color: '#1A237E', letterSpacing: 1 },
-  alertDate: { fontSize: 10, color: '#94A3B8' },
+  itemName: { fontSize: 16, color: '#1A237E', letterSpacing: 1 },
+  alertDate: { fontSize: 16, color: '#94A3B8' },
   salleRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 },
   salleInfo: { fontSize: 11, color: '#1A237E', textTransform: 'uppercase' },
   badgeContainer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stateBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  stateText: { fontSize: 9, textTransform: 'uppercase' },
-  categoryText: { fontSize: 10, color: '#94A3B8', textTransform: 'uppercase' },
+  stateText: { fontSize: 14, textTransform: 'uppercase' },
+  categoryText: { fontSize: 16, color: '#94A3B8', textTransform: 'uppercase' },
   detailsBtn: { paddingHorizontal: 15 },
   
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 100 },
   emptyText: { marginTop: 25, fontSize: 16, color: '#1A237E', letterSpacing: 2 },
-  emptySubText: { marginTop: 8, color: '#64748B', fontSize: 11, letterSpacing: 1 },
+  emptySubText: { marginTop: 8, color: '#64748B', fontSize: 16, letterSpacing: 1 },
 
   glow: { 
     elevation: 8, shadowColor: '#000', shadowOpacity: 0.25, 
