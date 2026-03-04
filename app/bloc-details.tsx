@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   headerTitleText: { 
     color: 'white', 
     fontWeight: '900', 
-    fontSize: 14, 
+    fontSize: 16, 
     letterSpacing: 4, 
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     textTransform: 'uppercase'
