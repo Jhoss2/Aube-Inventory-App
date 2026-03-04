@@ -110,10 +110,10 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 25, paddingTop: 50, paddingBottom: 60 },
   redHeaderPill: { backgroundColor: '#8B0000', paddingVertical: 12, paddingHorizontal: 15, borderRadius: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 25 },
   blackGlow: { shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 12 },
-  headerTitleText: { color: 'white', fontSize: 14 },
+  headerTitleText: { color: 'white', fontSize: 20 },
   photoZone: { backgroundColor: '#1A237E', borderRadius: 35, height: 180, overflow: 'hidden', marginBottom: 25 },
   photoPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  photoText: { color: 'white', fontSize: 11, marginTop: 10 },
+  photoText: { color: 'white', fontSize: 14, marginTop: 10 },
   imagePreview: { width: '100%', height: '100%', resizeMode: 'cover' },
   formContainer: { width: '100%' },
   label: { fontSize: 11, color: '#1A237E', marginBottom: 8, marginLeft: 10 },
@@ -122,5 +122,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row' },
   flex1: { flex: 1 },
   saveBtn: { backgroundColor: '#1A237E', paddingVertical: 22, borderRadius: 50, marginTop: 35, alignItems: 'center' },
-  saveBtnText: { color: 'white', fontSize: 14 }
+  saveBtnText: { color: 'white', fontSize: 16 }
 });
