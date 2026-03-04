@@ -79,7 +79,7 @@ export default function AddMaterialScreen() {
         {/* HEADER PILL AVEC LUEUR NOIRE */}
         <View style={[styles.headerPill, styles.glow]}>
           <TouchableOpacity onPress={() => router.back()}><ChevronLeft size={28} color="white" /></TouchableOpacity>
-          <Text style={styles.headerTitle}>NOUVEAU MATÉRIEL</Text>
+          <Text style={[styles.headerTitle, styles.boldSerifItalic]}>NOUVEAU MATÉRIEL</Text>
           <View style={{ width: 28 }} />
         </View>
 
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   headerTitle: { color: 'white', fontWeight: '900', fontSize: 20, letterSpacing: 2 },
   
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 9, fontWeight: '900', color: '#1A237E', letterSpacing: 1.5, marginLeft: 10, marginBottom: 8, textTransform: 'uppercase' },
+  label: { fontSize: 16, fontWeight: '900', color: '#1A237E', letterSpacing: 1.5, marginLeft: 10, marginBottom: 8, textTransform: 'uppercase' },
   
   input: { 
     backgroundColor: 'white', borderRadius: 20, padding: 15, 
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   stateSelector: { flexDirection: 'row', gap: 6, flex: 1 },
   stateBtn: { flex: 1, backgroundColor: 'white', borderRadius: 15, justifyContent: 'center', alignItems: 'center', height: 50 },
   stateBtnActive: { backgroundColor: '#1A237E' },
-  stateBtnText: { fontSize: 9, fontWeight: '900', color: '#1A237E' },
+  stateBtnText: { fontSize: 13, fontWeight: '900', color: '#1A237E' },
   whiteText: { color: 'white' },
   
   photoBox: { 
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', overflow: 'hidden', 
     borderWidth: 2, borderColor: '#1A237E', borderStyle: 'dashed' 
   },
-  photoText: { fontSize: 9, fontWeight: '900', color: '#1A237E', marginTop: 8 },
+  photoText: { fontSize: 16, fontWeight: '900', color: '#1A237E', marginTop: 8 },
   fullImg: { width: '100%', height: '100%' },
   textArea: { height: 90, textAlignVertical: 'top' },
   
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A237E', paddingVertical: 20, borderRadius: 50, 
     marginTop: 10, alignItems: 'center' 
   },
-  saveBtnText: { color: 'white', fontWeight: '900', fontSize: 13, letterSpacing: 2 },
+  saveBtnText: { color: 'white', fontWeight: '900', fontSize: 16, letterSpacing: 2 },
   
   // Lueur noire prononcée
   glow: { 
