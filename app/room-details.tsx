@@ -63,7 +63,7 @@ export default function RoomDetailsScreen() {
             onPress={() => room?.image && router.push({ pathname: '/fullscreen-view', params: { imageUri: room.image } })}
           >
             <Box size={24} color="#1A237E" />
-            <Text style={[styles.planText, styles.boldSerif]}>Voir le plan 3D / Architecture</Text>
+            <Text style={[styles.planText, styles.boldSerif]}>Voir l'image</Text>
           </TouchableOpacity>
         </View>
 
@@ -96,6 +96,8 @@ const styles = StyleSheet.create({
   boldSerif: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
+    fontSize: 16,
+    fontStyle: 'italic',
   },
 
   scrollContent: { 
@@ -119,7 +121,7 @@ const styles = StyleSheet.create({
     color: 'white', 
     flex: 1, 
     textAlign: 'center', 
-    fontSize: 14, 
+    fontSize: 20, 
     letterSpacing: 1 
   },
 
@@ -151,7 +153,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderColor: '#1A237E',
   },
-  planText: { fontSize: 12, color: '#1A237E', letterSpacing: 0.5 },
+  planText: { fontSize: 16, color: '#1A237E', letterSpacing: 0.5 },
 
   actionContainer: { marginTop: 45, gap: 20 },
   actionBtn: { 
@@ -163,7 +165,7 @@ const styles = StyleSheet.create({
   actionBtnText: { 
     color: 'white', 
     letterSpacing: 1.5, 
-    fontSize: 13 
+    fontSize: 16 
   },
 
   // LUEURS
