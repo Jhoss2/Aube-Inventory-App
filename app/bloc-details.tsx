@@ -118,6 +118,7 @@ const styles = StyleSheet.create({
     fontWeight: '900', 
     fontSize: 16, 
     letterSpacing: 4, 
+    fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     textTransform: 'uppercase'
   },
@@ -141,6 +142,7 @@ const styles = StyleSheet.create({
     fontSize: 13, 
     fontWeight: '700', 
     letterSpacing: 2,
+    fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     textTransform: 'uppercase'
   },
@@ -154,6 +156,7 @@ const styles = StyleSheet.create({
   errorBtnText: { 
     color: 'white', 
     fontWeight: '900',
+    fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif'
   },
   glow: { 
