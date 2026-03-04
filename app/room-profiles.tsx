@@ -8,7 +8,7 @@ import { ChevronLeft, Plus } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
 
 const { width } = Dimensions.get('window');
-const COLUMN_WIDTH = (width - 60) / 4; 
+const COLUMN_WIDTH = (width - 55) / 4; 
 
 export default function RoomProfilesScreen() {
   const router = useRouter();
@@ -78,6 +78,6 @@ const styles = StyleSheet.create({
   initialAvatar: { flex: 1, backgroundColor: '#8B0000', alignItems: 'center', justifyContent: 'center' },
   initialText: { color: 'white', fontSize: 24, fontWeight: 'bold' },
   imageAvatar: { width: '100%', height: '100%' },
-  roomName: { marginTop: 6, color: '#000', fontSize: 10, textAlign: 'center' },
+  roomName: { marginTop: 6, color: '#000', fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
   fab: { position: 'absolute', bottom: 30, right: 25, width: 60, height: 60, backgroundColor: '#8B0000', borderRadius: 30, justifyContent: 'center', alignItems: 'center' }
 });
