@@ -204,6 +204,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
     fontSize: 16,
+    fontStyle: 'italic',
   },
   fullContainer: { flex: 1, backgroundColor: 'black' },
   absoluteFull: { position: 'absolute', width: width, height: height },
