@@ -203,6 +203,7 @@ const styles = StyleSheet.create({
   boldSerif: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
+    fontSize: 16,
   },
   fullContainer: { flex: 1, backgroundColor: 'black' },
   absoluteFull: { position: 'absolute', width: width, height: height },
