@@ -13,7 +13,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
 
   const menuOptions = [
     { label: "Guide d'utilisation", path: '/guide-viewer' },
-    { label: "A propos du développeur", path: '/about-dev' }
+    { label: "À propos du développeur", path: '/about-dev' }
   ];
 
   return (
@@ -63,7 +63,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
                   <Image source={{ uri: menuLogo }} style={styles.logoImage} />
                 ) : (
                   <View style={styles.logoPlaceholder}>
-                    <Text style={styles.logoText}>LOGO</Text>
+                    <Text style={styles.logoText}>Logo</Text>
                   </View>
                 )}
               </View>
@@ -104,8 +104,9 @@ const styles = StyleSheet.create({
   titleText: { 
     color: 'white', 
     fontWeight: '900', 
-    fontSize: 28, 
-    lineHeight: 32,
+    fontSize: 35, 
+    lineHeight: 37,
+    fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', 
     textTransform: 'uppercase'
   },
@@ -114,17 +115,17 @@ const styles = StyleSheet.create({
   navText: { 
     color: 'white', 
     fontWeight: 'bold', 
-    fontSize: 22, 
+    fontSize: 25, 
     textAlign: 'center', 
     fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Snell Roundhand' : 'serif',
   },
   footer: { paddingBottom: 40, alignItems: 'center' },
-  versionText: { color: 'rgba(255,255,255,0.9)', fontWeight: 'bold', fontSize: 14, marginBottom: 20 },
+  versionText: { color: 'rgba(255,255,255,0.9)', fontWeight: 'bold', fontSize: 16, fontStyle: 'italic', marginBottom: 20 },
   logoOuter: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)', padding: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   logoGradient: { width: '100%', height: '100%', borderRadius: 40, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   logoImage: { width: '100%', height: '100%' },
   logoPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.4)', justifyContent: 'center', alignItems: 'center' },
-  logoText: { fontSize: 16, fontWeight: 'bold', color: '#8B0000' }, // Rouge plein pour le logo interne
+  logoText: { fontSize: 18, fontWeight: 'bold', fontStyle: 'italic', color: '#8B0000' }, // Rouge plein pour le logo interne
   closeZone: { flex: 1, height: '100%' }
 });
