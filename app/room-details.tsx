@@ -73,14 +73,14 @@ export default function RoomDetailsScreen() {
             style={[styles.actionBtn, styles.glowSmall]} 
             onPress={() => router.push({ pathname: '/room-contents', params: { roomId, roomName } })}
           >
-            <Text style={[styles.actionBtnText, styles.boldSerif]}>Afficher le matériel</Text>
+            <Text style={[styles.actionBtnText, styles.boldSerifItalic]}>Afficher le matériel</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={[styles.actionBtn, styles.glowSmall]} 
             onPress={() => router.push({ pathname: '/categories', params: { roomId, roomName } })}
           >
-            <Text style={[styles.actionBtnText, styles.boldSerif]}>Ajouter du matériel</Text>
+            <Text style={[styles.actionBtnText, styles.boldSerifItalic]}>Ajouter du matériel</Text>
           </TouchableOpacity>
         </View>
 
@@ -93,11 +93,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFE4E8' },
   
   // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
-  boldSerif: {
+  boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
     fontSize: 16,
-    fontStyle: 'italic',
   },
 
   scrollContent: { 
