@@ -33,7 +33,7 @@ export default function RoomDetailsScreen() {
             <ChevronLeft size={28} color="white" />
           </TouchableOpacity>
           
-          <Text style={[styles.redHeaderText, styles.boldSerif]} numberOfLines={1}>
+          <Text style={[styles.redHeaderText, styles.boldSerifItalic]} numberOfLines={1}>
             {roomName}
           </Text>
           
@@ -43,18 +43,18 @@ export default function RoomDetailsScreen() {
         {/* INFOS SECTION - STYLE INSTITUTIONNEL */}
         <View style={styles.infoSection}>
           <View style={[styles.infoRow, styles.glowSmall]}>
-            <Text style={[styles.infoLabel, styles.boldSerif]}>Capacité :</Text>
-            <Text style={[styles.infoValue, styles.boldSerif]}>{room?.capacity || "N/A"}</Text>
+            <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Capacité :</Text>
+            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{room?.capacity || "N/A"}</Text>
           </View>
           
           <View style={[styles.infoRow, styles.glowSmall]}>
-            <Text style={[styles.infoLabel, styles.boldSerif]}>Superficie :</Text>
-            <Text style={[styles.infoValue, styles.boldSerif]}>{room?.surface || "N/A"} m²</Text>
+            <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Superficie :</Text>
+            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{room?.surface || "N/A"} m²</Text>
           </View>
 
           <View style={[styles.infoRow, styles.glowSmall]}>
-            <Text style={[styles.infoLabel, styles.boldSerif]}>Emplacement :</Text>
-            <Text style={[styles.infoValue, styles.boldSerif]}>{room?.location || "N/A"}</Text>
+            <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Emplacement :</Text>
+            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{room?.location || "N/A"}</Text>
           </View>
 
           {/* SECTION PLAN 3D */}
@@ -63,7 +63,7 @@ export default function RoomDetailsScreen() {
             onPress={() => room?.image && router.push({ pathname: '/fullscreen-view', params: { imageUri: room.image } })}
           >
             <Box size={24} color="#1A237E" />
-            <Text style={[styles.planText, styles.boldSerif]}>Voir l'image</Text>
+            <Text style={[styles.planText, styles.boldSerifItalic]}>Voir l'image</Text>
           </TouchableOpacity>
         </View>
 
