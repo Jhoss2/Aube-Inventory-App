@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Modal,
-  ImageBackground, Image, Platform, FlatList, ActivityIndicator, Alert
+  ImageBackground, Image, Platform, FlatList, ActivityIndicator, Alert, ScrollView
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -246,7 +246,11 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
               </View>
             </View>
 
-            <View style={styles.navContainer}>
+            <ScrollView
+              style={styles.navContainer}
+              contentContainerStyle={styles.navContent}
+              showsVerticalScrollIndicator={false}
+            >
               {menuOptions.map((option, index) => (
                 <TouchableOpacity
                   key={index}
@@ -264,7 +268,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean, onClos
                 <Feather name="download" size={18} color="white" style={{ marginRight: 8 }} />
                 <Text style={styles.downloadText}>· Téléchargement{'\n'}  des données ·</Text>
               </TouchableOpacity>
-            </View>
+            </ScrollView>
 
             <View style={styles.footer}>
               <Text style={styles.versionText}>· Version 1.1.1 ·</Text>
@@ -358,8 +362,9 @@ const styles = StyleSheet.create({
     color: 'white', fontWeight: '900', fontSize: 35, lineHeight: 37, fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', textTransform: 'uppercase',
   },
-  navContainer: { flex: 1, paddingTop: 50, alignItems: 'center' },
-  navButton: { marginBottom: 40, paddingHorizontal: 15, width: '100%' },
+  navContainer: { flex: 1 },
+  navContent: { paddingTop: 24, alignItems: 'center', paddingBottom: 16 },
+  navButton: { marginBottom: 24, paddingHorizontal: 15, width: '100%' },
   navText: {
     color: 'white', fontWeight: 'bold', fontSize: 22, textAlign: 'center', fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Snell Roundhand' : 'serif',
