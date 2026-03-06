@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   View, Text, TouchableOpacity, ScrollView, Image, 
-  StyleSheet, SafeAreaView, StatusBar, Dimensions, Platform
+  StyleSheet, SafeAreaView, Dimensions, Platform, Alert
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Plus } from 'lucide-react-native';
@@ -13,7 +13,7 @@ const COLUMN_WIDTH = (width - 55) / 4;
 export default function RoomProfilesScreen() {
   const router = useRouter();
   const { blockId, type, level } = useLocalSearchParams();
-  const { appData } = useAppContext();
+  const { appData, deleteRoom } = useAppContext();
 
   const rooms = useMemo(() => {
     return (appData.salles || []).filter((s: any) => 
@@ -27,6 +27,22 @@ export default function RoomProfilesScreen() {
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   };
 
+  const handleLongPress = (room: any) => {
+    Alert.alert(
+      'Supprimer la salle',
+      `Voulez-vous vraiment supprimer "${formatName(room.name)}" ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () => deleteRoom(room.id),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -36,12 +52,17 @@ export default function RoomProfilesScreen() {
             <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>{String(level).toUpperCase()}</Text>
             <View style={{ width: 40 }} /> 
           </View>
+
+          <Text style={styles.sectionTitle}>Profil Des Salles</Text>
+
           <View style={styles.grid}>
             {rooms.map((room: any) => (
               <TouchableOpacity 
                 key={room.id} 
                 style={styles.roomItem}
                 onPress={() => router.push({ pathname: '/room-details', params: { roomId: room.id } })}
+                onLongPress={() => handleLongPress(room)}
+                delayLongPress={500}
               >
                 <View style={[styles.avatarContainer, styles.blackGlow]}>
                   {room.image ? <Image source={{ uri: room.image }} style={styles.imageAvatar} /> : (
@@ -72,6 +93,14 @@ const styles = StyleSheet.create({
   redHeaderPill: { backgroundColor: '#8B0000', paddingVertical: 14, paddingHorizontal: 15, borderRadius: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 35 },
   blackGlow: { elevation: 12, shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 8, shadowOffset: { width: 0, height: 6 } },
   headerTitleText: { color: 'white', fontSize: 16 },
+  sectionTitle: {
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+    fontWeight: 'bold',
+    fontSize: 22,
+    color: '#1a1a1a',
+    marginBottom: 20,
+    marginLeft: 4,
+  },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   roomItem: { width: COLUMN_WIDTH, alignItems: 'center', marginBottom: 20, marginHorizontal: 5 },
   avatarContainer: { width: '100%', aspectRatio: 1, borderRadius: 35, overflow: 'hidden', backgroundColor: 'white' },
