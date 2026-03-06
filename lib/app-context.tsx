@@ -6,14 +6,14 @@ const AppContext = createContext<any>(null);
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [appData, setAppData] = useState({
     materiels: [],
-    salles: [], // Stockage des salles créées via add-room.tsx
+    salles: [],
     notes: [],
-    customCategories: [], // Pour CategoriesScreen
+    customCategories: [],
     settings: {
       assistantName: "Aube",
       assistantAvatar: "https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6",
       aubePrompt: "Tu es Aube, assistant expert de l'Université AUBEN.",
-      univImage: null, 
+      univImage: null,
       bgImage: null,
       menuBg: null,
       menuLogo: null
@@ -42,36 +42,74 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const saveToStorage = async (newData: any) => {
-    try { await AsyncStorage.setItem('@auben_data', JSON.stringify(newData)); } 
+    try { await AsyncStorage.setItem('@auben_data', JSON.stringify(newData)); }
     catch (e) { console.error("Erreur sauvegarde", e); }
   };
 
-  // --- ACTIONS ---
+  // ── SETTINGS ──────────────────────────────────────────────────────────────
   const updateSettings = (newSettings: any) => {
     const newData = { ...appData, settings: { ...appData.settings, ...newSettings } };
     setAppData(newData);
     saveToStorage(newData);
   };
 
+  // ── SALLES ────────────────────────────────────────────────────────────────
   const addSalle = (salle: any) => {
     const newData = { ...appData, salles: [...(appData.salles || []), salle] };
     setAppData(newData);
     saveToStorage(newData);
   };
 
+  /** Supprime une salle ET tous ses matériels associés */
+  const deleteRoom = (roomId: string) => {
+    const newData = {
+      ...appData,
+      salles: (appData.salles || []).filter((s: any) => String(s.id) !== String(roomId)),
+      materiels: (appData.materiels || []).filter((m: any) => String(m.roomId) !== String(roomId)),
+    };
+    setAppData(newData);
+    saveToStorage(newData);
+  };
+
+  // ── MATÉRIELS ─────────────────────────────────────────────────────────────
+  /**
+   * Champs attendus dans `item` :
+   *  id, roomId, nom, category, quantite, etat,
+   *  marque, couleur, image, infos,
+   *  dateAcquisition, dateVerification, dateRenouvellement
+   */
   const addMateriel = (item: any) => {
-    const newItem = { ...item, id: `mat-${Date.now()}`, createdAt: new Date().toISOString() };
+    const newItem = {
+      ...item,
+      id: item.id ?? `mat-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
     const newData = { ...appData, materiels: [...(appData.materiels || []), newItem] };
     setAppData(newData);
     saveToStorage(newData);
   };
 
-  const deleteMateriel = (id: string) => {
-    const newData = { ...appData, materiels: appData.materiels.filter((m: any) => m.id !== id) };
+  const updateMateriel = (id: string, updates: any) => {
+    const newData = {
+      ...appData,
+      materiels: (appData.materiels || []).map((m: any) =>
+        m.id === id ? { ...m, ...updates } : m
+      ),
+    };
     setAppData(newData);
     saveToStorage(newData);
   };
 
+  const deleteMateriel = (id: string) => {
+    const newData = {
+      ...appData,
+      materiels: (appData.materiels || []).filter((m: any) => m.id !== id),
+    };
+    setAppData(newData);
+    saveToStorage(newData);
+  };
+
+  // ── NOTES ─────────────────────────────────────────────────────────────────
   const addNote = (note: any) => {
     const newData = { ...appData, notes: [...(appData.notes || []), note] };
     setAppData(newData);
@@ -81,21 +119,30 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const updateNote = (id: string, updatedNote: any) => {
     const newData = {
       ...appData,
-      notes: appData.notes.map((n: any) => n.id === id ? { ...n, ...updatedNote } : n)
+      notes: (appData.notes || []).map((n: any) =>
+        n.id === id ? { ...n, ...updatedNote } : n
+      ),
     };
     setAppData(newData);
     saveToStorage(newData);
   };
 
   const deleteNote = (id: string) => {
-    const newData = { ...appData, notes: appData.notes.filter((n: any) => n.id !== id) };
+    const newData = {
+      ...appData,
+      notes: (appData.notes || []).filter((n: any) => n.id !== id),
+    };
     setAppData(newData);
     saveToStorage(newData);
   };
 
   return (
-    <AppContext.Provider value={{ 
-      appData, setAppData, updateSettings, addSalle, addMateriel, deleteMateriel, addNote, updateNote, deleteNote 
+    <AppContext.Provider value={{
+      appData, setAppData,
+      updateSettings,
+      addSalle, deleteRoom,
+      addMateriel, updateMateriel, deleteMateriel,
+      addNote, updateNote, deleteNote,
     }}>
       {children}
     </AppContext.Provider>
