@@ -437,4 +437,4 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
   },
 });
-            
+      
