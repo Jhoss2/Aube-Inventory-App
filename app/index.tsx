@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, StatusBar, Image, ImageBackground, Modal, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, StatusBar, Image, ImageBackground, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '@/lib/app-context';
 import { Video, ResizeMode } from 'expo-av';
+import SideBar from './SideBar'; // ← import du composant SideBar (même dossier app/)
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -12,18 +13,15 @@ export default function HomeScreen() {
   const [showSplash, setShowSplash] = useState(true);
   const videoRef = useRef(null);
 
-  const univImage = appData?.settings?.univImage;
+  const univImage      = appData?.settings?.univImage;
   const backgroundImage = appData?.settings?.bgImage;
-  const menuBg = appData?.settings?.menuBg;
-  const menuLogo = appData?.settings?.menuLogo;
 
   useEffect(() => {
-    // Sécurité : si la vidéo ne se termine pas, on cache le splash après 5 secondes
     const timeout = setTimeout(() => setShowSplash(false), 5000);
     return () => clearTimeout(timeout);
   }, []);
 
-  // --- SPLASH SCREEN ANIMÉ ---
+  // ── SPLASH ────────────────────────────────────────────────────────────────
   if (showSplash) {
     return (
       <View style={styles.splashContainer}>
@@ -36,76 +34,33 @@ export default function HomeScreen() {
           shouldPlay
           isLooping={false}
           onPlaybackStatusUpdate={(status) => {
-            if (status.isLoaded && status.didJustFinish) {
-              setShowSplash(false);
-            }
+            if (status.isLoaded && status.didJustFinish) setShowSplash(false);
           }}
         />
       </View>
     );
   }
 
-  // --- ÉCRAN PRINCIPAL ---
+  // ── ÉCRAN PRINCIPAL ───────────────────────────────────────────────────────
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" backgroundColor="black" />
 
-      {/* --- MENU LATÉRAL --- */}
-      <Modal transparent visible={isMenuOpen} animationType="fade">
-        <View style={styles.sidebarContainer}>
-          <ImageBackground 
-            source={menuBg ? { uri: menuBg } : { uri: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80' }}
-            style={StyleSheet.absoluteFill}
-          >
-            <View style={styles.blueOverlay} />
-          </ImageBackground>
+      {/* ── SIDEBAR (composant complet avec téléchargement PDF) ── */}
+      <SideBar visible={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
 
-          <View style={styles.sidebarDrawer}>
-            <View style={styles.sidebarHeader}>
-              <Text style={[styles.sidebarTitle, styles.boldSerif]}>U-AUBEN{"\n"}SUPPLIES{"\n"}TRACKER</Text>
-              <TouchableOpacity onPress={() => setIsMenuOpen(false)}>
-                <Feather name="x" size={32} color="white" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.sidebarNav}>
-              {[
-                { label: "Guide d'utilisation", path: '/guide-viewer' },
-                { label: "A propos du développeur", path: '/about-dev' }
-              ].map((option, index) => (
-                <TouchableOpacity 
-                  key={index} 
-                  style={styles.sidebarBtn}
-                  onPress={() => { setIsMenuOpen(false); router.push(option.path as any); }}
-                >
-                  <Text style={[styles.sidebarBtnText, styles.boldSerif]}>· {option.label} ·</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View style={styles.sidebarFooter}>
-              <Text style={[styles.versionText, styles.boldSerif]}>· VERSION 1.1.1 ·</Text>
-              <View style={styles.logoCircle}>
-                {menuLogo ? (
-                  <Image source={{ uri: menuLogo }} style={styles.logoImg} />
-                ) : (
-                  <View style={styles.logoPlaceholder}><Text style={[styles.logoPText, styles.boldSerif]}>LOGO</Text></View>
-                )}
-              </View>
-            </View>
-          </View>
-          <TouchableOpacity style={{ flex: 1 }} onPress={() => setIsMenuOpen(false)} />
-        </View>
-      </Modal>
-
-      {/* --- CORPS DE L'APPLICATION --- */}
-      <ImageBackground 
+      {/* ── CORPS ── */}
+      <ImageBackground
         source={backgroundImage ? { uri: backgroundImage } : undefined}
         style={[StyleSheet.absoluteFill, { backgroundColor: '#fceef5' }]}
         resizeMode="cover"
       >
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 150 }} showsVerticalScrollIndicator={false}>
-          
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 150 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* HEADER */}
           <View style={[styles.headerRed, styles.glow]}>
             <TouchableOpacity onPress={() => setIsMenuOpen(true)}>
               <Feather name="menu" size={24} color="white" />
@@ -115,23 +70,29 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* BARRE DE RECHERCHE */}
           <View style={styles.searchContainer}>
             <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
-            <TextInput 
-                placeholder="Que cherchez vous ?" 
-                placeholderTextColor="#9ca3af"
-                style={[styles.searchInput, styles.glow, styles.boldSerif]} 
+            <TextInput
+              placeholder="Que cherchez vous ?"
+              placeholderTextColor="#9ca3af"
+              style={[styles.searchInput, styles.glow, styles.boldSerif]}
             />
             <TouchableOpacity style={styles.botButton} onPress={() => router.push('/chat-aube')}>
               <MaterialCommunityIcons name="robot" size={24} color="#3169e6" />
             </TouchableOpacity>
           </View>
 
+          {/* SÉLECTEUR DE BLOCS */}
           <View style={[styles.blockSelectorContainer, styles.glow]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.blockScrollContent}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.blockScrollContent}
+            >
               {['A', 'B', 'C', 'D', 'E', 'F'].map((block) => (
-                <TouchableOpacity 
-                  key={block} 
+                <TouchableOpacity
+                  key={block}
                   style={styles.blockButton}
                   onPress={() => router.push({ pathname: '/bloc-details', params: { blockId: block } })}
                 >
@@ -141,7 +102,7 @@ export default function HomeScreen() {
             </ScrollView>
           </View>
 
-          {/* SECTION IMAGE - EFFET BOSSE VIOLETTE LUISANTE */}
+          {/* IMAGE UNIVERSITÉ */}
           <View style={styles.univSection}>
             <View style={[styles.imageContainerBosse, styles.intenseGlow]}>
               <View style={styles.innerPadding}>
@@ -158,9 +119,10 @@ export default function HomeScreen() {
             <View style={[styles.titleSupport, styles.glow]}>
               <Text style={[styles.titleText, styles.boldSerif]}>UNIVERSITÉ AUBE NOUVELLE</Text>
             </View>
-          </View> 
+          </View>
         </ScrollView>
 
+        {/* BARRE DE NAVIGATION BAS */}
         <View style={[styles.bottomNav, styles.glow]}>
           <TouchableOpacity onPress={() => router.push('/alerts')}>
             <Feather name="bell" size={24} color="white" />
@@ -178,82 +140,74 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  // SPLASH
-  splashContainer: {
-    flex: 1,
-    backgroundColor: '#1A237E',
-  },
-  splashVideo: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
+  splashContainer: { flex: 1, backgroundColor: '#1A237E' },
+  splashVideo:     { flex: 1, width: '100%', height: '100%' },
 
-  // CLASSE GÉNÉRALE POUR LE GRAS ET LE SERIF
   boldSerif: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
+    fontStyle: 'italic',
   },
 
-  sidebarContainer: { flex: 1, flexDirection: 'row' },
-  blueOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(30, 58, 138, 0.4)' },
-  sidebarDrawer: { width: '50%', height: '100%', backgroundColor: 'rgba(139, 0, 0, 0.92)', padding: 20, paddingTop: 60 },
-  sidebarTitle: { color: 'white', fontSize: 22, letterSpacing: 4, textTransform: 'uppercase' },
-  sidebarHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 },
-  sidebarNav: { flex: 1, alignItems: 'center', paddingTop: 20 },
-  sidebarBtn: { marginBottom: 50, width: '100%' },
-  sidebarBtnText: { color: 'white', fontSize: 16, letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center' },
-  sidebarFooter: { alignItems: 'center', marginBottom: 30 },
-  versionText: { color: 'white', fontSize: 12, letterSpacing: 1.5 },
-  logoCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
-  logoImg: { width: '100%', height: '100%', borderRadius: 40 },
-  logoPlaceholder: { width: '100%', height: '100%', borderRadius: 40, backgroundColor: '#fbcfe8', justifyContent: 'center', alignItems: 'center' },
-  logoPText: { fontSize: 10, color: '#8B0000' },
+  headerRed: {
+    marginHorizontal: 12, marginTop: 20, height: 60,
+    backgroundColor: '#8B0000', borderRadius: 30,
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', paddingHorizontal: 20,
+  },
 
-  headerRed: { marginHorizontal: 12, marginTop: 20, height: 60, backgroundColor: '#8B0000', borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
   searchContainer: { marginHorizontal: 12, marginTop: 30, flexDirection: 'row', alignItems: 'center' },
-  searchInput: { flex: 1, height: 60, backgroundColor: 'white', borderRadius: 30, paddingLeft: 44, paddingRight: 48, fontSize: 14, color: '#333' },
+  searchInput: {
+    flex: 1, height: 60, backgroundColor: 'white', borderRadius: 30,
+    paddingLeft: 44, paddingRight: 48, fontSize: 14, color: '#333',
+  },
   searchIcon: { position: 'absolute', left: 16, zIndex: 1 },
-  botButton: { position: 'absolute', right: 12, zIndex: 1 },
-  
-  blockSelectorContainer: { marginHorizontal: 12, marginTop: 20, backgroundColor: '#263d7e', borderRadius: 30, height: 60, overflow: 'hidden' },
+  botButton:  { position: 'absolute', right: 12, zIndex: 1 },
+
+  blockSelectorContainer: {
+    marginHorizontal: 12, marginTop: 20, backgroundColor: '#263d7e',
+    borderRadius: 30, height: 60, overflow: 'hidden',
+  },
   blockScrollContent: { paddingHorizontal: 15, alignItems: 'center', gap: 15 },
-  blockButton: { backgroundColor: '#385598', paddingHorizontal: 18, height: 38, borderRadius: 15, justifyContent: 'center' },
+  blockButton: {
+    backgroundColor: '#385598', paddingHorizontal: 18,
+    height: 38, borderRadius: 15, justifyContent: 'center',
+  },
   blockButtonText: { color: 'white', fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' },
 
   univSection: { marginHorizontal: 12, marginTop: 30, alignItems: 'center' },
-
-  imageContainerBosse: { 
-    width: '100%', 
-    height: 380, 
-    borderRadius: 80,
-    backgroundColor: '#C97EFD', 
-    padding: 18,                
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)', 
+  imageContainerBosse: {
+    width: '100%', height: 380, borderRadius: 80,
+    backgroundColor: '#C97EFD', padding: 18,
+    borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)',
   },
   innerPadding: {
-    flex: 1,
-    borderRadius: 62,
-    overflow: 'hidden',
-    backgroundColor: '#C97EFD',
-    borderWidth: 4,             
+    flex: 1, borderRadius: 62, overflow: 'hidden',
+    backgroundColor: '#C97EFD', borderWidth: 4,
     borderColor: 'rgba(0,0,0,0.15)',
   },
-  univImage: { width: '100%', height: '100%' },
-  placeholderBlue: { flex: 1, backgroundColor: '#4184f4', justifyContent: 'center', alignItems: 'center' },
+  univImage:        { width: '100%', height: '100%' },
+  placeholderBlue:  { flex: 1, backgroundColor: '#4184f4', justifyContent: 'center', alignItems: 'center' },
 
-  intenseGlow: {
-    elevation: 30,
-    shadowColor: '#C97EFD',
-    shadowOpacity: 0.9,
-    shadowRadius: 25,
-    shadowOffset: { width: 0, height: 15 }
+  titleSupport: {
+    backgroundColor: '#263d7e', paddingHorizontal: 22, paddingVertical: 12,
+    borderRadius: 50, marginTop: 18, borderWidth: 1.5, borderColor: '#fceef5', alignSelf: 'center',
   },
-
-  titleSupport: { backgroundColor: '#263d7e', paddingHorizontal: 22, paddingVertical: 12, borderRadius: 50, marginTop: 18, borderWidth: 1.5, borderColor: '#fceef5', alignSelf: 'center' },
   titleText: { color: 'white', fontSize: 14, letterSpacing: 4, textTransform: 'uppercase' },
 
-  bottomNav: { position: 'absolute', bottom: 16, left: 16, right: 16, backgroundColor: '#263d7e', height: 65, borderRadius: 35, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 40 },
-  glow: { elevation: 15, shadowColor: '#000', shadowOpacity: 0.45, shadowRadius: 12, shadowOffset: { width: 0, height: 8 } }
+  bottomNav: {
+    position: 'absolute', bottom: 16, left: 16, right: 16,
+    backgroundColor: '#263d7e', height: 65, borderRadius: 35,
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', paddingHorizontal: 40,
+  },
+
+  intenseGlow: {
+    elevation: 30, shadowColor: '#C97EFD',
+    shadowOpacity: 0.9, shadowRadius: 25, shadowOffset: { width: 0, height: 15 },
+  },
+  glow: {
+    elevation: 15, shadowColor: '#000',
+    shadowOpacity: 0.45, shadowRadius: 12, shadowOffset: { width: 0, height: 8 },
+  },
 });
