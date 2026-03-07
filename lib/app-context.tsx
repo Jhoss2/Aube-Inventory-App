@@ -81,7 +81,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const addMateriel = (item: any) => {
     const newItem = {
       ...item,
-      id: item.id ?? `mat-${Date.now()}`,
+      id: item.id || ('mat-' + Date.now()),
       createdAt: new Date().toISOString(),
     };
     const newData = { ...appData, materiels: [...(appData.materiels || []), newItem] };
