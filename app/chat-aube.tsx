@@ -17,7 +17,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Send, CheckCheck, Trash2 } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
-import { chatWithAubeStream, AubeMessage } from '@/lib/aube-engine';
+import { chatWithAubeStream } from '@/lib/aube-engine';
 
 type UIMessage = {
   id:     string;
@@ -31,11 +31,12 @@ export default function ChatAubeScreen() {
   const { appData } = useAppContext() as any;
   const flatListRef = useRef<FlatList>(null);
 
-  const assistantName   = appData?.settings?.assistantName   || 'Aube';
-  const assistantAvatar = appData?.settings?.assistantAvatar ||
+  const settings        = (appData && appData.settings) || {};
+  const assistantName   = settings.assistantName   || 'Aube';
+  const assistantAvatar = settings.assistantAvatar ||
     'https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6';
-  const systemPrompt    = appData?.settings?.aubePrompt ||
-    "Tu es Aube, assistant expert de l'Université Aube Nouvelle.";
+  const systemPrompt    = settings.aubePrompt ||
+    "Tu es Aube, assistant expert de l'Universite Aube Nouvelle.";
 
   const welcomeMsg: UIMessage = {
     id:     '0',
@@ -49,10 +50,10 @@ export default function ChatAubeScreen() {
   const [isTyping,    setIsTyping]    = useState(false);
 
   // Historique multi-tours pour Gemini (sans le message de bienvenue)
-  const historyRef = useRef<AubeMessage[]>([]);
+  const historyRef = useRef<Array<{role: string; text: string}>>([]);
 
   const scrollToBottom = () => {
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+    setTimeout(() => { if (flatListRef.current) { flatListRef.current.scrollToEnd({ animated: true }); } }, 100);
   };
 
   const clearConversation = () => {
@@ -301,4 +302,4 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 2 },
   },
 });
-      
+        
