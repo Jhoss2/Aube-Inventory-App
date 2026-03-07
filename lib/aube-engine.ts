@@ -1,169 +1,150 @@
-/**
- * aube-engine.ts
- * Moteur IA d'Aube — Google Gemini 1.5 Flash (gratuit)
- * Hybride : données locales de l'app + connaissances générales
- *
- * Clé API : obtenez la vôtre gratuitement sur https://aistudio.google.com/app/apikey
- * Remplacez GEMINI_API_KEY ci-dessous par votre clé.
- */
+// aube-engine.js
+// Moteur IA Aube — Google Gemini 1.5 Flash (gratuit)
+// Cle API gratuite : https://aistudio.google.com/app/apikey
 
-const GEMINI_API_KEY = 'AIzaSyCgoWOcpz9-1rdcJYgj3TR3iTq8E0YaokA';
-const GEMINI_MODEL   = 'gemini-1.5-flash';
-const GEMINI_URL     =
-  'https://generativelanguage.googleapis.com/v1beta/models/' +
-  GEMINI_MODEL +
+var GEMINI_API_KEY = '';
+
+var GEMINI_URL = (
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash' +
   ':streamGenerateContent?alt=sse&key=' +
-  GEMINI_API_KEY;
+  GEMINI_API_KEY
+);
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Contexte appData injecté dans le prompt ───────────────────────────────────
 
-type GeminiPart    = { text: string };
-type GeminiContent = { role: 'user' | 'model'; parts: GeminiPart[] };
+function buildAppContext(appData) {
+  if (!appData) return 'Aucune donnee disponible.';
 
-export type AubeMessage = {
-  role: 'user' | 'model';
-  text: string;
-};
-
-// ── Formatage du contexte appData ─────────────────────────────────────────────
-
-function buildAppContext(appData: any): string {
-  if (!appData) return '';
-
-  const salles    = appData.salles    || [];
-  const materiels = appData.materiels || [];
+  var salles    = appData.salles    || [];
+  var materiels = appData.materiels || [];
 
   if (salles.length === 0 && materiels.length === 0) {
-    return 'Aucune donnée encore enregistrée dans la base de données.';
+    return 'Aucune donnee encore enregistree dans la base de donnees.';
   }
 
-  let ctx = '=== BASE DE DONNÉES U-AUBEN SUPPLIES TRACKER ===\n\n';
+  var ctx = '=== BASE DE DONNEES U-AUBEN SUPPLIES TRACKER ===\n\n';
 
-  // Salles
-  ctx += 'SALLES ENREGISTRÉES (' + salles.length + ') :\n';
-  salles.forEach(function(s: any) {
-    ctx += '  - Salle "' + (s.name || s.id) + '" | Bloc ' + (s.blockId || '?') +
-           ' | Niveau ' + (s.level || '?') + '\n';
-  });
+  ctx += 'SALLES (' + salles.length + ') :\n';
+  for (var si = 0; si < salles.length; si++) {
+    var s = salles[si];
+    ctx += '  - Salle "' + (s.name || s.id) + '" | Bloc ' + (s.blockId || '?') + ' | Niveau ' + (s.level || '?') + '\n';
+  }
 
-  ctx += '\nMATÉRIELS ENREGISTRÉS (' + materiels.length + ') :\n';
+  ctx += '\nMATERIELS (' + materiels.length + ') :\n';
 
-  // Grouper par salle pour plus de clarté
-  salles.forEach(function(s: any) {
-    var items = materiels.filter(function(m: any) {
-      return String(m.roomId) === String(s.id);
-    });
-    if (items.length === 0) return;
+  for (var si2 = 0; si2 < salles.length; si2++) {
+    var salle = salles[si2];
+    var items = [];
+    for (var mi = 0; mi < materiels.length; mi++) {
+      if (String(materiels[mi].roomId) === String(salle.id)) {
+        items.push(materiels[mi]);
+      }
+    }
+    if (items.length === 0) continue;
 
-    ctx += '\n  Salle "' + (s.name || s.id) + '" (' + items.length + ' matériels) :\n';
-    items.forEach(function(m: any) {
+    ctx += '\n  Salle "' + (salle.name || salle.id) + '" (' + items.length + ' materiels) :\n';
+    for (var ii = 0; ii < items.length; ii++) {
+      var m = items[ii];
       ctx += '    * ' + (m.nom || '?') +
-             ' | Catégorie: ' + (m.category || '?') +
-             ' | Marque: '    + (m.marque   || '?') +
-             ' | Couleur: '   + (m.couleur  || '?') +
-             ' | Quantité: '  + (m.quantite || '?') +
-             ' | État: '      + (m.etat     || '?');
-      if (m.dateAcquisition)    ctx += ' | Acquisition: '    + new Date(m.dateAcquisition).toLocaleDateString('fr-FR');
-      if (m.dateVerification)   ctx += ' | Vérification: '   + new Date(m.dateVerification).toLocaleDateString('fr-FR');
-      if (m.dateRenouvellement) ctx += ' | Renouvellement: ' + new Date(m.dateRenouvellement).toLocaleDateString('fr-FR');
-      if (m.infos)              ctx += ' | Notes: '          + m.infos;
+             ' | Cat: '      + (m.category || '?') +
+             ' | Marque: '   + (m.marque   || '?') +
+             ' | Couleur: '  + (m.couleur  || '?') +
+             ' | Qte: '      + (m.quantite || '?') +
+             ' | Etat: '     + (m.etat     || '?');
+      if (m.dateAcquisition) {
+        try { ctx += ' | Acq: ' + new Date(m.dateAcquisition).toLocaleDateString('fr-FR'); } catch(e) {}
+      }
+      if (m.dateVerification) {
+        try { ctx += ' | Verif: ' + new Date(m.dateVerification).toLocaleDateString('fr-FR'); } catch(e) {}
+      }
+      if (m.dateRenouvellement) {
+        try { ctx += ' | Renouv: ' + new Date(m.dateRenouvellement).toLocaleDateString('fr-FR'); } catch(e) {}
+      }
+      if (m.infos) ctx += ' | Notes: ' + m.infos;
       ctx += '\n';
-    });
-  });
-
-  // Matériels sans salle connue
-  var orphelins = materiels.filter(function(m: any) {
-    return !salles.find(function(s: any) { return String(s.id) === String(m.roomId); });
-  });
-  if (orphelins.length > 0) {
-    ctx += '\n  Matériels sans salle associée (' + orphelins.length + ') :\n';
-    orphelins.forEach(function(m: any) {
-      ctx += '    * ' + (m.nom || '?') + ' | État: ' + (m.etat || '?') + '\n';
-    });
+    }
   }
 
-  // Alertes automatiques
+  // Alertes
   var now = new Date();
   now.setHours(0, 0, 0, 0);
-  var alertes: string[] = [];
+  var alertes = [];
 
-  materiels.forEach(function(m: any) {
-    var etatUp = (m.etat || '').toUpperCase().trim();
-    if (['USÉ', 'USE', 'EN PANNE', 'ENDOMMAGÉ', 'ENDOMMAGE', 'DAMAGED'].includes(etatUp)) {
-      var salle = salles.find(function(s: any) { return String(s.id) === String(m.roomId); });
-      alertes.push('État critique: "' + (m.nom || '?') + '" (' + etatUp + ') dans salle "' + (salle ? salle.name : '?') + '"');
+  for (var ai = 0; ai < materiels.length; ai++) {
+    var mat = materiels[ai];
+    var etatUp = (mat.etat || '').toUpperCase().trim();
+    var etatsKo = ['USE', 'EN PANNE', 'ENDOMMAGE', 'DAMAGED'];
+    var isKo = false;
+    for (var ki = 0; ki < etatsKo.length; ki++) {
+      if (etatUp.indexOf(etatsKo[ki]) !== -1) { isKo = true; break; }
     }
-    if (m.dateRenouvellement) {
+    if (isKo) {
+      alertes.push('Etat critique: "' + (mat.nom || '?') + '" (' + etatUp + ')');
+    }
+    if (mat.dateRenouvellement) {
       try {
-        var dr = new Date(m.dateRenouvellement);
+        var dr = new Date(mat.dateRenouvellement);
         dr.setHours(0, 0, 0, 0);
-        var diff = Math.ceil((dr.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        var diff = Math.ceil((dr.getTime() - now.getTime()) / 86400000);
         if (diff < 0) {
-          alertes.push('Renouvellement DÉPASSÉ de ' + Math.abs(diff) + ' jours: "' + (m.nom || '?') + '"');
+          alertes.push('Renouvellement depasse de ' + Math.abs(diff) + ' jours: "' + (mat.nom || '?') + '"');
         } else if (diff <= 30) {
-          alertes.push('Renouvellement dans ' + diff + ' jours: "' + (m.nom || '?') + '"');
+          alertes.push('Renouvellement dans ' + diff + ' jours: "' + (mat.nom || '?') + '"');
         }
-      } catch {}
+      } catch(e) {}
     }
-  });
+  }
 
   if (alertes.length > 0) {
-    ctx += '\nALERTES ACTIVES (' + alertes.length + ') :\n';
-    alertes.forEach(function(a) { ctx += '  ⚠️ ' + a + '\n'; });
+    ctx += '\nALERTES (' + alertes.length + ') :\n';
+    for (var ali = 0; ali < alertes.length; ali++) {
+      ctx += '  ! ' + alertes[ali] + '\n';
+    }
   } else {
     ctx += '\nALERTES : Aucune alerte active.\n';
   }
 
-  ctx += '\n=== FIN DE LA BASE DE DONNÉES ===';
+  ctx += '\n=== FIN DE LA BASE DE DONNEES ===';
   return ctx;
 }
 
 // ── Prompt système ────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(customPrompt: string, appData: any): string {
+function buildSystemPrompt(customPrompt, appData) {
   var appCtx = buildAppContext(appData);
-  var today  = new Date().toLocaleDateString('fr-FR', {
-    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
-  });
+  var today = '';
+  try {
+    today = new Date().toLocaleDateString('fr-FR', {
+      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
+    });
+  } catch(e) {
+    today = new Date().toLocaleDateString();
+  }
 
   return (
     customPrompt + '\n\n' +
-    'Tu es un assistant intelligent intégré à l\'application U-Auben Supplies Tracker ' +
-    'de l\'Université Aube Nouvelle. ' +
-    'Tu réponds TOUJOURS en français. ' +
-    'Tu es précis, bienveillant, et tu utilises les données ci-dessous pour répondre ' +
-    'aux questions sur les salles, matériels, états et alertes. ' +
-    'Si la question ne concerne pas les données, tu réponds normalement comme un assistant IA général. ' +
-    'Date d\'aujourd\'hui : ' + today + '.\n\n' +
+    'Tu es Aube, assistante intelligente de l\'application U-Auben Supplies Tracker ' +
+    'de l\'Universite Aube Nouvelle. ' +
+    'Tu reponds toujours en francais. ' +
+    'Tu utilises les donnees ci-dessous pour repondre aux questions sur les salles et materiels. ' +
+    'Si la question est generale (pas liee aux donnees), tu reponds normalement comme un assistant IA. ' +
+    'Date du jour : ' + today + '.\n\n' +
     appCtx
   );
 }
 
-// ── Historique → format Gemini ────────────────────────────────────────────────
-
-function historyToGemini(history: AubeMessage[]): GeminiContent[] {
-  return history.map(function(msg) {
-    return {
-      role:  msg.role,
-      parts: [{ text: msg.text }],
-    };
-  });
-}
-
 // ── Streaming Gemini ──────────────────────────────────────────────────────────
 
-export async function chatWithAubeStream(
-  userText:     string,
-  systemPrompt: string,
-  appData:      any,
-  history:      AubeMessage[],
-  onChunk:      (chunk: string) => void
-): Promise<void> {
-
+export async function chatWithAubeStream(userText, systemPrompt, appData, history, onChunk) {
   var fullSystem = buildSystemPrompt(systemPrompt, appData);
-  var contents   = historyToGemini(history);
 
-  // Ajoute le message actuel
+  var contents = [];
+  for (var hi = 0; hi < history.length; hi++) {
+    contents.push({
+      role:  history[hi].role,
+      parts: [{ text: history[hi].text }],
+    });
+  }
   contents.push({ role: 'user', parts: [{ text: userText }] });
 
   var body = JSON.stringify({
@@ -192,8 +173,7 @@ export async function chatWithAubeStream(
     throw new Error('Gemini API error ' + response.status + ': ' + errText);
   }
 
-  // Lecture du stream SSE
-  var reader = response.body!.getReader();
+  var reader  = response.body.getReader();
   var decoder = new TextDecoder('utf-8');
   var buffer  = '';
 
@@ -203,23 +183,22 @@ export async function chatWithAubeStream(
 
     buffer += decoder.decode(result.value, { stream: true });
 
-    // Parse les lignes SSE
     var lines = buffer.split('\n');
     buffer = lines.pop() || '';
 
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim();
-      if (!line.startsWith('data:')) continue;
+    for (var li = 0; li < lines.length; li++) {
+      var line = lines[li].trim();
+      if (line.indexOf('data:') !== 0) continue;
 
       var jsonStr = line.slice(5).trim();
       if (jsonStr === '[DONE]') return;
 
       try {
         var parsed = JSON.parse(jsonStr);
-        var text   = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+        var cands  = parsed && parsed.candidates;
+        var text   = cands && cands[0] && cands[0].content && cands[0].content.parts && cands[0].content.parts[0] && cands[0].content.parts[0].text;
         if (text) onChunk(text);
-      } catch {}
+      } catch(e) {}
     }
   }
-                   }
-    
+      }
