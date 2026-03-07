@@ -267,10 +267,10 @@ export default function AddMaterialScreen() {
         <DateTimePicker
           value={
             showPicker === 'acquisition'
-              ? (dateAcquisition ?? new Date())
+              ? (dateAcquisition || new Date())
               : showPicker === 'verification'
-              ? (dateVerification ?? new Date())
-              : (dateRenouvellement ?? new Date())
+              ? (dateVerification || new Date())
+              : (dateRenouvellement || new Date())
           }
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
@@ -296,23 +296,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 15, marginBottom: 35,
   },
-  headerTitle: { color: 'white', fontWeight: '900', fontStyle: 'italic', fontSize: 20, letterSpacing: 2 },
+  headerTitle: { color: 'white', fontWeight: '900', fontSize: 20, letterSpacing: 2 },
 
   inputGroup: { marginBottom: 20 },
   label: {
-    fontSize: 16, fontWeight: '900', fontStyle: 'italic', color: '#1A237E',
+    fontSize: 16, fontWeight: '900', color: '#1A237E',
     letterSpacing: 1.5, marginLeft: 10, marginBottom: 8, textTransform: 'uppercase',
   },
 
   input: {
     backgroundColor: 'white', borderRadius: 20, padding: 15,
-    fontWeight: '700', fontStyle: 'italic', color: '#374151', borderWidth: 1, borderColor: '#FCE7F3',
+    fontWeight: '700', color: '#374151', borderWidth: 1, borderColor: '#FCE7F3',
   },
   dateRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   dateText: { color: '#374151', fontWeight: '700', fontSize: 15 },
-  datePlaceholder: { color: '#94A3B8', fontWeight: '700', fontStyle: 'italic', fontSize: 15 },
+  datePlaceholder: { color: '#94A3B8', fontWeight: '700', fontSize: 15 },
 
   row: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   stateSelector: { flexDirection: 'row', gap: 6, flex: 1 },
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', height: 50,
   },
   stateBtnActive: { backgroundColor: '#1A237E' },
-  stateBtnText: { fontSize: 13, fontWeight: '900', fontStyle: 'italic', color: '#1A237E' },
+  stateBtnText: { fontSize: 13, fontWeight: '900', color: '#1A237E' },
   whiteText: { color: 'white' },
 
   photoBox: {
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
     borderWidth: 2, borderColor: '#1A237E', borderStyle: 'dashed',
   },
-  photoText: { fontSize: 16, fontWeight: '900', fontStyle: 'italic', color: '#1A237E', marginTop: 8 },
+  photoText: { fontSize: 16, fontWeight: '900', color: '#1A237E', marginTop: 8 },
   fullImg: { width: '100%', height: '100%' },
   textArea: { height: 90, textAlignVertical: 'top' },
 
@@ -337,11 +337,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A237E', paddingVertical: 20, borderRadius: 50,
     marginTop: 10, alignItems: 'center',
   },
-  saveBtnText: { color: 'white', fontWeight: '900', fontSize: 16, fontStyle: 'italic', letterSpacing: 2 },
+  saveBtnText: { color: 'white', fontWeight: '900', fontSize: 16, letterSpacing: 2 },
 
   glow: {
     elevation: 8, shadowColor: '#000',
     shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 5 },
   },
 });
-        
+          
