@@ -13,8 +13,8 @@ export default function HomeScreen() {
   const [showSplash, setShowSplash] = useState(true);
   const videoRef = useRef(null);
 
-  const univImage      = appData?.settings?.univImage;
-  const backgroundImage = appData?.settings?.bgImage;
+  const univImage      = (appData && appData.settings && appData.settings.univImage) || null;
+  const backgroundImage = (appData && appData.settings && appData.settings.bgImage) || null;
 
   useEffect(() => {
     const timeout = setTimeout(() => setShowSplash(false), 5000);
@@ -211,3 +211,4 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.45, shadowRadius: 12, shadowOffset: { width: 0, height: 8 },
   },
 });
+          
