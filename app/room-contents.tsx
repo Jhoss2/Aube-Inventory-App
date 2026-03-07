@@ -24,7 +24,7 @@ const fmtDate = (iso: string | null | undefined) => {
 };
 
 const etatColor = (etat: string | undefined) => {
-  const e = (etat ?? '').toUpperCase().trim();
+  const e = (etat || '').toUpperCase().trim();
   if (['NEUF'].includes(e))                             return '#16a34a'; // vert
   if (['BON', 'BON ÉTAT', 'BON ETAT'].includes(e))     return '#2563eb'; // bleu
   if (['USÉ', 'USE', 'CORRECT'].includes(e))           return '#D97706'; // orange
@@ -86,7 +86,7 @@ export default function RoomContentsScreen() {
                 ? <Image source={{ uri: item.image }} style={styles.materialImg} />
                 : <View style={[styles.materialImg, styles.imagePlaceholder]}>
                     <Text style={[styles.placeholderLetter, styles.SBI]}>
-                      {item.nom?.[0]?.toUpperCase() ?? '?'}
+                      {item.nom ? item.nom[0].toUpperCase() : '?'}
                     </Text>
                   </View>
               }
@@ -96,7 +96,7 @@ export default function RoomContentsScreen() {
               <View style={styles.infoCol}>
 
                 {/* NOM */}
-                <Text style={[styles.mainTitle, styles.SBI]}>{item.nom ?? '—'}</Text>
+                <Text style={[styles.mainTitle, styles.SBI]}>{item.nom || '—'}</Text>
 
                 {/* CHAMPS PRINCIPAUX */}
                 <InfoLine label="Catégorie"  value={item.category} />
@@ -108,7 +108,7 @@ export default function RoomContentsScreen() {
                 <View style={styles.infoLine}>
                   <Text style={[styles.labelBlue, styles.SBI]}>État :</Text>
                   <Text style={[styles.statusVal, styles.SBI, { color: etatColor(item.etat) }]}>
-                    {item.etat ?? '—'}
+                    {item.etat || '—'}
                   </Text>
                 </View>
 
@@ -225,4 +225,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
   },
 });
-      
+                        
