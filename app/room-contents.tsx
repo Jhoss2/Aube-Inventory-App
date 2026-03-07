@@ -23,6 +23,15 @@ const fmtDate = (iso: string | null | undefined) => {
   } catch { return iso; }
 };
 
+const etatColor = (etat: string | undefined) => {
+  const e = (etat ?? '').toUpperCase().trim();
+  if (['NEUF'].includes(e))                             return '#16a34a'; // vert
+  if (['BON', 'BON ÉTAT', 'BON ETAT'].includes(e))     return '#2563eb'; // bleu
+  if (['USÉ', 'USE', 'CORRECT'].includes(e))           return '#D97706'; // orange
+  if (['ENDOMMAGÉ', 'ENDOMMAGE', 'EN PANNE', 'DAMAGED'].includes(e)) return '#dc2626'; // rouge
+  return '#374151'; // gris par défaut
+};
+
 function InfoLine({ label, value }: { label: string; value?: string | number | null }) {
   return (
     <View style={styles.infoLine}>
@@ -98,11 +107,7 @@ export default function RoomContentsScreen() {
                 {/* ÉTAT avec couleur dynamique */}
                 <View style={styles.infoLine}>
                   <Text style={[styles.labelBlue, styles.SBI]}>État :</Text>
-                  <Text style={[
-                    styles.statusVal, styles.SBI,
-                    { color: ['usé', 'panne', 'endommagé'].some(k => (item.etat ?? '').toLowerCase().includes(k))
-                        ? '#8B0000' : '#059669' }
-                  ]}>
+                  <Text style={[styles.statusVal, styles.SBI, { color: etatColor(item.etat) }]}>
                     {item.etat ?? '—'}
                   </Text>
                 </View>
@@ -220,4 +225,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
   },
 });
-    
+      
