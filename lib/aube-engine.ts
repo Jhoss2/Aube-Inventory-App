@@ -7,7 +7,7 @@
  * Remplacez GEMINI_API_KEY ci-dessous par votre clé.
  */
 
-const GEMINI_API_KEY = 'VOTRE_CLE_API_GEMINI_ICI';
+const GEMINI_API_KEY = 'AIzaSyCgoWOcpz9-1rdcJYgj3TR3iTq8E0YaokA';
 const GEMINI_MODEL   = 'gemini-1.5-flash';
 const GEMINI_URL     =
   'https://generativelanguage.googleapis.com/v1beta/models/' +
