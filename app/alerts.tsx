@@ -23,8 +23,8 @@ export default function AlertsScreen() {
   const router = useRouter();
   const { appData } = useAppContext() as any;
 
-  const materiels = appData?.materiels || [];
-  const salles    = appData?.salles    || [];
+  const materiels = (appData && appData.materiels) || [];
+  const salles    = (appData && appData.salles)    || [];
 
   const alerts: AlertItem[] = useMemo(() => {
     const now = new Date();
@@ -36,7 +36,7 @@ export default function AlertsScreen() {
       const salle    = salles.find((s: any) => String(s.id) === String(m.roomId));
       const salleNom = salle ? salle.name : 'Salle inconnue';
 
-      const etatNorm = (m.etat ?? '').toUpperCase().trim();
+      const etatNorm = (m.etat || '').toUpperCase().trim();
 
       // ── 1. Alerte sur l'état ─────────────────────────────────────────────
       const etatsAlerte = ['ENDOMMAGÉ', 'ENDOMMAGÉ', 'EN PANNE', 'USÉ', 'USE', 'DAMAGED'];
@@ -110,10 +110,10 @@ export default function AlertsScreen() {
       case 'etat':
       default:
         return {
-          barColor:   item.etat?.toUpperCase().includes('PANNE') ? '#8B0000' : '#F59E0B',
-          badgeBg:    item.etat?.toUpperCase().includes('PANNE') ? '#FFE4E8' : '#FEF3C7',
-          badgeColor: item.etat?.toUpperCase().includes('PANNE') ? '#8B0000' : '#92400E',
-          label:      (item.etat ?? '').toUpperCase(),
+          barColor:   (item.etat || '').toUpperCase().includes('PANNE') ? '#8B0000' : '#F59E0B',
+          badgeBg:    (item.etat || '').toUpperCase().includes('PANNE') ? '#FFE4E8' : '#FEF3C7',
+          badgeColor: (item.etat || '').toUpperCase().includes('PANNE') ? '#8B0000' : '#92400E',
+          label:      (item.etat || '').toUpperCase(),
           icon:       <AlertTriangle size={22} color="#1A237E" />,
         };
     }
@@ -138,7 +138,7 @@ export default function AlertsScreen() {
         <View style={styles.alertContent}>
           <View style={styles.alertHeader}>
             <Text style={[styles.itemName, styles.SBI]} numberOfLines={1}>
-              {(item.nom ?? '').toUpperCase()}
+              {(item.nom || '').toUpperCase()}
             </Text>
             {item.dateRenouvellement ? (
               <Text style={[styles.alertDate, styles.SBI]}>
@@ -150,7 +150,7 @@ export default function AlertsScreen() {
           <View style={styles.salleRow}>
             <MapPin size={12} color="#1A237E" />
             <Text style={[styles.salleInfo, styles.SBI]}>
-              {(item.salleNom ?? '').toUpperCase()}
+              {(item.salleNom || '').toUpperCase()}
             </Text>
           </View>
 
@@ -293,4 +293,4 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 5 },
   },
 });
-                      
+                                      
