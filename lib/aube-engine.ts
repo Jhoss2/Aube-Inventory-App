@@ -2,7 +2,7 @@
 // Moteur IA Aube — Google Gemini 1.5 Flash (gratuit)
 // Cle API gratuite : https://aistudio.google.com/app/apikey
 
-var GEMINI_API_KEY = '';
+var GEMINI_API_KEY = 'AIzaSyCgoWOcpz9-1rdcJYgj3TR3iTq8E0YaokA';
 
 var GEMINI_URL = (
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash' +
