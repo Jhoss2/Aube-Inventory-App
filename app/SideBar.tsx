@@ -292,9 +292,10 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
   const router = useRouter();
   const { appData } = useAppContext() as any;
 
-  const menuBg   = appData?.settings?.menuBg;
-  const menuLogo = appData?.settings?.menuLogo;
-  const rooms: any[] = appData?.salles || [];
+  const settings         = (appData && appData.settings) || {};
+  const menuBg           = settings.menuBg   || null;
+  const menuLogo         = settings.menuLogo || null;
+  const rooms: any[]     = (appData && appData.salles) || [];
 
   const [showRoomPicker, setShowRoomPicker] = useState(false);
   const [isGenerating,   setIsGenerating]   = useState(false);
@@ -308,7 +309,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
     setShowRoomPicker(false);
     setIsGenerating(true);
     try {
-      const html = buildHtml(room, appData?.materiels || []);
+      const html = buildHtml(room, (appData && appData.materiels) || []);
       const { uri } = await Print.printToFileAsync({ html, base64: false });
       setIsGenerating(false);
       if (await Sharing.isAvailableAsync()) {
@@ -532,7 +533,4 @@ const styles = StyleSheet.create({
   },
   roomAvatarImg:    { width: '100%', height: '100%' },
   roomAvatarLetter: { color: 'white', fontSize: 20 },
-  roomRowName:      { fontSize: 15, color: 'white' },
-  roomRowSub:       { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
-
- 
+  roomRowName:      { fontSize: 15
