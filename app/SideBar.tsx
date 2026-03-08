@@ -158,16 +158,16 @@ function buildHtml(room: any, materiels: any[]): string {
 
   // Colonnes et leur largeur
   var cols = [
-    { label: 'Cat\u00e9gorie',         w: '12%' },
-    { label: 'Nom',                    w: '12%' },
-    { label: 'Marque',                 w: '9%'  },
-    { label: 'Couleur',                w: '7%'  },
-    { label: 'Quantit\u00e9',          w: '7%'  },
-    { label: 'Etat',                   w: '8%'  },
-    { label: 'D.A = Date Acquisition', w: '12%' },
-    { label: 'D.D.V = Derni\u00e8re V\u00e9rif.', w: '12%' },
-    { label: 'D.R = Renouvellement',   w: '12%' },
-    { label: 'Image',                  w: '9%'  },
+    { label: 'Cat\u00e9gorie', w: '12%' },
+    { label: 'Nom',            w: '12%' },
+    { label: 'Marque',         w: '9%'  },
+    { label: 'Couleur',        w: '7%'  },
+    { label: 'Quantit\u00e9',  w: '7%'  },
+    { label: 'Etat',           w: '8%'  },
+    { label: 'D.A',            w: '12%' },
+    { label: 'D.D.V',          w: '12%' },
+    { label: 'D.R',            w: '12%' },
+    { label: 'Image',          w: '9%'  },
   ];
 
   // En-têtes
@@ -534,14 +534,4 @@ const styles = StyleSheet.create({
   roomAvatarImg:    { width: '100%', height: '100%' },
   roomAvatarLetter: { color: 'white', fontSize: 20 },
   roomRowName:      { fontSize: 15, color: 'white' },
-  roomRowSub:       { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
-
-  genOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
-  genBox: {
-    backgroundColor: '#0a0f2e', borderRadius: 24, padding: 36,
-    alignItems: 'center', gap: 16,
-    borderWidth: 1, borderColor: 'rgba(255,160,60,0.4)',
-    shadowColor: '#e85d04', shadowOpacity: 0.4, shadowRadius: 24, elevation: 20,
-  },
-  genText: { color: '#ff9a3c', fontSize: 16 },
-});
+  roomRowSub:       { fontSize: 12, color: 'rgba(255,255,255,0.5)', mar
