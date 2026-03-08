@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
   boldSerif: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
+    fontStyle: 'italic',
   },
 
   container: { flex: 1 },
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
   backBtn: { padding: 8 },
   headerTitleText: { 
     color: 'white', 
-    fontSize: 16, 
+    fontSize: 20, 
     letterSpacing: 1.5, 
     textAlign: 'center',
     flex: 1
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1 
   },
 
-  buttonList: { width: '100%', paddingHorizontal: 25, gap: 16, maxWidth: 600 },
+  buttonList: { width: '100%', paddingHorizontal: 25, gap: 16, maxWidth: 600, marginTop: 40 },
   levelButton: { 
     backgroundColor: '#1A237E', 
     height: 55, 
@@ -158,7 +159,8 @@ const styles = StyleSheet.create({
   },
   levelButtonText: { 
     color: 'white', 
-    fontSize: 14, 
+    fontSize: 16, 
     letterSpacing: 1,
   }
 });
+    
