@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
-    fontSize: 16,
+    fontStyle: 'italic',
   },
 
   scrollContent: { 
@@ -183,3 +183,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 }
   }
 });
+                                        
