@@ -143,6 +143,7 @@ const styles = StyleSheet.create({
   boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
+    fontStyle: 'italic',
   },
 
   redHeaderPill: { 
@@ -227,3 +228,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 }
   }
 });
+    
