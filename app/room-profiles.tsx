@@ -95,7 +95,8 @@ const styles = StyleSheet.create({
   headerTitleText: { color: 'white', fontSize: 16 },
   sectionTitle: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
-    fontWeight: 'bold',
+    fontWeight: '900',
+    fontStyle: 'italic',
     fontSize: 22,
     color: '#1a1a1a',
     marginBottom: 20,
@@ -110,3 +111,4 @@ const styles = StyleSheet.create({
   roomName: { marginTop: 6, color: '#000', fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
   fab: { position: 'absolute', bottom: 30, right: 25, width: 60, height: 60, backgroundColor: '#8B0000', borderRadius: 30, justifyContent: 'center', alignItems: 'center' }
 });
+                    
