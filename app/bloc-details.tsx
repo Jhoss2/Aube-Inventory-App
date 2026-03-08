@@ -55,7 +55,7 @@ export default function BlocDetailsScreen() {
           </View>
 
           {/* VUE DE DESSUS */}
-          <View style={styles.sectionContainer}>
+          <View style={[styles.sectionContainer, { marginTop: 30 }]}>
             <TouchableOpacity
               onPress={() => router.push({ pathname: '/fullscreen-view', params: { imageUri: aerialImg, title: `VUE AÉRIENNE - BLOC ${blockId}` } })}
               style={[styles.imageCard, styles.glow]} activeOpacity={0.9}>
@@ -99,8 +99,7 @@ export default function BlocDetailsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fceef5' },
   container: { flex: 1 },
-  scrollContent: { padding: 20, paddingTop: 20, paddingBottom: 60 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  scrollContent: { padding: 20, paddingTop: 20, paddingBottom: 60 },  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
     height: 60, 
@@ -116,7 +115,7 @@ const styles = StyleSheet.create({
   headerTitleText: { 
     color: 'white', 
     fontWeight: '900', 
-    fontSize: 16, 
+    fontSize: 20, 
     letterSpacing: 4, 
     fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
@@ -139,8 +138,8 @@ const styles = StyleSheet.create({
   // STYLE GUIDE / À PROPOS (Textes dans les pilules bleues)
   titleText: { 
     color: 'white', 
-    fontSize: 13, 
-    fontWeight: '700', 
+    fontSize: 16, 
+    fontWeight: '900', 
     letterSpacing: 2,
     fontStyle: 'italic',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
@@ -167,3 +166,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 } 
   }
 });
+                
