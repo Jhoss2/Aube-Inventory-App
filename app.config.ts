@@ -60,7 +60,10 @@ const config: ExpoConfig = {
   ],
   experiments: {
     typedRoutes: true
-  }
+  },
+  extra: {
+    geminiApiKey: process.env.GEMINI_API_KEY || "",
+  },
 };
 
 export default config;
