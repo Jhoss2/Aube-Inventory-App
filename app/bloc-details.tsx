@@ -33,12 +33,12 @@ export default function BlocDetailsScreen() {
   }
 
   // LOGIQUE DE RÉCUPÉRATION DES IMAGES (Paramètres > Données bloc > Placeholder)
-  const bloc = appData?.blocs?.[blockId as string];
-  const settings = appData?.settings || {};
+  const bloc = (appData && appData.blocs && appData.blocs[blockId as string]) || null;
+  const settings = (appData && appData.settings) || {};
 
-  const aerialImg = settings[`bloc${blockId}_aerial`] || bloc?.mainImage || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80';
-  const sallesImg = settings[`bloc${blockId}_sub1`] || bloc?.sallesImage || aerialImg;
-  const bureauxImg = settings[`bloc${blockId}_sub2`] || bloc?.bureauxImage || aerialImg;
+  const aerialImg = settings['bloc' + blockId + '_aerial'] || (bloc && bloc.mainImage) || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80';
+  const sallesImg = settings['bloc' + blockId + '_sub1'] || (bloc && bloc.sallesImage) || aerialImg;
+  const bureauxImg = settings['bloc' + blockId + '_sub2'] || (bloc && bloc.bureauxImage) || aerialImg;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -166,4 +166,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 } 
   }
 });
-                
+
