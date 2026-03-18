@@ -19,7 +19,7 @@ export default function RoomDetailsScreen() {
 
   // Récupération de la salle
   const room = (appData.salles || []).find((s: any) => s.id.toString() === roomId);
-  const roomName = room?.name || "Détails";
+  const roomName = (room && room.name) || "Détails";
 
   return (
     <View style={styles.container}>
@@ -44,23 +44,23 @@ export default function RoomDetailsScreen() {
         <View style={styles.infoSection}>
           <View style={[styles.infoRow, styles.glowSmall]}>
             <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Capacité :</Text>
-            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{room?.capacity || "N/A"}</Text>
+            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{(room && room.capacity) || "N/A"}</Text>
           </View>
           
           <View style={[styles.infoRow, styles.glowSmall]}>
             <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Superficie :</Text>
-            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{room?.surface || "N/A"} m²</Text>
+            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{(room && room.surface) || "N/A"} m²</Text>
           </View>
 
           <View style={[styles.infoRow, styles.glowSmall]}>
             <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Emplacement :</Text>
-            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{room?.location || "N/A"}</Text>
+            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{(room && room.location) || "N/A"}</Text>
           </View>
 
           {/* SECTION PLAN 3D */}
           <TouchableOpacity 
             style={[styles.planBox, styles.glowSmall]}
-            onPress={() => room?.image && router.push({ pathname: '/fullscreen-view', params: { imageUri: room.image } })}
+            onPress={() => { if (room && room.image) { router.push({ pathname: '/fullscreen-view', params: { imageUri: room.image } }); } }}
           >
             <Box size={24} color="#1A237E" />
             <Text style={[styles.planText, styles.boldSerifItalic]}>Voir l'image</Text>
@@ -183,4 +183,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 }
   }
 });
-                                        
+
