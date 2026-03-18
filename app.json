@@ -27,7 +27,10 @@
       "permissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "web": {
@@ -43,6 +46,7 @@
       "expo-image-picker",
       "expo-document-picker",
       "expo-blur",
+      "expo-notifications",
       [
         "expo-build-properties",
         {
