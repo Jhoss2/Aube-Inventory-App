@@ -1,8 +1,16 @@
 // aube-engine.js
 // Moteur IA Aube — Google Gemini 1.5 Flash (gratuit)
-// Cle API gratuite : https://aistudio.google.com/app/apikey
+// Cle API : variable d'environnement GEMINI_API_KEY
+// Sur Codemagic : App settings > Environment variables > ajouter GEMINI_API_KEY
+// Dans app.config.js : extra: { geminiApiKey: process.env.GEMINI_API_KEY }
 
-var GEMINI_API_KEY = 'AIzaSyCgoWOcpz9-1rdcJYgj3TR3iTq8E0YaokA';
+import Constants from 'expo-constants';
+
+var GEMINI_API_KEY = (
+  Constants.expoConfig &&
+  Constants.expoConfig.extra &&
+  Constants.expoConfig.extra.geminiApiKey
+) ? Constants.expoConfig.extra.geminiApiKey : '';
 
 var GEMINI_URL = (
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash' +
@@ -201,5 +209,5 @@ export async function chatWithAubeStream(userText, systemPrompt, appData, histor
       } catch(e) {}
     }
   }
-}
-  
+    }
+        
