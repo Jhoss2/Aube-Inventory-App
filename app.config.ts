@@ -1,7 +1,7 @@
 import type { ExpoConfig } from "expo/config";
 
 const config: ExpoConfig = {
-  name: "U-Auben Tracker",
+  name: "U-AUBEN INVENTORY APP",
   slug: "uaubentracker",
   version: "1.0.1",
   orientation: "portrait",
