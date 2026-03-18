@@ -72,8 +72,9 @@ export default function SettingsScreen() {
   };
 
   if (!isAuthenticated) {
-    const authBg = appData.settings?.authBgImage;
-    const blurVal = appData.settings?.authBlur || 0;
+    const settings2 = (appData && appData.settings) || {};
+    const authBg = settings2.authBgImage || null;
+    const blurVal = settings2.authBlur || 0;
 
     return (
       <View style={styles.fullContainer}>
@@ -131,12 +132,12 @@ export default function SettingsScreen() {
           <View style={styles.accordionContent}>
             <SettingRow label="Fond d'écran Authentification" field="authBgImage" />
             <View style={{marginTop: 15}}>
-              <Text style={[styles.rowLabel, styles.boldSerif]}>Intensité du flou : {Math.round(appData.settings?.authBlur || 0)}%</Text>
+              <Text style={[styles.rowLabel, styles.boldSerif]}>Intensité du flou : {Math.round(((appData && appData.settings && appData.settings.authBlur) || 0))}%</Text>
               <Slider
                 style={{width: '100%', height: 40}}
                 minimumValue={0}
                 maximumValue={100}
-                value={appData.settings?.authBlur || 0}
+                value={(appData && appData.settings && appData.settings.authBlur) || 0}
                 onSlidingComplete={(val) => updateSettings({ authBlur: val })}
                 minimumTrackTintColor="#FF0000"
                 maximumTrackTintColor="#ddd"
@@ -258,3 +259,4 @@ const styles = StyleSheet.create({
   blockSection: { marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 10 },
   blockLabel: { fontSize: 13, color: '#8B1A1A', marginBottom: 10 }
 });
+                                                                                                  
