@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.22)',
   },
 
-  messageText:   { fontSize: 18, color: '#0a0a2a', lineHeight: 26, letterSpacing: 0.2 },
+  messageText:   { fontSize: 18, color: '#000', lineHeight: 26, letterSpacing: 0.2 },
   messageFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 8, gap: 6 },
   timeText:      { fontSize: 12, color: 'rgba(10,10,42,0.5)' },
 
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 18,
-    color: '#0a0a2a',
+    color: '#000',
     paddingHorizontal: 20,
     paddingVertical: 14,
     backgroundColor: 'rgba(255,255,255,0.4)',
