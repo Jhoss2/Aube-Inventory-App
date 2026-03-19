@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, Text, TouchableOpacity, TextInput, ScrollView, 
   StyleSheet, Alert, ImageBackground, Dimensions, Platform 
@@ -10,6 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAppContext } from '@/lib/app-context';
 import { BlurView } from 'expo-blur';
 import Slider from '@react-native-community/slider';
+import { setGeminiApiKey, loadGeminiApiKey } from '@/lib/aube-engine';
 
 const { width, height } = Dimensions.get('window');
 
@@ -19,6 +20,25 @@ export default function SettingsScreen() {
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [geminiKey, setGeminiKey] = useState('');
+  const [geminiSaved, setGeminiSaved] = useState(false);
+
+  useEffect(() => {
+    loadGeminiApiKey().then(function(k) {
+      if (k) setGeminiKey(k);
+    }).catch(function() {});
+  }, []);
+
+  const handleSaveGeminiKey = async () => {
+    if (!geminiKey.trim()) {
+      Alert.alert('Erreur', 'La clé API ne peut pas être vide.');
+      return;
+    }
+    await setGeminiApiKey(geminiKey.trim());
+    setGeminiSaved(true);
+    Alert.alert('✅ Clé enregistrée', 'Aube utilisera cette clé pour se connecter à Gemini.');
+    setTimeout(function() { setGeminiSaved(false); }, 3000);
+  };
 
   const [openSections, setOpenSections] = useState({
     security: true,
@@ -27,6 +47,7 @@ export default function SettingsScreen() {
     blocs: false,
     affiches: false,
     chat: false,
+    ia: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -208,6 +229,39 @@ export default function SettingsScreen() {
             <SettingRow label="Fond d'écran du chat" field="chatBgImage" />
           </View>
         )}
+
+        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('ia')}>
+          <Text style={[styles.accordionTitle, styles.boldSerif]}>Intelligence Aube — Clé API</Text>
+          <Feather name={openSections.ia ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+        </TouchableOpacity>
+        {openSections.ia && (
+          <View style={styles.accordionContent}>
+            <Text style={[styles.boldSerif, { fontSize: 13, color: '#555', marginBottom: 10 }]}>
+              Clé API Gemini (aistudio.google.com)
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 8 }}>
+              <TextInput
+                value={geminiKey}
+                onChangeText={setGeminiKey}
+                placeholder="Collez votre clé API ici..."
+                placeholderTextColor="#aaa"
+                secureTextEntry={true}
+                style={[styles.keyInput, styles.boldSerif]}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                onPress={handleSaveGeminiKey}
+                style={[styles.saveKeyBtn, geminiSaved && styles.saveKeyBtnOk]}
+              >
+                <Feather name={geminiSaved ? "check" : "save"} size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.boldSerif, { fontSize: 11, color: '#888' }]}>
+              La clé est stockée localement sur l'appareil. Elle n'est jamais partagée.
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -257,6 +311,26 @@ const styles = StyleSheet.create({
   rowButtonActive: { backgroundColor: '#1D3583', borderColor: '#1D3583' },
   rowButtonText: { fontSize: 11 },
   blockSection: { marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 10 },
-  blockLabel: { fontSize: 13, color: '#8B1A1A', marginBottom: 10 }
+  blockLabel: { fontSize: 13, color: '#8B1A1A', marginBottom: 10 },
+
+  keyInput: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 13,
+    color: '#333',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  saveKeyBtn: {
+    backgroundColor: '#1D3583',
+    width: 48, height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  saveKeyBtnOk: { backgroundColor: '#059669' },
 });
-                                                                                                  
+              
