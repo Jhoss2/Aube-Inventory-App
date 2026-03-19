@@ -18,7 +18,6 @@ import { ouvrirCamera } from '@/lib/aube-vision';
 import { apprendreAutomatiquement, lancerSessionApprentissage, statsApprentissage } from '@/lib/aube-learner';
 
 const { width, height } = Dimensions.get('window');
-const AVATAR_HEADER_SIZE = width * 0.55;
 
 type UIMessage = {
   id:     string;
@@ -190,16 +189,26 @@ export default function ChatAubeScreen() {
       historyRef.current = [...historyRef.current, { role: 'user', text: userText }, { role: 'model', text: fullResponse }];
       if (historyRef.current.length > 40) historyRef.current = historyRef.current.slice(-40);
 
-      // Sauvegarder la conversation apres chaque echange
       AsyncStorage.setItem('aube_conversation', JSON.stringify({
         messages: messages,
         history: historyRef.current,
         session: sessionRef.current,
         savedAt: Date.now(),
       })).catch(function() {});
+
+      // Si pas de reponse generee, afficher un message par defaut
+      if (!fullResponse || fullResponse.trim() === '') {
+        setMessages(prev => prev.map(msg =>
+          msg.id === aubeMsgId ? { ...msg, text: 'Je suis là ! Posez-moi votre question.' } : msg
+        ));
+      }
     } catch (e: any) {
+      // Afficher la reponse offline plutot qu'une erreur generique
+      var errMsg = fullResponse && fullResponse.trim()
+        ? fullResponse
+        : 'Je rencontre une difficulté technique. Réessayez dans un instant.';
       setMessages(prev => prev.map(msg =>
-        msg.id === aubeMsgId ? { ...msg, text: 'Une erreur est survenue. Vérifie ta connexion.' } : msg
+        msg.id === aubeMsgId ? { ...msg, text: errMsg } : msg
       ));
     }
     setIsTyping(false);
@@ -221,7 +230,7 @@ export default function ChatAubeScreen() {
 
           {/* Bulle glass */}
           <View style={[styles.bubbleWrap, isAube ? styles.aubeBubbleWrap : styles.userBubbleWrap]}>
-            <BlurView intensity={80} tint="light" style={[styles.bubble, isAube ? styles.aubeBubble : styles.userBubble]}>
+            <View style={[styles.bubble, isAube ? styles.aubeBubble : styles.userBubble]}>
               {isAube && item.text === '' && isTyping
                 ? <ActivityIndicator size="small" color="#1A237E" />
                 : <Text style={[styles.messageText, styles.SBI]}>{item.text}</Text>
@@ -229,10 +238,10 @@ export default function ChatAubeScreen() {
               {item.text !== '' && (
                 <View style={styles.messageFooter}>
                   <Text style={[styles.timeText, styles.SBI]}>{item.time}</Text>
-                  {!isAube && <CheckCheck size={16} color="#1A237E" style={{ opacity: 0.7 }} />}
+                  {!isAube && <CheckCheck size={16} color="#0a0a2a" style={{ opacity: 0.6 }} />}
                 </View>
               )}
-            </BlurView>
+            </View>
           </View>
 
           {/* Avatar droite (utilisateur) */}
@@ -276,33 +285,29 @@ export default function ChatAubeScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
 
-          {/* ── HEADER GLASS ── */}
-          <BlurView intensity={60} tint="dark" style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
-              <ChevronLeft size={30} color="white" />
-            </TouchableOpacity>
-            <View style={styles.headerCenter}>
-              <Text style={[styles.headerName, styles.SBI]}>{assistantName.toUpperCase()}</Text>
-              <View style={styles.statusRow}>
-                <View style={styles.statusDot} />
-                <Text style={[styles.statusText, styles.SBI]}>En ligne</Text>
+          {/* ── HEADER TRANSPARENT avec avatar ── */}
+          <View style={styles.headerPad}>
+            <View style={styles.headerBar}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+                <ChevronLeft size={30} color="white" />
+              </TouchableOpacity>
+              <View style={styles.headerAvatarWrap}>
+                <Image source={{ uri: assistantAvatar }} style={styles.headerAvatar} />
               </View>
+              <View style={styles.headerCenter}>
+                <Text style={[styles.headerName, styles.SBI]}>{assistantName.toUpperCase()}</Text>
+                <View style={styles.statusRow}>
+                  <View style={styles.statusDot} />
+                  <Text style={[styles.statusText, styles.SBI]}>En ligne</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={handleCamera} style={styles.headerBtn}>
+                <Camera size={22} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={clearConversation} style={styles.headerBtn}>
+                <Trash2 size={22} color="white" />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={handleCamera} style={styles.headerBtn}>
-              <Camera size={22} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={clearConversation} style={styles.headerBtn}>
-              <Trash2 size={22} color="white" />
-            </TouchableOpacity>
-          </BlurView>
-
-          {/* ── GRAND AVATAR EN HAUT ── */}
-          <View style={styles.heroAvatarWrap} pointerEvents="none">
-            <Image
-              source={{ uri: assistantAvatar }}
-              style={styles.heroAvatar}
-              resizeMode="cover"
-            />
           </View>
 
           {/* ── LISTE DES MESSAGES ── */}
@@ -316,14 +321,14 @@ export default function ChatAubeScreen() {
           />
 
           {/* ── INPUT GLASS ── */}
-          <BlurView intensity={70} tint="light" style={styles.inputBar}>
+          <View style={styles.inputBar}>
             <View style={styles.inputInner}>
               <TextInput
                 placeholder={'Écrire à ' + assistantName + '...'}
                 style={[styles.textInput, styles.SBI]}
                 value={inputValue}
                 onChangeText={setInputValue}
-                placeholderTextColor="rgba(26,35,126,0.5)"
+                placeholderTextColor="rgba(10,10,42,0.4)"
                 multiline={false}
                 onSubmitEditing={handleSend}
                 returnKeyType="send"
@@ -333,12 +338,10 @@ export default function ChatAubeScreen() {
                 disabled={isTyping || !inputValue.trim()}
                 style={[styles.sendBtn, (!inputValue.trim() || isTyping) && styles.sendBtnDisabled]}
               >
-                <BlurView intensity={80} tint="dark" style={styles.sendBtnBlur}>
-                  <Send size={24} color="white" />
-                </BlurView>
+                <Send size={24} color="white" />
               </TouchableOpacity>
             </View>
-          </BlurView>
+          </View>
 
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -360,38 +363,32 @@ const styles = StyleSheet.create({
   SBI: { ...SBI_BASE },
 
   // ── Header ──
-  header: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 10, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)',
+  headerPad:  { paddingHorizontal: 14, paddingTop: 12, paddingBottom: 4 },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
-  headerBtn:    { padding: 10 },
-  headerCenter: { flex: 1, alignItems: 'center' },
-  headerName:   { color: 'white', fontSize: 22, letterSpacing: 3 },
-  statusRow:    { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  statusDot:    { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80', marginRight: 6 },
-  statusText:   { color: 'rgba(255,255,255,0.85)', fontSize: 14 },
-
-  // ── Grand avatar ──
-  heroAvatarWrap: {
-    position: 'absolute',
-    top: 80,
-    alignSelf: 'center',
-    zIndex: 0,
-    width: AVATAR_HEADER_SIZE,
-    height: AVATAR_HEADER_SIZE * 1.3,
+  headerBtn:        { padding: 6 },
+  headerAvatarWrap: {
+    width: 50, height: 50, borderRadius: 25,
+    overflow: 'hidden', marginHorizontal: 10,
+    borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)',
+    elevation: 4,
+    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
   },
-  heroAvatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 30,
-    opacity: 0.92,
-  },
+  headerAvatar:  { width: '100%', height: '100%' },
+  headerCenter:  { flex: 1 },
+  headerName:    { color: 'white', fontSize: 18, letterSpacing: 1 },
+  statusRow:     { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  statusDot:     { width: 7, height: 7, borderRadius: 4, backgroundColor: '#4ADE80', marginRight: 5 },
+  statusText:    { color: 'rgba(255,255,255,0.85)', fontSize: 12 },
 
   // ── Messages ──
   listContent: {
     paddingHorizontal: 16,
-    paddingTop: AVATAR_HEADER_SIZE * 1.35 + 90,
+    paddingTop: 20,
     paddingBottom: 20,
   },
   messageRow: {
@@ -423,21 +420,21 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     padding: 18,
     overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
   },
   aubeBubble: {
     borderBottomLeftRadius: 6,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   userBubble: {
     borderBottomRightRadius: 6,
-    backgroundColor: 'rgba(224,231,255,0.35)',
+    backgroundColor: 'rgba(255,255,255,0.22)',
   },
 
-  messageText:   { fontSize: 18, color: '#1a1a3a', lineHeight: 26, letterSpacing: 0.2 },
+  messageText:   { fontSize: 18, color: '#0a0a2a', lineHeight: 26, letterSpacing: 0.2 },
   messageFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 8, gap: 6 },
-  timeText:      { fontSize: 12, color: 'rgba(26,35,126,0.6)' },
+  timeText:      { fontSize: 12, color: 'rgba(10,10,42,0.5)' },
 
   // ── Input ──
   inputBar: {
@@ -446,6 +443,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   inputInner: {
     flexDirection: 'row',
@@ -455,19 +453,22 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 18,
-    color: '#1A237E',
+    color: '#0a0a2a',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: 'rgba(255,255,255,0.4)',
     borderRadius: 50,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.7)',
+    borderColor: 'rgba(255,255,255,0.8)',
     minHeight: 56,
   },
   sendBtn: {
     width: 56, height: 56,
     borderRadius: 28,
     overflow: 'hidden',
+    backgroundColor: 'rgba(26,35,126,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
     elevation: 6,
     shadowColor: '#1A237E', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
   },
@@ -475,8 +476,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(26,35,126,0.6)',
+    backgroundColor: 'transparent',
   },
   sendBtnDisabled: { opacity: 0.4 },
 });
-        
+                                          
