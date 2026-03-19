@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { invaliderCacheDonnees, invaliderCacheEntite } from '@/lib/aube-semantic-cache';
 
 const AppContext = createContext<any>(null);
 
@@ -58,6 +59,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     const newData = { ...appData, salles: [...(appData.salles || []), salle] };
     setAppData(newData);
     saveToStorage(newData);
+    invaliderCacheDonnees().catch(function() {});
   };
 
   /** Supprime une salle ET tous ses matériels associés */
@@ -87,9 +89,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     const newData = { ...appData, materiels: [...(appData.materiels || []), newItem] };
     setAppData(newData);
     saveToStorage(newData);
+    invaliderCacheDonnees().catch(function() {});
   };
 
   const updateMateriel = (id: string, updates: any) => {
+    const mat = (appData.materiels || []).find((m: any) => m.id === id);
     const newData = {
       ...appData,
       materiels: (appData.materiels || []).map((m: any) =>
@@ -98,15 +102,20 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     };
     setAppData(newData);
     saveToStorage(newData);
+    invaliderCacheDonnees().catch(function() {});
+    if (mat && mat.nom) invaliderCacheEntite(mat.nom).catch(function() {});
   };
 
   const deleteMateriel = (id: string) => {
+    const mat = (appData.materiels || []).find((m: any) => m.id === id);
     const newData = {
       ...appData,
       materiels: (appData.materiels || []).filter((m: any) => m.id !== id),
     };
     setAppData(newData);
     saveToStorage(newData);
+    invaliderCacheDonnees().catch(function() {});
+    if (mat && mat.nom) invaliderCacheEntite(mat.nom).catch(function() {});
   };
 
   // ── NOTES ─────────────────────────────────────────────────────────────────
