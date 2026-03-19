@@ -2,16 +2,23 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, TextInput, FlatList,
   Image, ImageBackground, KeyboardAvoidingView, Platform,
-  ActivityIndicator, StyleSheet, StatusBar, Alert,
+  ActivityIndicator, StyleSheet, StatusBar, Alert, Dimensions,
+  AppState,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Send, CheckCheck, Trash2, Camera } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppContext } from '@/lib/app-context';
 import { chatWithAubeStream } from '@/lib/aube-engine';
 import { initAubeDb } from '@/lib/aube-db';
 import { scanAlertes } from '@/lib/aube-notifications';
-import { ouvrirCamera, rechercherParDescription, formaterResultats } from '@/lib/aube-vision';
+import { ouvrirCamera } from '@/lib/aube-vision';
+import { apprendreAutomatiquement, lancerSessionApprentissage, statsApprentissage } from '@/lib/aube-learner';
+
+const { width, height } = Dimensions.get('window');
+const AVATAR_HEADER_SIZE = width * 0.55;
 
 type UIMessage = {
   id:     string;
@@ -28,7 +35,7 @@ export default function ChatAubeScreen() {
   const sessionRef  = useRef<string>('session-' + Date.now());
 
   const settings        = (appData && appData.settings) || {};
-  const assistantName   = settings.assistantName   || 'Aube';
+  const assistantName   = settings.assistantName   || 'AUBE';
   const assistantAvatar = settings.assistantAvatar || 'https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6';
   const userAvatar      = settings.userAvatar  || null;
   const chatBgImage     = settings.chatBgImage || null;
@@ -37,7 +44,7 @@ export default function ChatAubeScreen() {
   const makeWelcome = (): UIMessage => ({
     id:     '0',
     sender: 'aube',
-    text:   'Bonjour ! Je suis ' + assistantName + '. Je connais toutes les données de vos salles et matériels. Comment puis-je vous aider ?',
+    text:   'Salut , je suis ' + assistantName + ' l\'assistante de cette application. Je suis chargée de vous guider et de vous informer. Que puis-je faire pour vous aujourd\'hui ?',
     time:   new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   });
 
@@ -46,11 +53,46 @@ export default function ChatAubeScreen() {
   const [isTyping,   setIsTyping]   = useState(false);
   const historyRef = useRef<Array<{role: string; text: string}>>([]);
 
+  const appStateRef = useRef(AppState.currentState);
+
   useEffect(() => {
     initAubeDb().catch(function() {});
     var mats = (appData && appData.materiels) || [];
     var sals = (appData && appData.salles) || [];
     if (mats.length > 0) scanAlertes(mats, sals).catch(function() {});
+
+    // Déclencher l'auto-apprentissage en arrière-plan au démarrage
+    apprendreAutomatiquement(appData).catch(function() {});
+
+    // Restaurer la conversation sauvegardée
+    AsyncStorage.getItem('aube_conversation').then(function(saved) {
+      if (saved) {
+        try {
+          var data = JSON.parse(saved);
+          if (data.messages && data.messages.length > 1) {
+            setMessages(data.messages);
+          }
+          if (data.history) historyRef.current = data.history;
+          if (data.session) sessionRef.current = data.session;
+        } catch(e) {}
+      }
+    }).catch(function() {});
+
+    // Sauvegarder quand l'app passe en arrière-plan
+    var sub = AppState.addEventListener('change', function(nextState) {
+      if (appStateRef.current === 'active' && nextState === 'background') {
+        // Sauvegarde de la conversation
+        AsyncStorage.setItem('aube_conversation', JSON.stringify({
+          messages: messages,
+          history: historyRef.current,
+          session: sessionRef.current,
+          savedAt: Date.now(),
+        })).catch(function() {});
+      }
+      appStateRef.current = nextState;
+    });
+
+    return function() { sub.remove(); };
   }, []);
 
   const scrollToBottom = () => {
@@ -61,6 +103,7 @@ export default function ChatAubeScreen() {
     historyRef.current = [];
     sessionRef.current = 'session-' + Date.now();
     setMessages([makeWelcome()]);
+    AsyncStorage.removeItem('aube_conversation').catch(function() {});
   };
 
   const handleLongPress = (msg: UIMessage) => {
@@ -72,22 +115,57 @@ export default function ChatAubeScreen() {
   };
 
   const handleCamera = async () => {
-    var mats = (appData && appData.materiels) || [];
-    var sals = (appData && appData.salles) || [];
-    var uri  = await ouvrirCamera();
+    var uri = await ouvrirCamera();
     if (!uri) return;
-    var now     = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    var msgId   = Date.now().toString();
-    var rep     = 'Analyse la photo et decris le materiel visible (couleur, forme, nom) pour que je le retrouve dans la base.';
-    setMessages(prev => [...prev, { id: msgId, sender: 'aube', text: rep, time: now }]);
+    var now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(), sender: 'aube',
+      text: 'Décris-moi le matériel visible sur la photo (nom, couleur, forme) pour que je le retrouve dans la base.',
+      time: now,
+    }]);
     scrollToBottom();
   };
 
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
-
     const userText  = inputValue.trim();
     const now       = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Commande EB1 : déclencher l'apprentissage manuellement
+    if (userText.indexOf('EB1') !== -1 && (userText.toLowerCase().indexOf('apprend') !== -1 || userText.toLowerCase().indexOf('appren') !== -1 || userText.toLowerCase().indexOf('formation') !== -1)) {
+      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'user', text: userText, time: now }]);
+      setInputValue('');
+      setIsTyping(true);
+      const trigMsgId = (Date.now() + 1).toString();
+      setMessages(prev => [...prev, { id: trigMsgId, sender: 'aube', text: 'Session d\'apprentissage déclenchée... Je contacte Gemini pour combler mes lacunes.', time: now }]);
+      scrollToBottom();
+
+      await initLearnerDb();
+      const settings2 = (appData && appData.settings) || {};
+      const key = settings2.geminiApiKey || '';
+
+      await lancerSessionApprentissage(key, appData, function(progress: any) {
+        setMessages(prev => prev.map(msg =>
+          msg.id === trigMsgId ? { ...msg, text: progress.message || '...' } : msg
+        ));
+        scrollToBottom();
+      });
+      setIsTyping(false);
+      return;
+    }
+
+    // Commande EB1 : stats apprentissage
+    if (userText.indexOf('EB1') !== -1 && userText.toLowerCase().indexOf('stat') !== -1) {
+      await initLearnerDb();
+      const stats = await statsApprentissage();
+      const statMsg = 'Statistiques d\'apprentissage :\n\n📚 Leçons apprises : ' + stats.lecons + '\n❓ Lacunes en attente : ' + stats.lacunes + '\n🎓 Sessions terminées : ' + stats.sessions;
+      setMessages(prev => [...prev,
+        { id: Date.now().toString(), sender: 'user', text: userText, time: now },
+        { id: (Date.now()+1).toString(), sender: 'aube', text: statMsg, time: now },
+      ]);
+      setInputValue('');
+      return;
+    }
     const userMsgId = Date.now().toString();
     const aubeMsgId = (Date.now() + 1).toString();
 
@@ -98,7 +176,6 @@ export default function ChatAubeScreen() {
     setMessages(prev => [...prev, { id: aubeMsgId, sender: 'aube', text: '', time: now }]);
 
     var fullResponse = '';
-
     try {
       await chatWithAubeStream(
         userText, systemPrompt, appData, historyRef.current,
@@ -108,176 +185,298 @@ export default function ChatAubeScreen() {
           setMessages(prev => prev.map(msg => msg.id === aubeMsgId ? { ...msg, text: snap } : msg));
           scrollToBottom();
         },
-        sessionRef.current,
-        appContext
+        sessionRef.current, appContext
       );
-
       historyRef.current = [...historyRef.current, { role: 'user', text: userText }, { role: 'model', text: fullResponse }];
       if (historyRef.current.length > 40) historyRef.current = historyRef.current.slice(-40);
 
+      // Sauvegarder la conversation apres chaque echange
+      AsyncStorage.setItem('aube_conversation', JSON.stringify({
+        messages: messages,
+        history: historyRef.current,
+        session: sessionRef.current,
+        savedAt: Date.now(),
+      })).catch(function() {});
     } catch (e: any) {
       setMessages(prev => prev.map(msg =>
-        msg.id === aubeMsgId ? { ...msg, text: 'Une erreur est survenue. Verifie ta connexion.' } : msg
+        msg.id === aubeMsgId ? { ...msg, text: 'Une erreur est survenue. Vérifie ta connexion.' } : msg
       ));
     }
     setIsTyping(false);
   };
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+  // ── Bulle de message ──────────────────────────────────────────────────────
+  const renderMessage = ({ item }: { item: UIMessage }) => {
+    const isAube = item.sender === 'aube';
+    return (
+      <TouchableOpacity activeOpacity={0.9} onLongPress={() => handleLongPress(item)} delayLongPress={500}>
+        <View style={[styles.messageRow, isAube ? styles.aubeRow : styles.userRow]}>
 
-      {/* HEADER */}
-      <View style={styles.headerPadding}>
-        <View style={[styles.redHeaderPill, styles.glow]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <ChevronLeft size={28} color="white" />
-          </TouchableOpacity>
-          <View style={styles.avatarContainer}>
-            <Image source={{ uri: assistantAvatar }} style={styles.avatarImg} />
-          </View>
-          <View style={styles.headerInfo}>
-            <Text style={[styles.assistantTitle, styles.SBI]}>{assistantName}</Text>
-            <View style={styles.statusRow}>
-              <View style={styles.statusDot} />
-              <Text style={[styles.statusText, styles.SBI]}>En ligne · données synchronisées</Text>
+          {/* Avatar gauche (Aube) */}
+          {isAube && (
+            <View style={styles.msgAvatarWrap}>
+              <Image source={{ uri: assistantAvatar }} style={styles.msgAvatar} />
             </View>
-          </View>
-          <TouchableOpacity onPress={handleCamera} style={styles.clearBtn}>
-            <Camera size={18} color="rgba(255,255,255,0.7)" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={clearConversation} style={styles.clearBtn}>
-            <Trash2 size={18} color="rgba(255,255,255,0.7)" />
-          </TouchableOpacity>
-        </View>
-      </View>
+          )}
 
-      {/* CHAT */}
+          {/* Bulle glass */}
+          <View style={[styles.bubbleWrap, isAube ? styles.aubeBubbleWrap : styles.userBubbleWrap]}>
+            <BlurView intensity={80} tint="light" style={[styles.bubble, isAube ? styles.aubeBubble : styles.userBubble]}>
+              {isAube && item.text === '' && isTyping
+                ? <ActivityIndicator size="small" color="#1A237E" />
+                : <Text style={[styles.messageText, styles.SBI]}>{item.text}</Text>
+              }
+              {item.text !== '' && (
+                <View style={styles.messageFooter}>
+                  <Text style={[styles.timeText, styles.SBI]}>{item.time}</Text>
+                  {!isAube && <CheckCheck size={16} color="#1A237E" style={{ opacity: 0.7 }} />}
+                </View>
+              )}
+            </BlurView>
+          </View>
+
+          {/* Avatar droite (utilisateur) */}
+          {!isAube && (
+            <View style={styles.msgAvatarWrap}>
+              {userAvatar
+                ? <Image source={{ uri: userAvatar }} style={styles.msgAvatar} />
+                : <View style={[styles.msgAvatar, styles.userAvatarFallback]}>
+                    <Text style={[styles.SBI, { color: 'white', fontSize: 18 }]}>U</Text>
+                  </View>
+              }
+            </View>
+          )}
+
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  // ── Render principal ──────────────────────────────────────────────────────
+  return (
+    <View style={styles.root}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+
+      {/* FOND D'ÉCRAN PLEIN ÉCRAN */}
       <ImageBackground
         source={chatBgImage
           ? { uri: chatBgImage }
-          : { uri: 'https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png' }}
-        imageStyle={{ opacity: chatBgImage ? 0.25 : 0.03 }}
-        style={styles.chatBackground}
-      >
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onLongPress={() => handleLongPress(item)}
-              delayLongPress={500}
-            >
-              <View style={[styles.messageRow, item.sender === 'user' ? styles.userRow : styles.aubeRow]}>
+          : { uri: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1000' }}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      />
 
-                {item.sender === 'aube' && (
-                  <View style={styles.msgAvatar}>
-                    <Image source={{ uri: assistantAvatar }} style={styles.msgAvatarImg} />
-                  </View>
-                )}
+      {/* Overlay très léger pour lisibilité */}
+      <View style={styles.overlay} />
 
-                <View style={[styles.bubble, item.sender === 'user' ? styles.userBubble : styles.aubeBubble, styles.glowLight]}>
-                  {item.sender === 'aube' && item.text === '' && isTyping
-                    ? <ActivityIndicator size="small" color="#8B0000" />
-                    : <Text style={[styles.messageText, styles.SBI]}>{item.text}</Text>
-                  }
-                  {item.text !== '' && (
-                    <View style={styles.messageFooter}>
-                      <Text style={[styles.timeText, styles.SBI]}>{item.time}</Text>
-                      {item.sender === 'user' && <CheckCheck size={14} color="#1A237E" style={{ opacity: 0.8 }} />}
-                    </View>
-                  )}
-                </View>
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
 
-                {item.sender === 'user' && (
-                  <View style={styles.msgAvatar}>
-                    {userAvatar
-                      ? <Image source={{ uri: userAvatar }} style={styles.msgAvatarImg} />
-                      : <View style={[styles.msgAvatarImg, { backgroundColor: '#1A237E', justifyContent: 'center', alignItems: 'center' }]}>
-                          <Text style={[styles.SBI, { color: 'white', fontSize: 12 }]}>U</Text>
-                        </View>
-                    }
-                  </View>
-                )}
-
-              </View>
+          {/* ── HEADER GLASS ── */}
+          <BlurView intensity={60} tint="dark" style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+              <ChevronLeft size={30} color="white" />
             </TouchableOpacity>
-          )}
-        />
-      </ImageBackground>
+            <View style={styles.headerCenter}>
+              <Text style={[styles.headerName, styles.SBI]}>{assistantName.toUpperCase()}</Text>
+              <View style={styles.statusRow}>
+                <View style={styles.statusDot} />
+                <Text style={[styles.statusText, styles.SBI]}>En ligne</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={handleCamera} style={styles.headerBtn}>
+              <Camera size={22} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={clearConversation} style={styles.headerBtn}>
+              <Trash2 size={22} color="white" />
+            </TouchableOpacity>
+          </BlurView>
 
-      {/* INPUT */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}>
-        <View style={styles.inputContainer}>
-          <View style={[styles.textInputWrapper, styles.glowLight]}>
-            <TextInput
-              placeholder={'Écrire à ' + assistantName + '...'}
-              style={[styles.textInput, styles.SBI]}
-              value={inputValue}
-              onChangeText={setInputValue}
-              placeholderTextColor="#94A3B8"
-              multiline={false}
-              onSubmitEditing={handleSend}
-              returnKeyType="send"
+          {/* ── GRAND AVATAR EN HAUT ── */}
+          <View style={styles.heroAvatarWrap} pointerEvents="none">
+            <Image
+              source={{ uri: assistantAvatar }}
+              style={styles.heroAvatar}
+              resizeMode="cover"
             />
           </View>
-          <TouchableOpacity
-            onPress={handleSend}
-            disabled={isTyping || !inputValue.trim()}
-            style={[styles.sendBtn, styles.glow, (!inputValue.trim() || isTyping) && styles.sendBtnDisabled]}
-          >
-            <Send size={22} color="white" />
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+          {/* ── LISTE DES MESSAGES ── */}
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            renderItem={renderMessage}
+          />
+
+          {/* ── INPUT GLASS ── */}
+          <BlurView intensity={70} tint="light" style={styles.inputBar}>
+            <View style={styles.inputInner}>
+              <TextInput
+                placeholder={'Écrire à ' + assistantName + '...'}
+                style={[styles.textInput, styles.SBI]}
+                value={inputValue}
+                onChangeText={setInputValue}
+                placeholderTextColor="rgba(26,35,126,0.5)"
+                multiline={false}
+                onSubmitEditing={handleSend}
+                returnKeyType="send"
+              />
+              <TouchableOpacity
+                onPress={handleSend}
+                disabled={isTyping || !inputValue.trim()}
+                style={[styles.sendBtn, (!inputValue.trim() || isTyping) && styles.sendBtnDisabled]}
+              >
+                <BlurView intensity={80} tint="dark" style={styles.sendBtnBlur}>
+                  <Send size={24} color="white" />
+                </BlurView>
+              </TouchableOpacity>
+            </View>
+          </BlurView>
+
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
+const SBI_BASE = {
+  fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+  fontWeight: '900' as const,
+  fontStyle: 'italic' as const,
+};
+
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
-  SBI: {
-    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
-    fontWeight: '900',
-    fontStyle: 'italic',
-  },
-  headerPadding: { paddingHorizontal: 20, paddingTop: 10, marginBottom: 10 },
-  redHeaderPill: {
-    backgroundColor: '#8B0000', borderRadius: 50,
-    paddingVertical: 10, paddingHorizontal: 15,
+  root:    { flex: 1, backgroundColor: '#1A237E' },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.08)' },
+  safeArea:{ flex: 1, backgroundColor: 'transparent' },
+
+  SBI: { ...SBI_BASE },
+
+  // ── Header ──
+  header: {
     flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 10, paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)',
   },
-  backBtn:        { padding: 5 },
-  avatarContainer:{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'white', borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)', overflow: 'hidden', marginLeft: 10 },
-  avatarImg:      { width: '100%', height: '100%' },
-  headerInfo:     { flex: 1, marginLeft: 12 },
-  assistantTitle: { color: 'white', fontSize: 14 },
-  statusRow:      { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  statusDot:      { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ADE80', marginRight: 5 },
-  statusText:     { color: 'rgba(255,255,255,0.9)', fontSize: 11 },
-  clearBtn:       { padding: 8, marginLeft: 4 },
-  chatBackground: { flex: 1 },
-  listContent:    { padding: 20, paddingBottom: 30 },
-  messageRow:     { flexDirection: 'row', marginBottom: 18, alignItems: 'flex-end' },
-  userRow:        { justifyContent: 'flex-end' },
-  aubeRow:        { justifyContent: 'flex-start' },
-  msgAvatar:      { width: 32, height: 32, borderRadius: 16, marginHorizontal: 6, overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
-  msgAvatarImg:   { width: '100%', height: '100%', borderRadius: 16 },
-  bubble:         { maxWidth: '78%', padding: 16, borderRadius: 25 },
-  userBubble:     { backgroundColor: '#E0E7FF', borderBottomRightRadius: 4, borderWidth: 1.5, borderColor: '#C7D2FE' },
-  aubeBubble:     { backgroundColor: 'white', borderBottomLeftRadius: 4, borderWidth: 1.5, borderColor: '#F1F5F9' },
-  messageText:    { fontSize: 15, color: '#1E293B', lineHeight: 22, letterSpacing: 0.3 },
-  messageFooter:  { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 6, gap: 5 },
-  timeText:       { fontSize: 11, color: '#64748B' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
-  textInputWrapper: { flex: 1, backgroundColor: 'white', borderRadius: 50, paddingHorizontal: 20, height: 55, justifyContent: 'center', borderWidth: 1.5, borderColor: '#FCE7F3' },
-  textInput:      { color: '#1A237E', fontSize: 13, letterSpacing: 1 },
-  sendBtn:        { width: 55, height: 55, backgroundColor: '#1A237E', borderRadius: 27.5, justifyContent: 'center', alignItems: 'center', marginLeft: 12 },
-  sendBtnDisabled:{ backgroundColor: '#94A3B8', elevation: 0 },
-  glow:           { elevation: 8, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 5 } },
-  glowLight:      { elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 2 } },
+  headerBtn:    { padding: 10 },
+  headerCenter: { flex: 1, alignItems: 'center' },
+  headerName:   { color: 'white', fontSize: 22, letterSpacing: 3 },
+  statusRow:    { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  statusDot:    { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80', marginRight: 6 },
+  statusText:   { color: 'rgba(255,255,255,0.85)', fontSize: 14 },
+
+  // ── Grand avatar ──
+  heroAvatarWrap: {
+    position: 'absolute',
+    top: 80,
+    alignSelf: 'center',
+    zIndex: 0,
+    width: AVATAR_HEADER_SIZE,
+    height: AVATAR_HEADER_SIZE * 1.3,
+  },
+  heroAvatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+    opacity: 0.92,
+  },
+
+  // ── Messages ──
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: AVATAR_HEADER_SIZE * 1.35 + 90,
+    paddingBottom: 20,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    alignItems: 'flex-end',
+  },
+  aubeRow: { justifyContent: 'flex-start' },
+  userRow: { justifyContent: 'flex-end' },
+
+  msgAvatarWrap: {
+    width: 64, height: 64,
+    borderRadius: 32,
+    overflow: 'hidden',
+    marginHorizontal: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.6)',
+    elevation: 6,
+    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
+  },
+  msgAvatar: { width: '100%', height: '100%' },
+  userAvatarFallback: { backgroundColor: '#1A237E', justifyContent: 'center', alignItems: 'center' },
+
+  bubbleWrap:     { maxWidth: '72%' },
+  aubeBubbleWrap: {},
+  userBubbleWrap: {},
+
+  bubble: {
+    borderRadius: 28,
+    padding: 18,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
+  aubeBubble: {
+    borderBottomLeftRadius: 6,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  userBubble: {
+    borderBottomRightRadius: 6,
+    backgroundColor: 'rgba(224,231,255,0.35)',
+  },
+
+  messageText:   { fontSize: 18, color: '#1a1a3a', lineHeight: 26, letterSpacing: 0.2 },
+  messageFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 8, gap: 6 },
+  timeText:      { fontSize: 12, color: 'rgba(26,35,126,0.6)' },
+
+  // ── Input ──
+  inputBar: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    overflow: 'hidden',
+  },
+  inputInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 18,
+    color: '#1A237E',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    borderRadius: 50,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.7)',
+    minHeight: 56,
+  },
+  sendBtn: {
+    width: 56, height: 56,
+    borderRadius: 28,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#1A237E', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
+  },
+  sendBtnBlur: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(26,35,126,0.6)',
+  },
+  sendBtnDisabled: { opacity: 0.4 },
 });
+        
