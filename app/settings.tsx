@@ -51,7 +51,7 @@ export default function SettingsScreen() {
     setTestingGemini(true);
     setGeminiStatus('Test en cours...');
     try {
-      var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + geminiKey.trim();
+      var url = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' + geminiKey.trim();
       var response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -403,4 +403,4 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
   },
 });
-          
+                
