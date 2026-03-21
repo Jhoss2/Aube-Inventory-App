@@ -19,22 +19,16 @@ import { apprendreAutomatiquement, lancerSessionApprentissage, statsApprentissag
 const { width, height } = Dimensions.get('window');
 
 // ── Composant Liquid Glass ────────────────────────────────────────────────────
-// Reproduit l'effet WebGL : transparence + highlight haut + ombre bas + bord lumineux
 function LiquidGlass({ children, style, isUser }: { children: React.ReactNode; style?: any; isUser?: boolean }) {
   return (
     <View style={[styles.glassOuter, style]}>
-      {/* Fond ultra-transparent */}
-      <View style={styles.glassBg} />
-      {/* Highlight blanc en haut (reflet loupe) */}
-      <View style={[styles.glassHighlight, isUser ? styles.glassHighlightRight : styles.glassHighlightLeft]} />
-      {/* Ombre sombre en bas */}
-      <View style={styles.glassShadowBottom} />
-      {/* Contenu */}
-      <View style={styles.glassContent}>
-        {children}
-      </View>
-      {/* Bord lumineux externe */}
-      <View style={[styles.glassBorder, isUser ? styles.glassBorderUser : styles.glassBorderAube]} />
+      {/* Calques décoratifs — pointerEvents none pour ne pas bloquer les touches */}
+      <View style={styles.glassBg} pointerEvents="none" />
+      <View style={[styles.glassHighlight]} pointerEvents="none" />
+      <View style={styles.glassShadowBottom} pointerEvents="none" />
+      <View style={[styles.glassBorder, isUser ? styles.glassBorderUser : styles.glassBorderAube]} pointerEvents="none" />
+      {/* Contenu interactif au-dessus */}
+      {children}
     </View>
   );
 }
@@ -342,25 +336,29 @@ export default function ChatAubeScreen() {
 
           {/* ── INPUT Liquid Glass ── */}
           <View style={styles.inputBarWrap}>
-            <LiquidGlass style={styles.inputGlass}>
-              <TextInput
-                placeholder={'Écrire à ' + assistantName + '...'}
-                style={[styles.textInput, styles.SBI]}
-                value={inputValue}
-                onChangeText={setInputValue}
-                placeholderTextColor="rgba(255,255,255,0.5)"
-                multiline={false}
-                onSubmitEditing={handleSend}
-                returnKeyType="send"
-              />
+            <View style={styles.inputRow}>
+              <LiquidGlass style={styles.inputGlass}>
+                <TextInput
+                  placeholder={'Écrire à ' + assistantName + '...'}
+                  style={[styles.textInput, styles.SBI]}
+                  value={inputValue}
+                  onChangeText={setInputValue}
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  multiline={false}
+                  onSubmitEditing={handleSend}
+                  returnKeyType="send"
+                />
+              </LiquidGlass>
               <TouchableOpacity
                 onPress={handleSend}
                 disabled={isTyping || !inputValue.trim()}
                 style={[styles.sendBtn, (!inputValue.trim() || isTyping) && styles.sendBtnDisabled]}
               >
-                <Send size={24} color="white" />
+                <LiquidGlass style={styles.sendBtnGlass}>
+                  <Send size={22} color="white" />
+                </LiquidGlass>
               </TouchableOpacity>
-            </LiquidGlass>
+            </View>
           </View>
 
         </KeyboardAvoidingView>
@@ -376,188 +374,90 @@ const SBI_BASE = {
 };
 
 const styles = StyleSheet.create({
-  root:    { flex: 1, backgroundColor: '#1A237E' },
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.08)' },
-  safeArea:{ flex: 1, backgroundColor: 'transparent' },
+  root:     { flex: 1, backgroundColor: 'transparent' },
+  overlay:  { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.08)' },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  SBI: {
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+    fontWeight: '900' as const,
+    fontStyle: 'italic' as const,
+  },
 
-  SBI: { ...SBI_BASE },
+  // ── Liquid Glass ──
+  glassOuter: { position: 'relative', overflow: 'hidden' },
+  glassBg: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.08)' },
+  glassHighlight: {
+    position: 'absolute', top: 0, left: '5%' as any, right: '5%' as any, height: '45%' as any,
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    borderBottomLeftRadius: 60, borderBottomRightRadius: 60,
+  },
+  glassShadowBottom: {
+    position: 'absolute', bottom: 0, left: 0, right: 0, height: '28%' as any,
+    backgroundColor: 'rgba(0,0,0,0.07)',
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+  },
+  glassBorder: { ...StyleSheet.absoluteFillObject, borderWidth: 1, borderColor: 'rgba(255,255,255,0.38)' },
+  glassBorderAube: { borderRadius: 24, borderBottomLeftRadius: 4 },
+  glassBorderUser: { borderRadius: 24, borderBottomRightRadius: 4 },
 
   // ── Header ──
-  headerPad:  { paddingHorizontal: 14, paddingTop: 12, paddingBottom: 4 },
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  headerBtn:        { padding: 6 },
-  headerAvatarWrap: {
-    width: 50, height: 50, borderRadius: 25,
-    overflow: 'hidden', marginHorizontal: 10,
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)',
-    elevation: 4,
-    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
-  },
-  headerAvatar:  { width: '100%', height: '100%' },
-  headerCenter:  { flex: 1 },
-  headerName:    { color: 'white', fontSize: 18, letterSpacing: 1 },
-  statusRow:     { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  statusDot:     { width: 7, height: 7, borderRadius: 4, backgroundColor: '#4ADE80', marginRight: 5 },
-  statusText:    { color: 'rgba(255,255,255,0.85)', fontSize: 12 },
-
-  // ── Messages ──
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 20,
-  },
-  messageRow: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    alignItems: 'flex-end',
-  },
-  aubeRow: { justifyContent: 'flex-start' },
-  userRow: { justifyContent: 'flex-end' },
-
-  msgAvatarWrap: {
-    width: 64, height: 64,
-    borderRadius: 32,
-    overflow: 'hidden',
-    marginHorizontal: 8,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.6)',
-    elevation: 6,
-    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
-  },
-  msgAvatar: { width: '100%', height: '100%' },
-  userAvatarFallback: { backgroundColor: '#1A237E', justifyContent: 'center', alignItems: 'center' },
-
-  bubbleWrap:     { maxWidth: '72%' },
-  aubeBubbleWrap: {},
-  userBubbleWrap: {},
-
-  // ── Liquid Glass System ──
-  glassOuter: {
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  glassBg: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  glassHighlight: {
-    position: 'absolute',
-    top: 0,
-    left: '5%',
-    right: '5%',
-    height: '45%',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
-  },
-  glassHighlightLeft:  {},
-  glassHighlightRight: {},
-  glassShadowBottom: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '30%',
-    backgroundColor: 'rgba(0,0,0,0.08)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  glassContent: {
-    padding: 0,
-  },
-  glassBorder: {
-    ...StyleSheet.absoluteFillObject,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  glassBorderAube: { borderBottomLeftRadius: 6 },
-  glassBorderUser: { borderBottomRightRadius: 6 },
-
-  // ── Header Glass ──
   headerPad:   { paddingHorizontal: 14, paddingTop: 12, paddingBottom: 4 },
-  headerBar:   { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
   headerGlass: {
-    borderRadius: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    elevation: 8,
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
+    borderRadius: 30, flexDirection: 'row' as const, alignItems: 'center' as const,
+    paddingVertical: 10, paddingHorizontal: 12,
+    elevation: 8, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
   },
   headerBtn:        { padding: 6 },
   headerAvatarWrap: {
-    width: 46, height: 46, borderRadius: 23,
-    overflow: 'hidden', marginHorizontal: 10,
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.6)',
+    width: 46, height: 46, borderRadius: 23, overflow: 'hidden' as const,
+    marginHorizontal: 10, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.6)',
   },
-  headerAvatar:  { width: '100%', height: '100%' },
+  headerAvatar:  { width: '100%' as any, height: '100%' as any },
   headerCenter:  { flex: 1 },
   headerName:    { color: 'white', fontSize: 17, letterSpacing: 1 },
-  statusRow:     { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  statusRow:     { flexDirection: 'row' as const, alignItems: 'center' as const, marginTop: 2 },
   statusDot:     { width: 7, height: 7, borderRadius: 4, backgroundColor: '#4ADE80', marginRight: 5 },
   statusText:    { color: 'rgba(255,255,255,0.9)', fontSize: 11 },
 
   // ── Messages ──
   listContent:  { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 20 },
-  messageRow:   { flexDirection: 'row', marginBottom: 18, alignItems: 'flex-end' },
-  aubeRow:      { justifyContent: 'flex-start' },
-  userRow:      { justifyContent: 'flex-end' },
+  messageRow:   { flexDirection: 'row' as const, marginBottom: 18, alignItems: 'flex-end' as const },
+  aubeRow:      { justifyContent: 'flex-start' as const },
+  userRow:      { justifyContent: 'flex-end' as const },
   msgAvatarWrap: {
-    width: 52, height: 52, borderRadius: 26,
-    overflow: 'hidden', marginHorizontal: 6,
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.5)',
+    width: 52, height: 52, borderRadius: 26, overflow: 'hidden' as const,
+    marginHorizontal: 6, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.5)',
     elevation: 4, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
   },
-  msgAvatar: { width: '100%', height: '100%' },
-  userAvatarFallback: { backgroundColor: 'rgba(26,35,126,0.6)', justifyContent: 'center', alignItems: 'center' },
-  bubbleWrap:     { maxWidth: '72%' },
-  aubeBubbleWrap: {},
-  userBubbleWrap: {},
-  aubeBubbleRadius: { borderRadius: 24, borderBottomLeftRadius: 4 },
-  userBubbleRadius: { borderRadius: 24, borderBottomRightRadius: 4 },
-  messageText:    { fontSize: 17, color: 'white', lineHeight: 25, letterSpacing: 0.2, padding: 16 },
-  messageFooter:  { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, gap: 5, marginTop: -4 },
-  timeText:       { fontSize: 11, color: 'rgba(255,255,255,0.7)' },
+  msgAvatar:          { width: '100%' as any, height: '100%' as any },
+  userAvatarFallback: { backgroundColor: 'rgba(26,35,126,0.6)', justifyContent: 'center' as const, alignItems: 'center' as const },
+  bubbleWrap:         { maxWidth: '72%' as any },
+  aubeBubbleWrap:     {},
+  userBubbleWrap:     {},
+  aubeBubbleRadius:   { borderRadius: 24, borderBottomLeftRadius: 4 },
+  userBubbleRadius:   { borderRadius: 24, borderBottomRightRadius: 4 },
+  messageText:        { fontSize: 17, color: 'white', lineHeight: 25, letterSpacing: 0.2, padding: 16 },
+  messageFooter:      { flexDirection: 'row' as const, justifyContent: 'flex-end' as const, alignItems: 'center' as const, paddingHorizontal: 16, paddingBottom: 10, gap: 5, marginTop: -4 },
+  timeText:           { fontSize: 11, color: 'rgba(255,255,255,0.7)' },
 
   // ── Input ──
   inputBarWrap: { paddingHorizontal: 14, paddingVertical: 10 },
+  inputRow:     { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10 },
   inputGlass: {
-    borderRadius: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 6,
-    elevation: 6,
-    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
+    flex: 1, borderRadius: 50,
+    elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
   },
   textInput: {
-    flex: 1,
-    fontSize: 17,
-    color: 'white',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    minHeight: 44,
+    flex: 1, fontSize: 17, color: 'white',
+    paddingHorizontal: 18, paddingVertical: 12, minHeight: 48,
   },
   sendBtn: {
-    width: 44, height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 2,
+    width: 50, height: 50, borderRadius: 25, overflow: 'hidden' as const,
+    elevation: 6, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
+  },
+  sendBtnGlass: {
+    borderRadius: 25, width: 50, height: 50,
+    justifyContent: 'center' as const, alignItems: 'center' as const,
   },
   sendBtnDisabled: { opacity: 0.35 },
-
-  // ── Input bar (old - kept for compat) ──
-  inputBar:   { paddingHorizontal: 14, paddingVertical: 10, backgroundColor: 'transparent' },
-  inputInner: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sendBtnBlur: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
