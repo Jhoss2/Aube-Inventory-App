@@ -40,6 +40,45 @@ export default function SettingsScreen() {
     setTimeout(function() { setGeminiSaved(false); }, 3000);
   };
 
+  const [geminiStatus, setGeminiStatus] = useState('');
+  const [testingGemini, setTestingGemini] = useState(false);
+
+  const testerConnexionGemini = async () => {
+    if (!geminiKey.trim()) {
+      Alert.alert('Erreur', 'Entrez d\'abord une clé API.');
+      return;
+    }
+    setTestingGemini(true);
+    setGeminiStatus('Test en cours...');
+    try {
+      var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + geminiKey.trim();
+      var response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: 'Dis juste: OK' }] }],
+          generationConfig: { maxOutputTokens: 10 },
+        }),
+      });
+      var data = await response.json();
+      if (!response.ok) {
+        var errMsg = (data && data.error && data.error.message) || ('HTTP ' + response.status);
+        setGeminiStatus('❌ Erreur : ' + errMsg);
+      } else {
+        var txt = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+        if (txt) {
+          setGeminiStatus('✅ Connexion OK ! Réponse : ' + txt.trim());
+          await setGeminiApiKey(geminiKey.trim());
+        } else {
+          setGeminiStatus('⚠️ Réponse vide. Clé peut-être invalide.');
+        }
+      }
+    } catch (e: any) {
+      setGeminiStatus('❌ Pas de réseau ou URL invalide : ' + (e.message || e));
+    }
+    setTestingGemini(false);
+  };
+
   const [openSections, setOpenSections] = useState({
     security: true,
     general: false,
@@ -245,7 +284,7 @@ export default function SettingsScreen() {
                 onChangeText={setGeminiKey}
                 placeholder="Collez votre clé API ici..."
                 placeholderTextColor="#aaa"
-                secureTextEntry={true}
+                secureTextEntry={false}
                 style={[styles.keyInput, styles.boldSerif]}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -257,8 +296,24 @@ export default function SettingsScreen() {
                 <Feather name={geminiSaved ? "check" : "save"} size={20} color="white" />
               </TouchableOpacity>
             </View>
-            <Text style={[styles.boldSerif, { fontSize: 11, color: '#888' }]}>
-              La clé est stockée localement sur l'appareil. Elle n'est jamais partagée.
+            <TouchableOpacity
+              onPress={testerConnexionGemini}
+              disabled={testingGemini}
+              style={[styles.testBtn, testingGemini && { opacity: 0.5 }]}
+            >
+              <Text style={[styles.boldSerif, { color: 'white', fontSize: 14 }]}>
+                {testingGemini ? '⏳ Test en cours...' : '🔌 Tester la connexion Gemini'}
+              </Text>
+            </TouchableOpacity>
+            {geminiStatus !== '' && (
+              <View style={styles.statusBox}>
+                <Text style={[styles.boldSerif, { fontSize: 13, color: geminiStatus.startsWith('✅') ? '#059669' : geminiStatus.startsWith('⚠️') ? '#d97706' : '#dc2626' }]}>
+                  {geminiStatus}
+                </Text>
+              </View>
+            )}
+            <Text style={[styles.boldSerif, { fontSize: 11, color: '#888', marginTop: 8 }]}>
+              La clé est stockée localement. Elle n'est jamais partagée.
             </Text>
           </View>
         )}
@@ -332,5 +387,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveKeyBtnOk: { backgroundColor: '#059669' },
+  testBtn: {
+    backgroundColor: '#1D3583',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  statusBox: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
 });
-              
+          
