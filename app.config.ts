@@ -1,6 +1,7 @@
-import type { ExpoConfig } from "expo/config";
+import type { ExpoConfig, ConfigContext } from "expo/config";
 
-const config: ExpoConfig = {
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
   name: "U-AUBEN INVENTORY APP",
   slug: "uaubentracker",
   version: "1.0.1",
@@ -20,7 +21,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: "com.uauben.tracker",
-    versionCode: 1,
+    versionCode: 2,
     icon: "./assets/icon.png",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptative-icon.png",
@@ -30,7 +31,10 @@ const config: ExpoConfig = {
       "android.permission.INTERNET",
       "android.permission.READ_EXTERNAL_STORAGE",
       "android.permission.WRITE_EXTERNAL_STORAGE",
-      "android.permission.CAMERA"
+      "android.permission.CAMERA",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.VIBRATE",
+      "android.permission.POST_NOTIFICATIONS"
     ]
   },
   web: {
@@ -65,6 +69,4 @@ const config: ExpoConfig = {
   extra: {
     geminiApiKey: process.env.GEMINI_API_KEY || "",
   },
-};
-
-export default config;
+});
