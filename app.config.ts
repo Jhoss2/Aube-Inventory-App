@@ -21,7 +21,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.uauben.tracker",
-    versionCode: 3,
+    versionCode: 4,
     icon: "./assets/icon.png",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptative-icon.png",
@@ -51,6 +51,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-document-picker",
     "expo-av",
     "expo-notifications",
+    "llama.rn",
     [
       "expo-build-properties",
       {
@@ -59,7 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           targetSdkVersion: 35,
           buildToolsVersion: "35.0.0",
           kotlinVersion: "1.9.25",
-          newArchEnabled: false,
+          newArchEnabled: true,
           extraProguardRules: "-keep class com.rnllama.** { *; }"
         }
       }
