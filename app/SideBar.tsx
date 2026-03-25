@@ -347,7 +347,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
           <View style={styles.drawer}>
             <View style={styles.drawerHeader}>
               <Text style={[styles.drawerTitle, SBI]}>
-                {'U-AUBEN\nSUPPLIES\nTRACKER'}
+                {'U-AUBEN\nINVENTORY\nAPP'}
               </Text>
               <TouchableOpacity onPress={onClose}>
                 <Feather name="x" size={32} color="white" />
@@ -379,7 +379,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
             </ScrollView>
 
             <View style={styles.drawerFooter}>
-              <Text style={[styles.versionText, SBI]}>{'· Version 1.1.1 ·'}</Text>
+              <Text style={[styles.versionText, SBI]}>{'· Version 1.0 ·'}</Text>
               <View style={styles.logoOuter}>
                 <View style={styles.logoInner}>
                   {menuLogo
