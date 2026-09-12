@@ -83,7 +83,7 @@ export default function RoomContentsScreen() {
             {/* IMAGE */}
             <View style={styles.imageBox}>
               {item.image
-                ? <Image source={{ uri: item.image }} style={styles.materialImg} />
+                ? <Image source={{ uri: item.image }} style={styles.materialImg} resizeMode="contain" />
                 : <View style={[styles.materialImg, styles.imagePlaceholder]}>
                     <Text style={[styles.placeholderLetter, styles.SBI]}>
                       {item.nom ? item.nom[0].toUpperCase() : '?'}
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
 
   imageBox: { marginBottom: 15 },
-  materialImg: { width: '100%', height: 200, borderRadius: 25, backgroundColor: '#F1F5F9' },
+  materialImg: { width: '100%', aspectRatio: 1, borderRadius: 25, backgroundColor: '#F1F5F9' },
   imagePlaceholder: { backgroundColor: '#8B0000', alignItems: 'center', justifyContent: 'center' },
   placeholderLetter: { color: 'white', fontSize: 56 },
 
@@ -225,4 +225,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
   },
 });
-                        
+
+          
