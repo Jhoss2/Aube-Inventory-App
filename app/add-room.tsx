@@ -18,6 +18,7 @@ export default function AddRoomScreen() {
   const [capacity, setCapacity] = useState('');
   const [area, setArea] = useState('');
   const [image, setImage] = useState<string | null>(null);
+  const [niveau, setNiveau] = useState(level || '');
 
   const formatLabel = (txt: string) => {
     if (!txt) return "";
@@ -43,7 +44,7 @@ export default function AddRoomScreen() {
       type: type,
       name: nom,
       location: emplacement,
-      level: level,
+      level: niveau,
       capacity, surface: area, image,
     });
     router.back();
@@ -80,8 +81,8 @@ export default function AddRoomScreen() {
           </View>
 
           <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Niveau")}</Text>
-          <View style={[styles.inputWrapper, styles.blackGlow, { backgroundColor: '#F1F5F9' }]}>
-            <TextInput style={[styles.input, styles.boldSerifItalic]} value={level} editable={false} />
+          <View style={[styles.inputWrapper, styles.blackGlow]}>
+            <TextInput style={[styles.input, styles.boldSerifItalic]} value={niveau} onChangeText={setNiveau} placeholder="Ex: Niveau 1" />
           </View>
 
           <View style={styles.row}>
