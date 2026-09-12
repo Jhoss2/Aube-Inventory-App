@@ -29,8 +29,8 @@ function formatName(name: string) {
 
 // Niveaux connus dans l'ordre d'affichage
 const NIVEAUX_ORDRE = [
-  'Niveau 0', 'Niveau 1', 'Niveau 2', 'Niveau 3',
-  'Niveau 4', 'Niveau 5', 'Rez-de-chaussée',
+  'Rez-de-chaussée', 'Niveau 0', 'Niveau 1', 'Niveau 2', 'Niveau 3',
+  'Niveau 4', 'Niveau 5',
 ];
 
 function sortNiveaux(niveaux: string[]) {
@@ -405,3 +405,4 @@ const styles = StyleSheet.create({
   cancelBtn:     { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderColor: '#8B0000' },
   saveBtn:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#8B0000', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
 });
+         
