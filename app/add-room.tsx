@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { 
   View, Text, TouchableOpacity, TextInput, ScrollView, 
-  StyleSheet, StatusBar, Alert, Image, Platform 
+  StyleSheet, StatusBar, Alert, Image, Platform, Modal 
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Camera } from 'lucide-react-native';
+import { ChevronLeft, Camera, ChevronDown, X, Check } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppContext } from '@/lib/app-context';
+
+// Niveaux disponibles, dans l'ordre hiérarchique attendu par l'écran Bloc Details
+const NIVEAUX = ['Rez-de-chaussée', 'Niveau 1', 'Niveau 2', 'Niveau 3', 'Niveau 4', 'Niveau 5'];
 
 export default function AddRoomScreen() {
   const router = useRouter();
@@ -18,7 +21,8 @@ export default function AddRoomScreen() {
   const [capacity, setCapacity] = useState('');
   const [area, setArea] = useState('');
   const [image, setImage] = useState<string | null>(null);
-  const [niveau, setNiveau] = useState(level || '');
+  const [niveau, setNiveau] = useState(NIVEAUX.includes(level) ? level : NIVEAUX[0]);
+  const [niveauPickerVisible, setNiveauPickerVisible] = useState(false);
 
   const formatLabel = (txt: string) => {
     if (!txt) return "";
@@ -81,9 +85,14 @@ export default function AddRoomScreen() {
           </View>
 
           <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Niveau")}</Text>
-          <View style={[styles.inputWrapper, styles.blackGlow]}>
-            <TextInput style={[styles.input, styles.boldSerifItalic]} value={niveau} onChangeText={setNiveau} placeholder="Ex: Niveau 1" />
-          </View>
+          <TouchableOpacity
+            style={[styles.inputWrapper, styles.blackGlow, styles.selectRow]}
+            onPress={() => setNiveauPickerVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.input, styles.boldSerifItalic]}>{niveau}</Text>
+            <ChevronDown size={20} color="#1A237E" style={styles.selectIcon} />
+          </TouchableOpacity>
 
           <View style={styles.row}>
             <View style={styles.flex1}>
@@ -101,6 +110,36 @@ export default function AddRoomScreen() {
           <Text style={[styles.saveBtnText, styles.boldSerifItalic]}>{formatLabel("Enregistrer la salle")}</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal
+        visible={niveauPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNiveauPickerVisible(false)}
+      >
+        <View style={styles.pickerOverlay}>
+          <View style={[styles.pickerBox, styles.blackGlow]}>
+            <View style={styles.pickerHeader}>
+              <Text style={[styles.pickerTitle, styles.boldSerifItalic]}>{formatLabel("Choisir le niveau")}</Text>
+              <TouchableOpacity onPress={() => setNiveauPickerVisible(false)}>
+                <X size={22} color="#8B0000" />
+              </TouchableOpacity>
+            </View>
+            {NIVEAUX.map((n) => (
+              <TouchableOpacity
+                key={n}
+                style={[styles.pickerOption, n === niveau && styles.pickerOptionActive]}
+                onPress={() => { setNiveau(n); setNiveauPickerVisible(false); }}
+              >
+                <Text style={[styles.pickerOptionText, styles.boldSerifItalic, n === niveau && styles.pickerOptionTextActive]}>
+                  {n}
+                </Text>
+                {n === niveau && <Check size={18} color="#8B0000" />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -123,5 +162,16 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row' },
   flex1: { flex: 1 },
   saveBtn: { backgroundColor: '#1A237E', paddingVertical: 22, borderRadius: 50, marginTop: 35, alignItems: 'center' },
-  saveBtnText: { color: 'white', fontSize: 16 }
+  saveBtnText: { color: 'white', fontSize: 16 },
+
+  selectRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  selectIcon: { marginRight: 16 },
+  pickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  pickerBox: { backgroundColor: 'white', borderRadius: 24, padding: 20, width: '100%', maxWidth: 480 },
+  pickerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  pickerTitle: { fontSize: 16, color: '#8B0000' },
+  pickerOption: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 12, borderRadius: 14, marginBottom: 6 },
+  pickerOptionActive: { backgroundColor: '#FFE4E8' },
+  pickerOptionText: { fontSize: 15, color: '#374151' },
+  pickerOptionTextActive: { color: '#8B0000' },
 });
