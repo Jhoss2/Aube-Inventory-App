@@ -74,7 +74,7 @@ export default function BlocDetailsScreen() {
   const blocData   = (appData && appData.blocs && appData.blocs[blockId as string]) || {};
   const aerialImg  = settings['bloc' + blockId + '_aerial'] || blocData.mainImage ||
     'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80';
-  const bgImage    = settings['bloc' + blockId + '_bg'] || null;
+  const bgImage    = settings['blocDetailsBg'] || null;
 
   // Toutes les salles de ce bloc, groupées par niveau
   const sallesParNiveau = useMemo(() => {
@@ -405,4 +405,3 @@ const styles = StyleSheet.create({
   cancelBtn:     { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderColor: '#8B0000' },
   saveBtn:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#8B0000', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
 });
-         
