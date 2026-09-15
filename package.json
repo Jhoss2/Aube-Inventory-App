@@ -13,7 +13,6 @@
   "dependencies": {
     "expo": "~52.0.25",
     "expo-router": "~4.0.16",
-    "query-string": "^9.1.1",
     "expo-sqlite": "~15.1.4",
     "expo-font": "~13.0.3",
     "expo-asset": "~11.0.1",
