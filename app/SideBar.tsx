@@ -8,6 +8,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import { useAppContext } from '@/lib/app-context';
 
 const SBI = {
@@ -31,123 +32,38 @@ function fmtDate(iso: string | null | undefined): string {
   } catch { return fmt(iso); }
 }
 
-// ── Bouton orange 3D bombé (en-têtes) ────────────────────────────────────────
-function orangeBtn(label: string, width: string): string {
-  return (
-    '<th style="' +
-    'width:' + width + ';' +
-    'padding:6px 4px;' +
-    'border:none;' +
-    'background:transparent;' +
-    '">' +
-    '<div style="' +
-    'background:linear-gradient(180deg,#ff9a3c 0%,#e85d04 40%,#c44b02 70%,#ff7a1a 100%);' +
-    'border-radius:50px;' +
-    'padding:8px 6px;' +
-    'text-align:center;' +
-    'font-family:Georgia,"Times New Roman",serif;' +
-    'font-size:11px;font-weight:900;font-style:italic;' +
-    'color:white;' +
-    'text-shadow:0 1px 3px rgba(0,0,0,0.6);' +
-    'box-shadow:' +
-    '0 4px 0 #8B2500,' +
-    '0 6px 12px rgba(0,0,0,0.5),' +
-    'inset 0 1px 0 rgba(255,220,150,0.6),' +
-    'inset 0 -2px 4px rgba(0,0,0,0.3);' +
-    'border:1px solid rgba(255,160,60,0.4);' +
-    '">' + label + '</div>' +
-    '</th>'
-  );
+// ── Conversion d'une image (locale ou distante) en data URI base64 ────────────
+// Garantit un rendu réel de l'image dans le PDF, y compris hors-ligne : le
+// fichier est intégré directement dans le HTML plutôt que simplement référencé.
+async function toDataUri(uri: string | null | undefined): Promise<string> {
+  if (!uri) return '';
+  try {
+    if (uri.indexOf('data:') === 0) return uri;
+
+    var localUri = uri;
+    if (uri.indexOf('http://') === 0 || uri.indexOf('https://') === 0) {
+      var dest = FileSystem.cacheDirectory + 'pdfimg_' + Date.now() + '_' +
+        Math.floor(Math.random() * 100000) + '.jpg';
+      var dl = await FileSystem.downloadAsync(uri, dest);
+      localUri = dl.uri;
+    }
+
+    var base64 = await FileSystem.readAsStringAsync(localUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    var ext = (localUri.split('.').pop() || 'jpg').toLowerCase().split('?')[0];
+    var mime = ext === 'png' ? 'image/png'
+      : ext === 'webp' ? 'image/webp'
+      : ext === 'gif' ? 'image/gif'
+      : 'image/jpeg';
+    return 'data:' + mime + ';base64,' + base64;
+  } catch (e) {
+    return '';
+  }
 }
 
-// ── Cellule glass blanche nacrée ──────────────────────────────────────────────
-function glassCell(value: string, width: string, align?: string): string {
-  var textAlign = align || 'center';
-  var display = value ? value : '&nbsp;';
-  return (
-    '<td style="' +
-    'width:' + width + ';' +
-    'padding:4px;' +
-    'border:none;' +
-    'background:transparent;' +
-    '">' +
-    '<div style="' +
-    'background:linear-gradient(135deg,' +
-    'rgba(255,255,255,0.95) 0%,' +
-    'rgba(220,235,255,0.85) 30%,' +
-    'rgba(200,220,255,0.75) 60%,' +
-    'rgba(230,240,255,0.90) 100%);' +
-    'border-radius:50px;' +
-    'padding:7px 10px;' +
-    'text-align:' + textAlign + ';' +
-    'font-family:Georgia,"Times New Roman",serif;' +
-    'font-size:10px;font-weight:900;font-style:italic;' +
-    'color:#1a1a3a;' +
-    'box-shadow:' +
-    'inset 0 1px 0 rgba(255,255,255,1),' +
-    'inset 0 -1px 0 rgba(180,200,255,0.5),' +
-    '0 2px 8px rgba(100,130,200,0.25),' +
-    '0 1px 0 rgba(255,255,255,0.8);' +
-    'border:1px solid rgba(200,215,255,0.6);' +
-    'min-height:28px;' +
-    'display:flex;align-items:center;justify-content:center;' +
-    '">' + display + '</div>' +
-    '</td>'
-  );
-}
-
-// ── Grand bloc glass (commentaire / nom salle) ────────────────────────────────
-function glassBigBlock(title: string, content: string, titleColor: string): string {
-  return (
-    '<div style="flex:1;display:flex;flex-direction:column;align-items:center;">' +
-
-    // Titre bouton orange
-    '<div style="' +
-    'background:linear-gradient(180deg,#ff9a3c 0%,#e85d04 40%,#c44b02 70%,#ff7a1a 100%);' +
-    'border-radius:50px;padding:8px 24px;margin-bottom:10px;' +
-    'font-family:Georgia,"Times New Roman",serif;' +
-    'font-size:13px;font-weight:900;font-style:italic;' +
-    'color:white;text-shadow:0 1px 3px rgba(0,0,0,0.6);' +
-    'box-shadow:0 4px 0 #8B2500,0 6px 12px rgba(0,0,0,0.5),' +
-    'inset 0 1px 0 rgba(255,220,150,0.6),inset 0 -2px 4px rgba(0,0,0,0.3);' +
-    'border:1px solid rgba(255,160,60,0.4);' +
-    '">' + title + '</div>' +
-
-    // Bloc glass
-    '<div style="' +
-    'width:100%;min-height:110px;' +
-    'background:linear-gradient(135deg,' +
-    'rgba(255,255,255,0.92) 0%,' +
-    'rgba(210,228,255,0.75) 40%,' +
-    'rgba(190,215,255,0.65) 70%,' +
-    'rgba(225,238,255,0.85) 100%);' +
-    'border-radius:22px;' +
-    'padding:16px 20px;' +
-    'box-shadow:' +
-    'inset 0 2px 0 rgba(255,255,255,1),' +
-    'inset 0 -2px 0 rgba(180,200,255,0.4),' +
-    'inset 2px 0 0 rgba(255,255,255,0.7),' +
-    '0 6px 20px rgba(80,120,200,0.3),' +
-    '0 1px 0 rgba(255,255,255,0.9);' +
-    'border:1.5px solid rgba(200,218,255,0.7);' +
-    'display:flex;align-items:center;justify-content:center;' +
-    '">' +
-    '<div style="' +
-    'font-family:Georgia,"Times New Roman",serif;' +
-    'font-size:15px;font-weight:900;font-style:italic;' +
-    'color:#1a1a3a;text-align:center;' +
-    '">' + (content || '&nbsp;') + '</div>' +
-    '</div>' +
-    '</div>'
-  );
-}
-
-// ── Générateur HTML principal ─────────────────────────────────────────────────
-function buildHtml(room: any, materiels: any[]): string {
-  var items = materiels.filter(function(m: any) {
-    return String(m.roomId) === String(room.id);
-  });
-
+// ── Générateur HTML principal — A4 portrait, fidèle à la maquette fournie ─────
+function buildHtml(room: any, items: any[], logoData: string): string {
   var roomName = room.name
     ? room.name.charAt(0).toUpperCase() + room.name.slice(1).toLowerCase()
     : fmt(room.id);
@@ -156,131 +72,72 @@ function buildHtml(room: any, materiels: any[]): string {
     day: '2-digit', month: 'long', year: 'numeric',
   });
 
-  // Colonnes et leur largeur
-  var cols = [
-    { label: 'Cat\u00e9gorie', w: '12%' },
-    { label: 'Nom',            w: '12%' },
-    { label: 'Marque',         w: '9%'  },
-    { label: 'Couleur',        w: '7%'  },
-    { label: 'Quantit\u00e9',  w: '7%'  },
-    { label: 'Etat',           w: '8%'  },
-    { label: 'D.A',            w: '12%' },
-    { label: 'D.D.V',          w: '12%' },
-    { label: 'D.R',            w: '12%' },
-    { label: 'Image',          w: '9%'  },
-  ];
+  var logoHtml = logoData
+    ? '<img class="logo" src="' + logoData + '" />'
+    : '';
 
-  // En-têtes
-  var headerCells = cols.map(function(c) { return orangeBtn(c.label, c.w); }).join('');
-
-  // Lignes de données
-  var dataRows = '';
+  var cardsHtml = '';
   if (items.length === 0) {
-    dataRows = (
-      '<tr><td colspan="10" style="padding:20px;text-align:center;' +
-      'font-family:Georgia,serif;font-style:italic;color:rgba(255,255,255,0.6);font-size:13px;">' +
-      'Aucun mat\u00e9riel enregistr\u00e9 pour cette salle.' +
-      '</td></tr>'
+    cardsHtml = (
+      '<div class="empty">Aucun mat\u00e9riel enregistr\u00e9 pour cette salle.</div>'
     );
   } else {
-    dataRows = items.map(function(item: any) {
-      var imgCell = '';
-      if (item.image) {
-        imgCell = (
-          '<td style="width:11%;padding:4px;border:none;background:transparent;">' +
-          '<div style="' +
-          'background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(220,235,255,0.85));' +
-          'border-radius:16px;padding:4px;' +
-          'box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 2px 8px rgba(100,130,200,0.25);' +
-          'border:1px solid rgba(200,215,255,0.6);' +
-          '">' +
-          '<img src="' + item.image + '" style="width:100%;height:36px;object-fit:cover;border-radius:12px;display:block;"/>' +
-          '</div>' +
-          '</td>'
-        );
-      } else {
-        imgCell = glassCell('\u2014', '11%');
-      }
+    cardsHtml = '<div class="grid">' + items.map(function(item: any) {
+      var imgHtml = item.image
+        ? '<img src="' + item.image + '" />'
+        : '<div class="noimg">' + (item.nom ? item.nom.charAt(0).toUpperCase() : '?') + '</div>';
 
       return (
-        '<tr>' +
-        glassCell(fmt(item.category),              '12%') +
-        glassCell(fmt(item.nom),                   '13%') +
-        glassCell(fmt(item.marque),                '10%') +
-        glassCell(fmt(item.couleur),               '8%')  +
-        glassCell(fmt(item.quantite),              '7%')  +
-        glassCell(fmt(item.etat),                  '9%')  +
-        glassCell(fmtDate(item.dateAcquisition),   '10%') +
-        glassCell(fmtDate(item.dateVerification),  '10%') +
-        glassCell(fmtDate(item.dateRenouvellement),'10%') +
-        imgCell +
-        '</tr>'
+        '<div class="card">' +
+        imgHtml +
+        '<div class="fields">' +
+        '<p><b>Cat\u00e9gorie : </b><span>' + fmt(item.category) + '</span></p>' +
+        '<p><b>Nom : </b><span>' + fmt(item.nom) + '</span></p>' +
+        '<p><b>Marque : </b><span>' + fmt(item.marque) + '</span></p>' +
+        '<p><b>Couleur : </b><span>' + fmt(item.couleur) + '</span></p>' +
+        '<p><b>Quantit\u00e9 : </b><span>' + fmt(item.quantite) + '</span></p>' +
+        '<p><b>\u00c9tat : </b><span>' + fmt(item.etat) + '</span></p>' +
+        '<p><b>D.A : </b><span>' + fmtDate(item.dateAcquisition) + '</span></p>' +
+        '<p><b>D.D.V : </b><span>' + fmtDate(item.dateVerification) + '</span></p>' +
+        '<p><b>D.R.C : </b><span>' + fmtDate(item.dateRenouvellement) + '</span></p>' +
+        '</div>' +
+        '</div>'
       );
-    }).join('');
+    }).join('') + '</div>';
   }
-
-  // Titre principal
-  var titleBtn = (
-    '<div style="' +
-    'display:inline-block;' +
-    'background:linear-gradient(180deg,#ff9a3c 0%,#e85d04 40%,#c44b02 70%,#ff7a1a 100%);' +
-    'border-radius:50px;padding:12px 40px;' +
-    'font-family:Georgia,"Times New Roman",serif;' +
-    'font-size:18px;font-weight:900;font-style:italic;' +
-    'color:white;text-shadow:0 1px 4px rgba(0,0,0,0.6);' +
-    'box-shadow:0 5px 0 #8B2500,0 8px 16px rgba(0,0,0,0.5),' +
-    'inset 0 1px 0 rgba(255,220,150,0.6),inset 0 -2px 4px rgba(0,0,0,0.3);' +
-    'border:1px solid rgba(255,160,60,0.4);' +
-    'margin-bottom:22px;' +
-    '">Liste du mat\u00e9riel</div>'
-  );
-
-  // Blocs bas
-  var bottomBlocks = (
-    '<div style="display:flex;gap:24px;margin-top:24px;align-items:flex-start;">' +
-    glassBigBlock('Commentaire', '', '#ff7a1a') +
-    glassBigBlock('Nom de la salle', roomName, '#ff7a1a') +
-    '</div>'
-  );
-
-  // Footer
-  var footer = (
-    '<div style="text-align:center;margin-top:18px;' +
-    'font-family:Georgia,serif;font-style:italic;font-size:10px;' +
-    'color:rgba(255,255,255,0.45);letter-spacing:1px;">' +
-    '\u00b7 U-Auben Supplies Tracker \u00b7 Version 1.1.1 \u00b7 ' + today + ' \u00b7' +
-    '</div>'
-  );
 
   return (
     '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>' +
     '<style>' +
-    '@page{size:A4 landscape;margin:16px;}' +
+    '@page{size:A4 portrait;margin:26px 34px;}' +
     '*{box-sizing:border-box;margin:0;padding:0;}' +
-    'body{' +
-    'background:#0a0f2e;' +
-    'min-height:100vh;padding:20px 24px;' +
-    'font-family:Georgia,"Times New Roman",serif;' +
-    '}' +
-    'table{width:100%;border-collapse:separate;border-spacing:0 5px;}' +
-    'thead tr{border:none;}' +
-    'tbody tr{border:none;}' +
+    'body{background:#ffffff;color:#1a1a1a;font-family:Arial,Helvetica,sans-serif;}' +
+
+    '.header{display:flex;align-items:center;gap:18px;margin-bottom:30px;}' +
+    '.logo{width:82px;height:82px;object-fit:contain;flex-shrink:0;}' +
+    '.header-text h1{font-size:22px;color:#8B0000;font-weight:800;margin-bottom:5px;}' +
+    '.header-text h2{font-size:14px;color:#374151;font-weight:700;}' +
+
+    '.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px 16px;}' +
+    '.card{display:flex;gap:9px;align-items:flex-start;}' +
+    '.card img,.card .noimg{width:66px;height:66px;border-radius:14px;object-fit:cover;flex-shrink:0;}' +
+    '.card .noimg{background:linear-gradient(160deg,#1A237E,#3b5bdb);color:white;' +
+    'display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;}' +
+
+    '.fields p{font-size:8.5px;line-height:1.55;color:#111827;font-weight:700;}' +
+    '.fields span{color:#1A237E;font-weight:700;}' +
+
+    '.empty{text-align:center;color:#6b7280;font-style:italic;margin-top:80px;font-size:13px;}' +
+    '.footer{margin-top:40px;text-align:right;font-style:italic;color:#8B0000;font-size:12px;font-weight:600;}' +
     '</style></head><body>' +
 
-    // Titre
-    '<div style="text-align:center;">' + titleBtn + '</div>' +
+    '<div class="header">' + logoHtml +
+    '<div class="header-text"><h1>' + roomName + '</h1><h2>Contenu de la salle</h2></div>' +
+    '</div>' +
 
-    // Tableau
-    '<table>' +
-    '<thead><tr>' + headerCells + '</tr></thead>' +
-    '<tbody>' + dataRows + '</tbody>' +
-    '</table>' +
+    cardsHtml +
 
-    // Bas de page
-    bottomBlocks +
-
-    // Footer
-    footer +
+    '<div class="footer">' + today + '</div>' +
 
     '</body></html>'
   );
@@ -311,7 +168,18 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
     setShowRoomPicker(false);
     setIsGenerating(true);
     try {
-      const html = buildHtml(room, (appData && appData.materiels) || []);
+      const rawItems = ((appData && appData.materiels) || []).filter(
+        (m: any) => String(m.roomId) === String(room.id)
+      );
+
+      // Encodage en base64 : garantit que le logo et les images du matériel
+      // s'affichent réellement dans le PDF, y compris sans connexion.
+      const itemsWithData = await Promise.all(
+        rawItems.map(async (m: any) => Object.assign({}, m, { image: await toDataUri(m.image) }))
+      );
+      const logoData = await toDataUri(settings.pdfLogo);
+
+      const html = buildHtml(room, itemsWithData, logoData);
       const { uri } = await Print.printToFileAsync({ html, base64: false });
       setIsGenerating(false);
       if (await Sharing.isAvailableAsync()) {
@@ -547,3 +415,4 @@ const styles = StyleSheet.create({
   },
   genText: { color: '#ff9a3c', fontSize: 16 },
 });
+                            
