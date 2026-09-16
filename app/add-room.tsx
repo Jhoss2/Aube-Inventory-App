@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   View, Text, TouchableOpacity, TextInput, ScrollView, 
-  StyleSheet, StatusBar, Alert, Image, Platform, Modal 
+  StyleSheet, StatusBar, Alert, Image, Platform, Modal, ImageBackground 
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Camera, ChevronDown, X, Check } from 'lucide-react-native';
@@ -14,7 +14,8 @@ const NIVEAUX = ['Rez-de-chaussée', 'Niveau 1', 'Niveau 2', 'Niveau 3', 'Niveau
 export default function AddRoomScreen() {
   const router = useRouter();
   const { blockId, type, level } = useLocalSearchParams<{ blockId: string, type: string, level: string }>();
-  const { addSalle } = useAppContext();
+  const { appData, addSalle } = useAppContext() as any;
+  const addRoomBg = (appData && appData.settings && appData.settings.addRoomBg) || null;
   
   const [nom, setNom] = useState('');
   const [emplacement, setEmplacement] = useState('');
@@ -57,6 +58,9 @@ export default function AddRoomScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
+      {addRoomBg && (
+        <ImageBackground source={{ uri: addRoomBg }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      )}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.redHeaderPill, styles.blackGlow]}>
           <TouchableOpacity onPress={() => router.back()}><ChevronLeft size={28} color="white" /></TouchableOpacity>
@@ -175,3 +179,4 @@ const styles = StyleSheet.create({
   pickerOptionText: { fontSize: 15, color: '#374151' },
   pickerOptionTextActive: { color: '#8B0000' },
 });
+          
