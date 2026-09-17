@@ -109,26 +109,26 @@ function buildHtml(room: any, items: any[], logoData: string): string {
   return (
     '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>' +
     '<style>' +
-    '@page{size:A4 portrait;margin:26px 34px;}' +
+    '@page{size:A4 portrait;margin-top:1in;margin-bottom:1in;margin-left:34px;margin-right:34px;}' +
     '*{box-sizing:border-box;margin:0;padding:0;}' +
-    'body{background:#ffffff;color:#1a1a1a;font-family:Arial,Helvetica,sans-serif;}' +
+    'body{background:#ffffff;color:#1a1a1a;font-family:Arial,Helvetica,sans-serif;position:relative;min-height:100%;}' +
 
-    '.header{display:flex;align-items:center;gap:18px;margin-bottom:30px;}' +
+    '.header{display:flex;align-items:center;gap:18px;margin-bottom:32px;}' +
     '.logo{width:82px;height:82px;object-fit:contain;flex-shrink:0;}' +
-    '.header-text h1{font-size:22px;color:#8B0000;font-weight:800;margin-bottom:5px;}' +
-    '.header-text h2{font-size:14px;color:#374151;font-weight:700;}' +
+    '.header-text h1{font-size:24px;color:#8B0000;font-weight:800;margin-bottom:6px;}' +
+    '.header-text h2{font-size:16px;color:#374151;font-weight:700;}' +
 
-    '.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px 16px;}' +
-    '.card{display:flex;gap:9px;align-items:flex-start;}' +
-    '.card img,.card .noimg{width:66px;height:66px;border-radius:14px;object-fit:cover;flex-shrink:0;}' +
+    '.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px 16px;}' +
+    '.card{display:flex;gap:10px;align-items:flex-start;}' +
+    '.card img,.card .noimg{width:78px;height:78px;border-radius:16px;object-fit:cover;flex-shrink:0;}' +
     '.card .noimg{background:linear-gradient(160deg,#1A237E,#3b5bdb);color:white;' +
-    'display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;}' +
+    'display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;}' +
 
-    '.fields p{font-size:8.5px;line-height:1.55;color:#111827;font-weight:700;}' +
+    '.fields p{font-size:10.5px;line-height:1.65;color:#111827;font-weight:700;}' +
     '.fields span{color:#1A237E;font-weight:700;}' +
 
     '.empty{text-align:center;color:#6b7280;font-style:italic;margin-top:80px;font-size:13px;}' +
-    '.footer{margin-top:40px;text-align:right;font-style:italic;color:#8B0000;font-size:12px;font-weight:600;}' +
+    '.footer{position:fixed;bottom:0;right:0;text-align:right;font-style:italic;color:#8B0000;font-size:12px;font-weight:600;}' +
     '</style></head><body>' +
 
     '<div class="header">' + logoHtml +
@@ -181,15 +181,25 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
 
       const html = buildHtml(room, itemsWithData, logoData);
       const { uri } = await Print.printToFileAsync({ html, base64: false });
+
+      // Le fichier lui-même doit porter le nom réel de la salle, pas un nom
+      // généré automatiquement par expo-print.
+      const roomLabel = room.name
+        ? room.name.charAt(0).toUpperCase() + room.name.slice(1).toLowerCase()
+        : ('Salle ' + room.id);
+      const safeName = roomLabel.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'Salle';
+      const namedUri = FileSystem.cacheDirectory + safeName + '.pdf';
+      await FileSystem.copyAsync({ from: uri, to: namedUri });
+
       setIsGenerating(false);
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, {
+        await Sharing.shareAsync(namedUri, {
           mimeType: 'application/pdf',
           dialogTitle: 'Donn\u00e9es \u2014 ' + (room.name || room.id),
           UTI: 'com.adobe.pdf',
         });
       } else {
-        Alert.alert('PDF g\u00e9n\u00e9r\u00e9', 'Fichier enregistr\u00e9 :\n' + uri);
+        Alert.alert('PDF g\u00e9n\u00e9r\u00e9', 'Fichier enregistr\u00e9 :\n' + namedUri);
       }
     } catch (e: any) {
       setIsGenerating(false);
@@ -415,4 +425,3 @@ const styles = StyleSheet.create({
   },
   genText: { color: '#ff9a3c', fontSize: 16 },
 });
-                            
