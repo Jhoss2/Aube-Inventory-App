@@ -70,11 +70,13 @@ export default function AddMaterialScreen() {
     };
     try {
       await addMateriel(newItem);
-      // Redirection automatique vers le profil de la salle
-      router.replace({
-        pathname: '/room-details',
-        params: { roomId, roomName },
-      });
+      // Retour au room-details déjà présent dans la pile : on dépile
+      // "add-material" ET "categories" (2 niveaux) au lieu de remplacer
+      // par une nouvelle instance, qui laissait "categories" coincé dans
+      // la pile — c'est ce qui provoquait le va-et-vient après de
+      // nombreux ajouts successifs.
+      if (router.canGoBack()) router.back();
+      if (router.canGoBack()) router.back();
     } catch (err) {
       Alert.alert('Erreur', 'Sauvegarde impossible');
     }
@@ -258,4 +260,3 @@ const styles = StyleSheet.create({
   saveBtnText:     { color: 'white', fontSize: 16, letterSpacing: 2 },
   glow:            { elevation: 8, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 5 } },
 });
-            
