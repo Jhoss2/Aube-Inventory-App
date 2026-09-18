@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
+import * as DocumentPicker from 'expo-document-picker';
 import { useAppContext } from '@/lib/app-context';
 
 const SBI = {
@@ -147,7 +148,7 @@ function buildHtml(room: any, items: any[], logoData: string): string {
 
 export default function SideBar({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const router = useRouter();
-  const { appData } = useAppContext() as any;
+  const { appData, exportBackup, importBackup } = useAppContext() as any;
 
   const settings         = (appData && appData.settings) || {};
   const menuBg           = settings.menuBg   || null;
@@ -207,6 +208,65 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
     }
   };
 
+  // ── Sauvegarde compl\u00e8te (export) — transfert sans cloud vers un autre t\u00e9l\u00e9phone
+  const handleExportBackup = async () => {
+    setIsGenerating(true);
+    try {
+      const uri = await exportBackup();
+      const dateLabel = new Date().toISOString().slice(0, 10);
+      const namedUri = FileSystem.cacheDirectory + 'AUBEN_Sauvegarde_' + dateLabel + '.json';
+      await FileSystem.copyAsync({ from: uri, to: namedUri });
+      setIsGenerating(false);
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(namedUri, {
+          mimeType: 'application/json',
+          dialogTitle: 'Sauvegarde compl\u00e8te AUBEN',
+        });
+      } else {
+        Alert.alert('Sauvegarde cr\u00e9\u00e9e', 'Fichier enregistr\u00e9 :\n' + namedUri);
+      }
+    } catch (e: any) {
+      setIsGenerating(false);
+      Alert.alert('Erreur', 'Impossible de cr\u00e9er la sauvegarde : ' + e.message);
+    }
+  };
+
+  // ── Restauration d'une sauvegarde (import) — remplace toutes les données actuelles
+  const handleImportBackup = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled) return;
+      const file = result.assets && result.assets[0];
+      if (!file) return;
+
+      Alert.alert(
+        'Restaurer cette sauvegarde ?',
+        'Toutes les donn\u00e9es actuelles de l\u2019application (salles, mat\u00e9riels, notes, images, r\u00e9glages) seront remplac\u00e9es par celles du fichier s\u00e9lectionn\u00e9. Cette action est irr\u00e9versible.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Restaurer', style: 'destructive', onPress: async () => {
+              setIsGenerating(true);
+              try {
+                await importBackup(file.uri);
+                setIsGenerating(false);
+                Alert.alert('Termin\u00e9', 'Vos donn\u00e9es ont \u00e9t\u00e9 restaur\u00e9es avec succ\u00e8s.');
+              } catch (e: any) {
+                setIsGenerating(false);
+                Alert.alert('Erreur', "Impossible d'importer ce fichier : " + e.message);
+              }
+            },
+          },
+        ]
+      );
+    } catch (e: any) {
+      Alert.alert('Erreur', "Impossible de lire le fichier : " + e.message);
+    }
+  };
+
   return (
     <>
       {/* ══ SIDEBAR ══ */}
@@ -253,6 +313,22 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
               >
                 <Feather name="download" size={20} color="white" />
                 <Text style={[styles.dlText, SBI]}>{'· T\u00e9l\u00e9chargement\n  des donn\u00e9es ·'}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.dlBtn}
+                onPress={handleExportBackup}
+              >
+                <Feather name="archive" size={20} color="white" />
+                <Text style={[styles.dlText, SBI]}>{'· Sauvegarde compl\u00e8te\n  (exporter) ·'}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.dlBtn}
+                onPress={handleImportBackup}
+              >
+                <Feather name="file-plus" size={20} color="white" />
+                <Text style={[styles.dlText, SBI]}>{'· Restaurer une\n  sauvegarde ·'}</Text>
               </TouchableOpacity>
             </ScrollView>
 
