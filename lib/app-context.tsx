@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
 import { invaliderCacheDonnees, invaliderCacheEntite } from '@/lib/aube-semantic-cache';
 
 const AppContext = createContext<any>(null);
@@ -130,6 +131,112 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     if (mat && mat.nom) invaliderCacheEntite(mat.nom).catch(function() {});
   };
 
+  // ── SAUVEGARDE / TRANSFERT (sans cloud) ─────────────────────────────────────
+  // Exporte toutes les données ET toutes les images (converties en base64) dans
+  // un seul fichier JSON portable. Ce fichier peut être envoyé par n'importe
+  // quel moyen déjà présent sur le téléphone (Bluetooth, câble, messagerie...)
+  // puis réimporté sur un autre appareil pour tout restaurer à l'identique,
+  // sans passer par un quelconque service cloud.
+
+  const isLocalImageUri = (v: any): boolean => {
+    return typeof v === 'string' && (
+      v.indexOf('file://') === 0 || v.indexOf('content://') === 0 || v.indexOf('ph://') === 0
+    );
+  };
+
+  const fileToDataUri = async (uri: string): Promise<string> => {
+    try {
+      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+      const ext = (uri.split('.').pop() || 'jpg').toLowerCase().split('?')[0];
+      const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
+      return 'data:' + mime + ';base64,' + base64;
+    } catch (e) { return ''; }
+  };
+
+  /** Parcourt récursivement les données, remplace chaque image locale par une
+   *  clé de référence, et remplit `images` avec son contenu réel en base64.
+   *  Générique : capture automatiquement toute image, où qu'elle se trouve
+   *  dans la structure (settings, blocs, salles, matériels...), sans avoir à
+   *  lister chaque champ un par un. */
+  const collectImages = async (node: any, images: Record<string, string>, counter: { n: number }): Promise<any> => {
+    if (Array.isArray(node)) {
+      const out = [];
+      for (let i = 0; i < node.length; i++) out.push(await collectImages(node[i], images, counter));
+      return out;
+    }
+    if (node && typeof node === 'object') {
+      const out: any = {};
+      const keys = Object.keys(node);
+      for (let i = 0; i < keys.length; i++) out[keys[i]] = await collectImages(node[keys[i]], images, counter);
+      return out;
+    }
+    if (isLocalImageUri(node)) {
+      const data = await fileToDataUri(node);
+      if (!data) return node;
+      const key = '__img_' + (counter.n++) + '__';
+      images[key] = data;
+      return key;
+    }
+    return node;
+  };
+
+  /** Opération inverse : réécrit chaque image en un vrai fichier local sur CET
+   *  appareil, et remplace la clé de référence par sa nouvelle URI. */
+  const restoreImages = async (node: any, images: Record<string, string>): Promise<any> => {
+    if (Array.isArray(node)) {
+      const out = [];
+      for (let i = 0; i < node.length; i++) out.push(await restoreImages(node[i], images));
+      return out;
+    }
+    if (node && typeof node === 'object') {
+      const out: any = {};
+      const keys = Object.keys(node);
+      for (let i = 0; i < keys.length; i++) out[keys[i]] = await restoreImages(node[keys[i]], images);
+      return out;
+    }
+    if (typeof node === 'string' && images[node]) {
+      const match = /^data:([^;]+);base64,([\s\S]*)$/.exec(images[node]);
+      if (!match) return node;
+      const mime = match[1]; const b64 = match[2];
+      const ext = mime.indexOf('png') !== -1 ? 'png' : mime.indexOf('webp') !== -1 ? 'webp' : mime.indexOf('gif') !== -1 ? 'gif' : 'jpg';
+      const dest = FileSystem.documentDirectory + 'auben_img_' + Date.now() + '_' + Math.floor(Math.random() * 100000) + '.' + ext;
+      try {
+        await FileSystem.writeAsStringAsync(dest, b64, { encoding: FileSystem.EncodingType.Base64 });
+        return dest;
+      } catch (e) { return node; }
+    }
+    return node;
+  };
+
+  /** Exporte tout (données + images) dans un seul fichier JSON portable et
+   *  retourne son URI locale, prête à être partagée. */
+  const exportBackup = async (): Promise<string> => {
+    const images: Record<string, string> = {};
+    const portableData = await collectImages(appData, images, { n: 0 });
+    const payload = {
+      app: 'U-Auben Inventory',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: portableData,
+      images,
+    };
+    const dest = FileSystem.cacheDirectory + 'auben_export_' + Date.now() + '.json';
+    await FileSystem.writeAsStringAsync(dest, JSON.stringify(payload));
+    return dest;
+  };
+
+  /** Restaure une sauvegarde à partir de son URI locale (fichier déjà
+   *  sélectionné par l'utilisateur) : réécrit les images sur CET appareil et
+   *  remplace entièrement les données actuelles. */
+  const importBackup = async (fileUri: string): Promise<void> => {
+    const raw = await FileSystem.readAsStringAsync(fileUri);
+    const payload = JSON.parse(raw);
+    if (!payload || !payload.data) throw new Error('Fichier de sauvegarde invalide.');
+    const restored = await restoreImages(payload.data, payload.images || {});
+    setAppData(restored);
+    await saveToStorage(restored);
+  };
+
   // ── NOTES ─────────────────────────────────────────────────────────────────
   const addNote = (note: any) => {
     const newData = { ...appData, notes: [...(appData.notes || []), note] };
@@ -164,6 +271,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       addSalle, updateSalle, deleteRoom,
       addMateriel, updateMateriel, deleteMateriel,
       addNote, updateNote, deleteNote,
+      exportBackup, importBackup,
     }}>
       {children}
     </AppContext.Provider>
@@ -171,3 +279,4 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAppContext = () => useContext(AppContext);
+    
