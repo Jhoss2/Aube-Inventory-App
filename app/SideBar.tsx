@@ -148,7 +148,7 @@ function buildHtml(room: any, items: any[], logoData: string): string {
 
 export default function SideBar({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const router = useRouter();
-  const { appData, exportBackup, importBackup } = useAppContext() as any;
+  const { appData, exportBackup, importBackup, annulerDernierImport } = useAppContext() as any;
 
   const settings         = (appData && appData.settings) || {};
   const menuBg           = settings.menuBg   || null;
@@ -214,20 +214,20 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
     try {
       const uri = await exportBackup();
       const dateLabel = new Date().toISOString().slice(0, 10);
-      const namedUri = FileSystem.cacheDirectory + 'AUBEN_Sauvegarde_' + dateLabel + '.json';
+      const namedUri = FileSystem.cacheDirectory + 'U-AUBEN_INVENTORY_APP_Sauvegarde_' + dateLabel + '.json';
       await FileSystem.copyAsync({ from: uri, to: namedUri });
       setIsGenerating(false);
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(namedUri, {
           mimeType: 'application/json',
-          dialogTitle: 'Sauvegarde compl\u00e8te AUBEN',
+          dialogTitle: 'Sauvegarde compl\u00e8te U-AUBEN',
         });
       } else {
         Alert.alert('Sauvegarde cr\u00e9\u00e9e', 'Fichier enregistr\u00e9 :\n' + namedUri);
       }
     } catch (e: any) {
       setIsGenerating(false);
-      Alert.alert('Erreur', 'Impossible de cr\u00e9er la sauvegarde : ' + e.message);
+      Alert.alert('Erreur', 'Impossible de cr\u00e9er la sauvegarde : ' + (e && e.message ? e.message : e));
     }
   };
 
@@ -244,7 +244,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
 
       Alert.alert(
         'Restaurer cette sauvegarde ?',
-        'Toutes les donn\u00e9es actuelles de l\u2019application (salles, mat\u00e9riels, notes, images, r\u00e9glages) seront remplac\u00e9es par celles du fichier s\u00e9lectionn\u00e9. Cette action est irr\u00e9versible.',
+        'Toutes les donn\u00e9es actuelles de l\u2019application (salles, mat\u00e9riels, notes, images, r\u00e9glages) seront remplac\u00e9es par celles du fichier s\u00e9lectionn\u00e9. Un fichier invalide sera automatiquement rejet\u00e9 sans rien modifier, et vous pourrez annuler cette restauration juste apr\u00e8s si besoin (bouton \u00ab Annuler le dernier import \u00bb ci-dessous).',
         [
           { text: 'Annuler', style: 'cancel' },
           {
@@ -256,15 +256,43 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
                 Alert.alert('Termin\u00e9', 'Vos donn\u00e9es ont \u00e9t\u00e9 restaur\u00e9es avec succ\u00e8s.');
               } catch (e: any) {
                 setIsGenerating(false);
-                Alert.alert('Erreur', "Impossible d'importer ce fichier : " + e.message);
+                Alert.alert('Erreur', "Impossible d'importer ce fichier : " + (e && e.message ? e.message : e));
               }
             },
           },
         ]
       );
     } catch (e: any) {
-      Alert.alert('Erreur', "Impossible de lire le fichier : " + e.message);
+      Alert.alert('Erreur', "Impossible de lire le fichier : " + (e && e.message ? e.message : e));
     }
+  };
+
+  // ── Annulation d'un import récent, si quelque chose s'est mal passé
+  const handleUndoImport = async () => {
+    Alert.alert(
+      'Annuler le dernier import ?',
+      'Vos données reviendront exactement à ce qu\'elles étaient juste avant votre dernière restauration.',
+      [
+        { text: 'Non', style: 'cancel' },
+        {
+          text: 'Oui, annuler', style: 'destructive', onPress: async () => {
+            setIsGenerating(true);
+            try {
+              const ok = await annulerDernierImport();
+              setIsGenerating(false);
+              if (ok) {
+                Alert.alert('Termin\u00e9', 'Vos données ont été remises comme avant l\'import.');
+              } else {
+                Alert.alert('Rien \u00e0 annuler', 'Aucun import récent n\'a été trouvé à annuler.');
+              }
+            } catch (e: any) {
+              setIsGenerating(false);
+              Alert.alert('Erreur', "Impossible d'annuler : " + (e && e.message ? e.message : e));
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -329,6 +357,14 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
               >
                 <Feather name="file-plus" size={20} color="white" />
                 <Text style={[styles.dlText, SBI]}>{'· Restaurer une\n  sauvegarde ·'}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.dlBtn, { opacity: 0.75 }]}
+                onPress={handleUndoImport}
+              >
+                <Feather name="rotate-ccw" size={18} color="white" />
+                <Text style={[styles.dlText, SBI, { fontSize: 11 }]}>{'· Annuler le dernier\n  import ·'}</Text>
               </TouchableOpacity>
             </ScrollView>
 
