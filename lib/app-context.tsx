@@ -14,7 +14,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     settings: {
       assistantName: "Aube",
       assistantAvatar: "https://api.dicebear.com/7.x/bottts/png?seed=Aube&backgroundColor=f472b6",
-      aubePrompt: "Tu es Aube, assistant expert de l'Université AUBEN.",
+      aubePrompt: "Tu es Aube, assistante experte de l'Université AUBEN.",
       univImage: null,
       bgImage: null,
       menuBg: null,
@@ -227,14 +227,48 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   /** Restaure une sauvegarde à partir de son URI locale (fichier déjà
    *  sélectionné par l'utilisateur) : réécrit les images sur CET appareil et
-   *  remplace entièrement les données actuelles. */
+   *  remplace entièrement les données actuelles.
+   *  Avant tout remplacement : validation stricte du contenu (un fichier qui
+   *  n'est pas une vraie sauvegarde U-Auben est rejeté sans rien toucher) et
+   *  sauvegarde de sécurité des données actuelles, récupérable via
+   *  annulerDernierImport() en cas de problème. */
   const importBackup = async (fileUri: string): Promise<void> => {
-    const raw = await FileSystem.readAsStringAsync(fileUri);
-    const payload = JSON.parse(raw);
-    if (!payload || !payload.data) throw new Error('Fichier de sauvegarde invalide.');
+    var raw;
+    try { raw = await FileSystem.readAsStringAsync(fileUri); }
+    catch (e) { throw new Error('Impossible de lire ce fichier.'); }
+
+    var payload;
+    try { payload = JSON.parse(raw); }
+    catch (e) { throw new Error('Ce fichier n\'est pas une sauvegarde valide (JSON illisible).'); }
+
+    if (!payload || typeof payload !== 'object' || !payload.data || typeof payload.data !== 'object') {
+      throw new Error('Ce fichier ne ressemble pas à une sauvegarde U-Auben.');
+    }
+    var d = payload.data;
+    if (!Array.isArray(d.salles) || !Array.isArray(d.materiels)) {
+      throw new Error('Ce fichier ne contient pas les données attendues (salles/matériels manquants) — import annulé, rien n\'a été modifié.');
+    }
+
+    // Instantané de sécurité AVANT tout remplacement.
+    try { await AsyncStorage.setItem('@auben_data_avant_import', JSON.stringify(appData)); }
+    catch (e) { /* on continue même si l'instantané échoue */ }
+
     const restored = await restoreImages(payload.data, payload.images || {});
     setAppData(restored);
     await saveToStorage(restored);
+  };
+
+  /** Annule le dernier import et restaure les données telles qu'elles étaient
+   *  juste avant. Retourne false s'il n'y a rien à annuler. */
+  const annulerDernierImport = async (): Promise<boolean> => {
+    try {
+      const saved = await AsyncStorage.getItem('@auben_data_avant_import');
+      if (!saved) return false;
+      const parsed = JSON.parse(saved);
+      setAppData(parsed);
+      await saveToStorage(parsed);
+      return true;
+    } catch (e) { return false; }
   };
 
   // ── NOTES ─────────────────────────────────────────────────────────────────
@@ -271,7 +305,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       addSalle, updateSalle, deleteRoom,
       addMateriel, updateMateriel, deleteMateriel,
       addNote, updateNote, deleteNote,
-      exportBackup, importBackup,
+      exportBackup, importBackup, annulerDernierImport,
     }}>
       {children}
     </AppContext.Provider>
@@ -279,4 +313,3 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAppContext = () => useContext(AppContext);
-  
