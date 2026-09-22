@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, StatusBar, Image, ImageBackground, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, StatusBar, Image, ImageBackground, Platform, Keyboard } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '@/lib/app-context';
@@ -11,6 +11,7 @@ export default function HomeScreen() {
   const { appData } = useAppContext() as any;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const videoRef = useRef(null);
 
   const univImage       = (appData && appData.settings && appData.settings.univImage) || null;
@@ -23,7 +24,7 @@ export default function HomeScreen() {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (!query.trim()) { setSearchResults([]); return; }
-    var q = query.toLowerCase();
+    var q = query.trim().replace(/\s+/g, ' ').toLowerCase();
     var salles = (appData && appData.salles) || [];
     var materiels = (appData && appData.materiels) || [];
     var results: any[] = [];
@@ -45,6 +46,15 @@ export default function HomeScreen() {
   useEffect(() => {
     const timeout = setTimeout(() => setShowSplash(false), 5000);
     return () => clearTimeout(timeout);
+  }, []);
+
+  // Masque la barre de navigation pendant que le clavier est ouvert, plutôt que
+  // de compter sur le comportement natif (resize/pan) qui peut rester incohérent
+  // selon l'appareil : cette solution est garantie identique partout.
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => { showSub.remove(); hideSub.remove(); };
   }, []);
 
   // ── SPLASH ────────────────────────────────────────────────────────────────
@@ -124,8 +134,11 @@ export default function HomeScreen() {
                   onPress={() => {
                     setSearchQuery('');
                     setSearchResults([]);
+                    Keyboard.dismiss();
                     if (r.type === 'materiel') {
                       router.push({ pathname: '/room-contents', params: { roomId: r.roomId, roomName: r.roomName } });
+                    } else if (r.type === 'salle') {
+                      router.push({ pathname: '/room-details', params: { roomId: r.id } });
                     }
                   }}
                 >
@@ -181,18 +194,20 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
 
-        {/* BARRE DE NAVIGATION BAS */}
-        <View style={[styles.bottomNav, styles.glow]}>
-          <TouchableOpacity onPress={() => router.push('/alerts')}>
-            <Feather name="bell" size={24} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.replace('/')}>
-            <Feather name="home" size={24} color="#fbcfe8" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/note-editor')}>
-            <Feather name="edit-3" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
+        {/* BARRE DE NAVIGATION BAS — masquée pendant la saisie pour éviter tout décalage */}
+        {!keyboardVisible && (
+          <View style={[styles.bottomNav, styles.glow]}>
+            <TouchableOpacity onPress={() => router.push('/alerts')}>
+              <Feather name="bell" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.replace('/')}>
+              <Feather name="home" size={24} color="#fbcfe8" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/note-editor')}>
+              <Feather name="edit-3" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
       </ImageBackground>
     </View>
   );
@@ -285,4 +300,3 @@ const styles = StyleSheet.create({
   resultLabel: { fontSize: 13, color: '#1A237E' },
   resultSub:   { fontSize: 11, color: '#94A3B8', marginTop: 2 },
 });
-
