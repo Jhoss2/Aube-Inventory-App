@@ -10,7 +10,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAppContext } from '@/lib/app-context';
 import { BlurView } from 'expo-blur';
 import Slider from '@react-native-community/slider';
-import { setGeminiApiKey, loadGeminiApiKey } from '@/lib/aube-engine';
 import { statsApprentissage } from '@/lib/aube-learner';
 
 const { width, height } = Dimensions.get('window');
@@ -21,62 +20,11 @@ export default function SettingsScreen() {
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [geminiKey, setGeminiKey] = useState('');
-  const [geminiSaved, setGeminiSaved] = useState(false);
-
-  useEffect(() => {
-    loadGeminiApiKey().then(function(k) {
-      if (k) setGeminiKey(k);
-    }).catch(function() {});
-  }, []);
-
-  const handleSaveGeminiKey = async () => {
-    if (!geminiKey.trim()) { Alert.alert('Erreur', 'La clé API ne peut pas être vide.'); return; }
-    await setGeminiApiKey(geminiKey.trim());
-    setGeminiSaved(true);
-    Alert.alert('✅ Clé enregistrée', 'Aube utilisera cette clé pour se connecter à Gemini.');
-    setTimeout(function() { setGeminiSaved(false); }, 3000);
-  };
-
-  const [geminiStatus, setGeminiStatus] = useState('');
-  const [testingGemini, setTestingGemini] = useState(false);
   const [apprentissageStats, setApprentissageStats] = useState<any>(null);
 
   useEffect(() => {
     statsApprentissage().then(function(s) { setApprentissageStats(s); }).catch(function() {});
   }, []);
-
-  const testerConnexionGemini = async () => {
-    if (!geminiKey.trim()) { Alert.alert('Erreur', 'Entrez d\'abord une clé API.'); return; }
-    setTestingGemini(true);
-    setGeminiStatus('Test en cours...');
-    try {
-      var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + geminiKey.trim();
-      var response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: 'Dis juste: OK' }] }],
-          generationConfig: { maxOutputTokens: 10 },
-        }),
-      });
-      var data = await response.json();
-      if (!response.ok) {
-        setGeminiStatus('❌ Erreur : ' + ((data && data.error && data.error.message) || ('HTTP ' + response.status)));
-      } else {
-        var txt = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
-        if (txt) {
-          setGeminiStatus('✅ Connexion OK ! Réponse : ' + txt.trim());
-          await setGeminiApiKey(geminiKey.trim());
-        } else {
-          setGeminiStatus('⚠️ Réponse vide. Clé peut-être invalide.');
-        }
-      }
-    } catch (e: any) {
-      setGeminiStatus('❌ Pas de réseau ou URL invalide : ' + (e.message || e));
-    }
-    setTestingGemini(false);
-  };
 
   const [openSections, setOpenSections] = useState({
     security: true, general: false, menu: false,
@@ -291,53 +239,15 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* IA — Clé API */}
+        {/* Intelligence Aube */}
         <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('ia')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Intelligence Aube — Clé API</Text>
+          <Text style={[styles.accordionTitle, styles.boldSerif]}>Intelligence Aube</Text>
           <Feather name={openSections.ia ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
         </TouchableOpacity>
         {openSections.ia && (
           <View style={styles.accordionContent}>
-            <Text style={[styles.boldSerif, { fontSize: 13, color: '#555', marginBottom: 10 }]}>
-              Clé API Gemini (aistudio.google.com)
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 8 }}>
-              <TextInput
-                value={geminiKey} onChangeText={setGeminiKey}
-                placeholder="Collez votre clé API ici..."
-                placeholderTextColor="#aaa"
-                secureTextEntry={false}
-                style={[styles.keyInput, styles.boldSerif]}
-                autoCapitalize="none" autoCorrect={false}
-              />
-              <TouchableOpacity
-                onPress={handleSaveGeminiKey}
-                style={[styles.saveKeyBtn, geminiSaved && styles.saveKeyBtnOk]}
-              >
-                <Feather name={geminiSaved ? "check" : "save"} size={20} color="white" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              onPress={testerConnexionGemini}
-              disabled={testingGemini}
-              style={[styles.testBtn, testingGemini && { opacity: 0.5 }]}
-            >
-              <Text style={[styles.boldSerif, { color: 'white', fontSize: 14 }]}>
-                {testingGemini ? '⏳ Test en cours...' : '🔌 Tester la connexion Gemini'}
-              </Text>
-            </TouchableOpacity>
-            {geminiStatus !== '' && (
-              <View style={styles.statusBox}>
-                <Text style={[styles.boldSerif, {
-                  fontSize: 13,
-                  color: geminiStatus.startsWith('✅') ? '#059669' : geminiStatus.startsWith('⚠️') ? '#d97706' : '#dc2626',
-                }]}>
-                  {geminiStatus}
-                </Text>
-              </View>
-            )}
-            <Text style={[styles.boldSerif, { fontSize: 11, color: '#888', marginTop: 8 }]}>
-              La clé est stockée localement. Elle n'est jamais partagée.
+            <Text style={[styles.boldSerif, { fontSize: 12, color: '#888' }]}>
+              Aube fonctionne entièrement en local, sur cet appareil — aucune donnée n'est envoyée à l'extérieur.
             </Text>
 
             {/* Apprentissage local */}
@@ -391,3 +301,4 @@ const styles = StyleSheet.create({
   testBtn:          { backgroundColor: '#1D3583', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4, marginBottom: 8 },
   statusBox:        { backgroundColor: '#f8f8f8', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#eee' },
 });
+          
