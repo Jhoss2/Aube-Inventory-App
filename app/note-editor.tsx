@@ -12,7 +12,8 @@ import {
   Keyboard, 
   SafeAreaView, 
   StatusBar,
-  ImageBackground
+  ImageBackground,
+  useWindowDimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Trash2, StickyNote } from 'lucide-react-native';
@@ -22,6 +23,10 @@ export default function NoteEditorScreen() {
   const router = useRouter();
   const { appData, addNote, updateNote, deleteNote } = useAppContext() as any;
   const noteEditorBg = (appData && appData.settings && appData.settings.noteEditorBg) || null;
+
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -102,7 +107,7 @@ export default function NoteEditorScreen() {
       <View style={styles.container}>
         
         {/* HEADER ROUGE PILL SHAPE */}
-        <View style={styles.headerPadding}>
+        <View style={[styles.headerPadding, isDesktop && styles.headerPaddingDesktop]}>
           <View style={[styles.redHeaderPill, styles.glow]}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
               <ChevronLeft size={28} color="white" />
@@ -116,74 +121,78 @@ export default function NoteEditorScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
           style={{ flex: 1 }}
         >
-          {/* ÉDITEUR DANS UNE CARTE BLANCHE */}
-          <View style={[styles.editorCard, styles.glow]}>
-            <View style={styles.editorHeader}>
-              <Text style={[styles.editorMode, styles.boldSerifItalic]}>
-                {editingId ? "Modification" : "Nouvelle Note"}
-              </Text>
-              {editingId && (
-                <TouchableOpacity onPress={resetForm}>
-                  <Text style={[styles.cancelText, styles.boldSerifItalic]}>Annuler</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+          <View style={[styles.mainWrapper, isDesktop && styles.mainWrapperDesktop]}>
             
-            <TextInput 
-              value={title} 
-              onChangeText={setTitle} 
-              placeholder="Titre..." 
-              style={[styles.inputTitle, styles.boldSerifItalic]} 
-              placeholderTextColor="#94A3B8"
-            />
-            <TextInput 
-              value={content} 
-              onChangeText={setContent} 
-              placeholder="Écrire ici..." 
-              multiline 
-              style={[styles.inputContent, styles.boldSerifItalic]} 
-              textAlignVertical="top"
-              placeholderTextColor="#CBD5E1"
-            />
-            
-            <TouchableOpacity onPress={handleSave} style={[styles.saveBtn, styles.glow]}>
-              <Text style={[styles.saveBtnText, styles.boldSerifItalic]}>
-                {editingId ? "Mettre à jour" : "Enregistrer"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* LISTE HISTORIQUE */}
-          <View style={styles.listContainer}>
-            <View style={styles.historyHeader}>
-                <StickyNote size={18} color="#1A237E" />
-                <Text style={[styles.listTitle, styles.boldSerifItalic]}>Historique ({notes.length})</Text>
-            </View>
-            
-            <FlatList
-              data={notes}
-              keyExtractor={(item) => item.id.toString()}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 40 }}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={[styles.noteItem, editingId === item.id && styles.noteItemActive]} 
-                  onPress={() => startEdit(item)}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.itemTitle, styles.boldSerifItalic]} numberOfLines={1}>
-                        {item.title || "Note sans titre"}
-                    </Text>
-                    <Text style={[styles.itemContent, styles.boldSerifItalic]} numberOfLines={1}>
-                        {item.content || "Pas de contenu"}
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => confirmDelete(item.id)} style={styles.deleteBtn}>
-                    <Trash2 size={20} color="#8B0000" />
+            {/* ÉDITEUR DANS UNE CARTE BLANCHE */}
+            <View style={[styles.editorCard, styles.glow]}>
+              <View style={styles.editorHeader}>
+                <Text style={[styles.editorMode, styles.boldSerifItalic]}>
+                  {editingId ? "Modification" : "Nouvelle Note"}
+                </Text>
+                {editingId && (
+                  <TouchableOpacity onPress={resetForm}>
+                    <Text style={[styles.cancelText, styles.boldSerifItalic]}>Annuler</Text>
                   </TouchableOpacity>
-                </TouchableOpacity>
-              )}
-            />
+                )}
+              </View>
+              
+              <TextInput 
+                value={title} 
+                onChangeText={setTitle} 
+                placeholder="Titre..." 
+                style={[styles.inputTitle, styles.boldSerifItalic]} 
+                placeholderTextColor="#94A3B8"
+              />
+              <TextInput 
+                value={content} 
+                onChangeText={setContent} 
+                placeholder="Écrire ici..." 
+                multiline 
+                style={[styles.inputContent, styles.boldSerifItalic]} 
+                textAlignVertical="top"
+                placeholderTextColor="#CBD5E1"
+              />
+              
+              <TouchableOpacity onPress={handleSave} style={[styles.saveBtn, styles.glow]}>
+                <Text style={[styles.saveBtnText, styles.boldSerifItalic]}>
+                  {editingId ? "Mettre à jour" : "Enregistrer"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* LISTE HISTORIQUE */}
+            <View style={styles.listContainer}>
+              <View style={styles.historyHeader}>
+                  <StickyNote size={18} color="#1A237E" />
+                  <Text style={[styles.listTitle, styles.boldSerifItalic]}>Historique ({notes.length})</Text>
+              </View>
+              
+              <FlatList
+                data={notes}
+                keyExtractor={(item) => item.id.toString()}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 40 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={[styles.noteItem, editingId === item.id && styles.noteItemActive]} 
+                    onPress={() => startEdit(item)}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.itemTitle, styles.boldSerifItalic]} numberOfLines={1}>
+                          {item.title || "Note sans titre"}
+                      </Text>
+                      <Text style={[styles.itemContent, styles.boldSerifItalic]} numberOfLines={1}>
+                          {item.content || "Pas de contenu"}
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => confirmDelete(item.id)} style={styles.deleteBtn}>
+                      <Trash2 size={20} color="#8B0000" />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -195,13 +204,17 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFE4E8' },
   container: { flex: 1 },
   
-  // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
+  mainWrapper: { flex: 1, width: '100%' },
+  mainWrapperDesktop: { width: 800, alignSelf: 'center' },
+
   boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
   },
 
   headerPadding: { paddingHorizontal: 25, paddingTop: 30, marginBottom: 20 },
+  headerPaddingDesktop: { width: 800, alignSelf: 'center', width: '100%', maxWidth: 800 },
+
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
     paddingVertical: 12, 
@@ -214,7 +227,6 @@ const styles = StyleSheet.create({
   backBtn: { padding: 5 },
   headerTitleText: { color: 'white', fontSize: 20, letterSpacing: 1 },
 
-  // Éditeur
   editorCard: { 
     backgroundColor: 'white', 
     marginHorizontal: 25, 
@@ -252,7 +264,6 @@ const styles = StyleSheet.create({
   },
   saveBtnText: { color: 'white', letterSpacing: 1.5, fontSize: 16 },
 
-  // Liste
   listContainer: { flex: 1, paddingHorizontal: 25 },
   historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15, marginLeft: 10 },
   listTitle: { fontSize: 16, color: '#1A237E', letterSpacing: 1 },
