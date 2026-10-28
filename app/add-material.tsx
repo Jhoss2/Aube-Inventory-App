@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, TextInput, ScrollView,
-  StyleSheet, StatusBar, Alert, Image, Platform, ImageBackground,
+  StyleSheet, StatusBar, Alert, Image, Platform, ImageBackground, useWindowDimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Camera, Calendar } from 'lucide-react-native';
@@ -23,6 +23,10 @@ export default function AddMaterialScreen() {
   }>();
   const { appData, addMateriel } = useAppContext() as any;
   const addMaterialBg = (appData && appData.settings && appData.settings.addMaterialBg) || null;
+
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
 
   const [nom,       setNom]       = useState('');
   const [quantite,  setQuantite]  = useState('1');
@@ -70,11 +74,6 @@ export default function AddMaterialScreen() {
     };
     try {
       await addMateriel(newItem);
-      // Retour au room-details déjà présent dans la pile : on dépile
-      // "add-material" ET "categories" (2 niveaux) au lieu de remplacer
-      // par une nouvelle instance, qui laissait "categories" coincé dans
-      // la pile — c'est ce qui provoquait le va-et-vient après de
-      // nombreux ajouts successifs.
       if (router.canGoBack()) router.back();
       if (router.canGoBack()) router.back();
     } catch (err) {
@@ -106,111 +105,113 @@ export default function AddMaterialScreen() {
         <ImageBackground source={{ uri: addMaterialBg }} style={StyleSheet.absoluteFill} resizeMode="cover" />
       )}
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]} showsVerticalScrollIndicator={false}>
+        <View style={[styles.formWrapper, isDesktop && styles.formWrapperDesktop]}>
 
-        {/* HEADER */}
-        <View style={[styles.headerPill, styles.glow]}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <ChevronLeft size={28} color="white" />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, BSI]}>NOUVEAU MATÉRIEL</Text>
-          <View style={{ width: 28 }} />
-        </View>
+          {/* HEADER */}
+          <View style={[styles.headerPill, styles.glow]}>
+            <TouchableOpacity onPress={() => router.back()}>
+              <ChevronLeft size={28} color="white" />
+            </TouchableOpacity>
+            <Text style={[styles.headerTitle, BSI]}>NOUVEAU MATÉRIEL</Text>
+            <View style={{ width: 28 }} />
+          </View>
 
-        {/* NOM */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, BSI]}>Nom du matériel</Text>
-          <TextInput
-            style={[styles.input, styles.glow, BSI]}
-            value={nom}
-            onChangeText={setNom}
-            placeholder={'Ex: ' + (category || 'Climatiseur') + '...'}
-            placeholderTextColor="#94A3B8"
-          />
-        </View>
-
-        {/* QUANTITÉ + ÉTAT */}
-        <View style={styles.row}>
-          <View style={{ flex: 0.4 }}>
-            <Text style={[styles.label, BSI]}>Quantité</Text>
+          {/* NOM */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, BSI]}>Nom du matériel</Text>
             <TextInput
               style={[styles.input, styles.glow, BSI]}
-              value={quantite}
-              onChangeText={setQuantite}
-              keyboardType="numeric"
+              value={nom}
+              onChangeText={setNom}
+              placeholder={'Ex: ' + (category || 'Climatiseur') + '...'}
+              placeholderTextColor="#94A3B8"
             />
           </View>
-          <View style={{ flex: 0.6 }}>
-            <Text style={[styles.label, BSI]}>État actuel</Text>
-            <View style={styles.stateSelector}>
-              {['NEUF', 'BON', 'USÉ'].map((s) => (
-                <TouchableOpacity
-                  key={s}
-                  onPress={() => setEtat(s)}
-                  style={[styles.stateBtn, etat === s && styles.stateBtnActive, styles.glow]}
-                >
-                  <Text style={[styles.stateBtnText, BSI, etat === s && styles.whiteText]}>{s}</Text>
-                </TouchableOpacity>
-              ))}
+
+          {/* QUANTITÉ + ÉTAT */}
+          <View style={styles.row}>
+            <View style={{ flex: 0.4 }}>
+              <Text style={[styles.label, BSI]}>Quantité</Text>
+              <TextInput
+                style={[styles.input, styles.glow, BSI]}
+                value={quantite}
+                onChangeText={setQuantite}
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={{ flex: 0.6 }}>
+              <Text style={[styles.label, BSI]}>État actuel</Text>
+              <View style={styles.stateSelector}>
+                {['NEUF', 'BON', 'USÉ'].map((s) => (
+                  <TouchableOpacity
+                    key={s}
+                    onPress={() => setEtat(s)}
+                    style={[styles.stateBtn, etat === s && styles.stateBtnActive, styles.glow]}
+                  >
+                    <Text style={[styles.stateBtnText, BSI, etat === s && styles.whiteText]}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* MARQUE + COULEUR */}
-        <View style={styles.row}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.label, BSI]}>Marque</Text>
+          {/* MARQUE + COULEUR */}
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.label, BSI]}>Marque</Text>
+              <TextInput
+                style={[styles.input, styles.glow, BSI]}
+                value={marque} onChangeText={setMarque}
+                placeholder="Ex: Sony" placeholderTextColor="#94A3B8"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.label, BSI]}>Couleur</Text>
+              <TextInput
+                style={[styles.input, styles.glow, BSI]}
+                value={couleur} onChangeText={setCouleur}
+                placeholder="Ex: Noir" placeholderTextColor="#94A3B8"
+              />
+            </View>
+          </View>
+
+          {/* IMAGE */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, BSI]}>Image du matériel</Text>
+            <TouchableOpacity style={[styles.photoBox, styles.glow]} onPress={pickImage}>
+              {image
+                ? <Image source={{ uri: image }} style={styles.fullImg} />
+                : <View style={{ alignItems: 'center' }}>
+                    <Camera size={32} color="#1A237E" />
+                    <Text style={[styles.photoText, BSI]}>Ajouter une image</Text>
+                  </View>
+              }
+            </TouchableOpacity>
+          </View>
+
+          {/* DATES */}
+          <DateField label="Date d'acquisition"                value={dateAcquisition}    pickerKey="acquisition"    />
+          <DateField label="Date de dernière vérification"     value={dateVerification}   pickerKey="verification"   />
+          <DateField label="Date de renouvellement conseillée" value={dateRenouvellement} pickerKey="renouvellement" />
+
+          {/* INFOS */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, BSI]}>Informations / Notes</Text>
             <TextInput
-              style={[styles.input, styles.glow, BSI]}
-              value={marque} onChangeText={setMarque}
-              placeholder="Ex: Sony" placeholderTextColor="#94A3B8"
+              style={[styles.input, styles.textArea, styles.glow, BSI]}
+              multiline value={infos} onChangeText={setInfos}
+              placeholder="Détails techniques, emplacement précis..."
+              placeholderTextColor="#94A3B8"
             />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.label, BSI]}>Couleur</Text>
-            <TextInput
-              style={[styles.input, styles.glow, BSI]}
-              value={couleur} onChangeText={setCouleur}
-              placeholder="Ex: Noir" placeholderTextColor="#94A3B8"
-            />
-          </View>
-        </View>
 
-        {/* IMAGE */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, BSI]}>Image du matériel</Text>
-          <TouchableOpacity style={[styles.photoBox, styles.glow]} onPress={pickImage}>
-            {image
-              ? <Image source={{ uri: image }} style={styles.fullImg} />
-              : <View style={{ alignItems: 'center' }}>
-                  <Camera size={32} color="#1A237E" />
-                  <Text style={[styles.photoText, BSI]}>Ajouter une image</Text>
-                </View>
-            }
+          {/* SAVE */}
+          <TouchableOpacity style={[styles.saveBtn, styles.glow]} onPress={handleSave}>
+            <Text style={[styles.saveBtnText, BSI]}>Enregistrer</Text>
           </TouchableOpacity>
+
         </View>
-
-        {/* DATES */}
-        <DateField label="Date d'acquisition"                value={dateAcquisition}    pickerKey="acquisition"    />
-        <DateField label="Date de dernière vérification"     value={dateVerification}   pickerKey="verification"   />
-        <DateField label="Date de renouvellement conseillée" value={dateRenouvellement} pickerKey="renouvellement" />
-
-        {/* INFOS */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, BSI]}>Informations / Notes</Text>
-          <TextInput
-            style={[styles.input, styles.textArea, styles.glow, BSI]}
-            multiline value={infos} onChangeText={setInfos}
-            placeholder="Détails techniques, emplacement précis..."
-            placeholderTextColor="#94A3B8"
-          />
-        </View>
-
-        {/* SAVE */}
-        <TouchableOpacity style={[styles.saveBtn, styles.glow]} onPress={handleSave}>
-          <Text style={[styles.saveBtnText, BSI]}>Enregistrer</Text>
-        </TouchableOpacity>
-
       </ScrollView>
 
       {showPicker && (
@@ -233,6 +234,10 @@ export default function AddMaterialScreen() {
 const styles = StyleSheet.create({
   container:     { flex: 1, backgroundColor: '#FFE4E8' },
   scrollContent: { padding: 25, paddingTop: 55, paddingBottom: 40 },
+  scrollContentDesktop: { alignItems: 'center' },
+
+  formWrapper: { width: '100%' },
+  formWrapperDesktop: { width: 750, maxWidth: '100%' },
 
   headerPill: {
     backgroundColor: '#8B0000', height: 55, borderRadius: 50,
