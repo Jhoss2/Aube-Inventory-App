@@ -7,7 +7,8 @@ import {
   ScrollView, 
   StatusBar,
   Platform,
-  ImageBackground
+  ImageBackground,
+  useWindowDimensions
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Box } from 'lucide-react-native';
@@ -17,6 +18,10 @@ export default function RoomDetailsScreen() {
   const router = useRouter();
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
   const { appData } = useAppContext() as any;
+
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
 
   // Récupération de la salle
   const room = (appData.salles || []).find((s: any) => s.id.toString() === roomId);
@@ -30,65 +35,67 @@ export default function RoomDetailsScreen() {
         <ImageBackground source={{ uri: roomDetailsBg }} style={StyleSheet.absoluteFill} resizeMode="cover" />
       )}
       
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
-        {/* HEADER ROUGE PILL - AVEC LUEUR NOIRE */}
-        <View style={[styles.redHeaderPill, styles.glowBlack]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <ChevronLeft size={28} color="white" />
-          </TouchableOpacity>
-          
-          <Text style={[styles.redHeaderText, styles.boldSerifItalic]} numberOfLines={1}>
-            {roomName}
-          </Text>
-          
-          <View style={{ width: 40 }} /> 
-        </View>
+      <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]} showsVerticalScrollIndicator={false}>
+        <View style={[styles.contentWrapper, isDesktop && styles.contentWrapperDesktop]}>
 
-        {/* INFOS SECTION - STYLE INSTITUTIONNEL */}
-        <View style={styles.infoSection}>
-          <View style={[styles.infoRow, styles.glowSmall]}>
-            <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Capacité :</Text>
-            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{(room && room.capacity) || "N/A"}</Text>
-          </View>
-          
-          <View style={[styles.infoRow, styles.glowSmall]}>
-            <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Superficie :</Text>
-            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{(room && room.surface) || "N/A"} m²</Text>
+          {/* HEADER ROUGE PILL - AVEC LUEUR NOIRE */}
+          <View style={[styles.redHeaderPill, styles.glowBlack]}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <ChevronLeft size={28} color="white" />
+            </TouchableOpacity>
+            
+            <Text style={[styles.redHeaderText, styles.boldSerifItalic]} numberOfLines={1}>
+              {roomName}
+            </Text>
+            
+            <View style={{ width: 40 }} /> 
           </View>
 
-          <View style={[styles.infoRow, styles.glowSmall]}>
-            <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Emplacement :</Text>
-            <Text style={[styles.infoValue, styles.boldSerifItalic]}>{(room && room.location) || "N/A"}</Text>
+          {/* INFOS SECTION - STYLE INSTITUTIONNEL */}
+          <View style={styles.infoSection}>
+            <View style={[styles.infoRow, styles.glowSmall]}>
+              <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Capacité :</Text>
+              <Text style={[styles.infoValue, styles.boldSerifItalic]}>{(room && room.capacity) || "N/A"}</Text>
+            </View>
+            
+            <View style={[styles.infoRow, styles.glowSmall]}>
+              <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Superficie :</Text>
+              <Text style={[styles.infoValue, styles.boldSerifItalic]}>{(room && room.surface) || "N/A"} m²</Text>
+            </View>
+
+            <View style={[styles.infoRow, styles.glowSmall]}>
+              <Text style={[styles.infoLabel, styles.boldSerifItalic]}>Emplacement :</Text>
+              <Text style={[styles.infoValue, styles.boldSerifItalic]}>{(room && room.location) || "N/A"}</Text>
+            </View>
+
+            {/* SECTION PLAN 3D */}
+            <TouchableOpacity 
+              style={[styles.planBox, styles.glowSmall]}
+              onPress={() => { if (room && room.image) { router.push({ pathname: '/fullscreen-view', params: { imageUri: room.image } }); } }}
+            >
+              <Box size={24} color="#1A237E" />
+              <Text style={[styles.planText, styles.boldSerifItalic]}>Voir l'image</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* SECTION PLAN 3D */}
-          <TouchableOpacity 
-            style={[styles.planBox, styles.glowSmall]}
-            onPress={() => { if (room && room.image) { router.push({ pathname: '/fullscreen-view', params: { imageUri: room.image } }); } }}
-          >
-            <Box size={24} color="#1A237E" />
-            <Text style={[styles.planText, styles.boldSerifItalic]}>Voir l'image</Text>
-          </TouchableOpacity>
-        </View>
+          {/* BOUTONS D'ACTION (BLEU MARINE) */}
+          <View style={styles.actionContainer}>
+            <TouchableOpacity 
+              style={[styles.actionBtn, styles.glowSmall]} 
+              onPress={() => router.push({ pathname: '/room-contents', params: { roomId, roomName } })}
+            >
+              <Text style={[styles.actionBtnText, styles.boldSerifItalic]}>Afficher le matériel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.actionBtn, styles.glowSmall]} 
+              onPress={() => router.push({ pathname: '/categories', params: { roomId, roomName } })}
+            >
+              <Text style={[styles.actionBtnText, styles.boldSerifItalic]}>Ajouter du matériel</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* BOUTONS D'ACTION (BLEU MARINE) */}
-        <View style={styles.actionContainer}>
-          <TouchableOpacity 
-            style={[styles.actionBtn, styles.glowSmall]} 
-            onPress={() => router.push({ pathname: '/room-contents', params: { roomId, roomName } })}
-          >
-            <Text style={[styles.actionBtnText, styles.boldSerifItalic]}>Afficher le matériel</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.actionBtn, styles.glowSmall]} 
-            onPress={() => router.push({ pathname: '/categories', params: { roomId, roomName } })}
-          >
-            <Text style={[styles.actionBtnText, styles.boldSerifItalic]}>Ajouter du matériel</Text>
-          </TouchableOpacity>
         </View>
-
       </ScrollView>
     </View>
   );
@@ -97,7 +104,6 @@ export default function RoomDetailsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFE4E8' },
   
-  // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
   boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
@@ -109,6 +115,10 @@ const styles = StyleSheet.create({
     paddingTop: 55, 
     paddingBottom: 40 
   },
+  scrollContentDesktop: { alignItems: 'center' },
+
+  contentWrapper: { width: '100%' },
+  contentWrapperDesktop: { width: 750, maxWidth: '100%' },
   
   redHeaderPill: { 
     backgroundColor: '#8B0000', 
@@ -159,7 +169,7 @@ const styles = StyleSheet.create({
   },
   planText: { fontSize: 16, color: '#1A237E', letterSpacing: 0.5 },
 
-  actionContainer: { marginTop: 45, gap: 20 },
+  actionContainer: { marginTop: 45, gap: 20, width: '100%' },
   actionBtn: { 
     backgroundColor: '#1A237E', 
     paddingVertical: 22, 
@@ -172,7 +182,6 @@ const styles = StyleSheet.create({
     fontSize: 16 
   },
 
-  // LUEURS
   glowBlack: {
     elevation: 8,
     shadowColor: '#000',
@@ -188,4 +197,3 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 }
   }
 });
-
