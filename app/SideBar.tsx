@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Modal,
   ImageBackground, Image, Platform, FlatList,
-  ActivityIndicator, Alert, ScrollView,
+  ActivityIndicator, Alert, ScrollView, useWindowDimensions,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -35,8 +35,6 @@ function fmtDate(iso: string | null | undefined): string {
 }
 
 // ── Conversion d'une image (locale ou distante) en data URI base64 ────────────
-// Garantit un rendu réel de l'image dans le PDF, y compris hors-ligne : le
-// fichier est intégré directement dans le HTML plutôt que simplement référencé.
 async function toDataUri(uri: string | null | undefined): Promise<string> {
   if (!uri) return '';
   try {
@@ -151,6 +149,10 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
   const router = useRouter();
   const { appData, exportBackup, importBackup, annulerDernierImport } = useAppContext() as any;
 
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
+
   const settings         = (appData && appData.settings) || {};
   const menuBg           = settings.menuBg   || null;
   const menuLogo         = settings.menuLogo || null;
@@ -174,8 +176,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
         (m: any) => String(m.roomId) === String(room.id)
       );
 
-      // Encodage en base64 : garantit que le logo et les images du matériel
-      // s'affichent réellement dans le PDF, y compris sans connexion.
       const itemsWithData = await Promise.all(
         rawItems.map(async (m: any) => Object.assign({}, m, { image: await toDataUri(m.image) }))
       );
@@ -184,8 +184,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
       const html = buildHtml(room, itemsWithData, logoData);
       const { uri } = await Print.printToFileAsync({ html, base64: false });
 
-      // Le fichier lui-même doit porter le nom réel de la salle, pas un nom
-      // généré automatiquement par expo-print.
       const roomLabel = room.name
         ? room.name.charAt(0).toUpperCase() + room.name.slice(1).toLowerCase()
         : ('Salle ' + room.id);
@@ -209,7 +207,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
     }
   };
 
-  // ── Sauvegarde compl\u00e8te (export) — transfert sans cloud vers un autre t\u00e9l\u00e9phone
   const handleExportBackup = async () => {
     setIsGenerating(true);
     try {
@@ -238,17 +235,13 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
             setIsGenerating(false);
             Alert.alert(
               'Sauvegarde enregistr\u00e9e',
-              'Le fichier "' + nomFichier + '.json" a \u00e9t\u00e9 cr\u00e9\u00e9 dans le dossier que vous avez choisi \u2014 visible directement depuis votre gestionnaire de fichiers.'
+              'Le fichier "' + nomFichier + '.json" a \u00e9t\u00e9 cr\u00e9\u00e9 dans le dossier choisi.'
             );
             return;
           }
-          // Dossier refus\u00e9 : on continue vers le repli ci-dessous.
-        } catch (safError) {
-          // SAF indisponible ou erreur : on continue vers le repli ci-dessous.
-        }
+        } catch (safError) {}
       }
 
-      // Repli (iOS, ou refus/\u00e9chec du choix de dossier sur Android) : partage classique.
       const namedUri = FileSystem.cacheDirectory + nomFichier + '.json';
       await FileSystem.copyAsync({ from: uri, to: namedUri });
       setIsGenerating(false);
@@ -266,7 +259,6 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
     }
   };
 
-  // ── Restauration d'une sauvegarde (import) — remplace toutes les données actuelles
   const handleImportBackup = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -279,7 +271,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
 
       Alert.alert(
         'Restaurer cette sauvegarde ?',
-        'Toutes les donn\u00e9es actuelles de l\u2019application (salles, mat\u00e9riels, notes, images, r\u00e9glages) seront remplac\u00e9es par celles du fichier s\u00e9lectionn\u00e9. Un fichier invalide sera automatiquement rejet\u00e9 sans rien modifier, et vous pourrez annuler cette restauration juste apr\u00e8s si besoin (bouton \u00ab Annuler le dernier import \u00bb ci-dessous).',
+        'Toutes les donn\u00e9es actuelles de l\u2019application seront remplac\u00e9es.',
         [
           { text: 'Annuler', style: 'cancel' },
           {
@@ -302,11 +294,10 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
     }
   };
 
-  // ── Annulation d'un import récent, si quelque chose s'est mal passé
   const handleUndoImport = async () => {
     Alert.alert(
       'Annuler le dernier import ?',
-      'Vos données reviendront exactement à ce qu\'elles étaient juste avant votre dernière restauration.',
+      'Vos données reviendront à l\'état précédent.',
       [
         { text: 'Non', style: 'cancel' },
         {
@@ -318,7 +309,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
               if (ok) {
                 Alert.alert('Termin\u00e9', 'Vos données ont été remises comme avant l\'import.');
               } else {
-                Alert.alert('Rien \u00e0 annuler', 'Aucun import récent n\'a été trouvé à annuler.');
+                Alert.alert('Rien \u00e0 annuler', 'Aucun import récent n\'a été trouvé.');
               }
             } catch (e: any) {
               setIsGenerating(false);
@@ -345,7 +336,8 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
             <View style={styles.blueOverlay} />
           </ImageBackground>
 
-          <View style={styles.drawer}>
+          {/* Largeur adaptative : 420px max en Desktop, 50% sur Tablette */}
+          <View style={[styles.drawer, isDesktop && styles.drawerDesktop]}>
             <View style={styles.drawerHeader}>
               <Text style={[styles.drawerTitle, SBI]}>
                 {'U-AUBEN\nINVENTORY\nAPP'}
@@ -425,7 +417,7 @@ export default function SideBar({ visible, onClose }: { visible: boolean; onClos
       {/* ══ SÉLECTEUR DE SALLE ══ */}
       <Modal transparent visible={showRoomPicker} animationType="slide">
         <View style={styles.pickerOverlay}>
-          <View style={styles.pickerSheet}>
+          <View style={[styles.pickerSheet, isDesktop && styles.pickerSheetDesktop]}>
             <View style={styles.pickerHeader}>
               <Text style={[styles.pickerTitle, SBI]}>Choisir une salle</Text>
               <TouchableOpacity onPress={() => setShowRoomPicker(false)}>
@@ -496,6 +488,9 @@ const styles = StyleSheet.create({
     elevation: 20, shadowColor: '#000',
     shadowOffset: { width: 10, height: 0 }, shadowOpacity: 0.5, shadowRadius: 15,
   },
+  drawerDesktop: {
+    width: 420, // Largeur fixe élégante en mode Desktop Windows
+  },
   drawerHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
     padding: 20, paddingTop: 55,
@@ -539,6 +534,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a0f2e', borderTopLeftRadius: 28, borderTopRightRadius: 28,
     maxHeight: '75%', overflow: 'hidden',
     shadowColor: '#e85d04', shadowOpacity: 0.3, shadowRadius: 20, elevation: 20,
+  },
+  pickerSheetDesktop: {
+    width: 600,
+    alignSelf: 'center',
+    borderRadius: 28,
+    marginBottom: 40,
   },
   pickerHeader: {
     backgroundColor: '#e85d04',
