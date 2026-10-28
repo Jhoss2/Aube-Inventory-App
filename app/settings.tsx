@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   View, Text, TouchableOpacity, TextInput, ScrollView, 
-  StyleSheet, Alert, ImageBackground, Dimensions, Platform 
+  StyleSheet, Alert, ImageBackground, Dimensions, Platform, useWindowDimensions 
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +17,10 @@ const { width, height } = Dimensions.get('window');
 export default function SettingsScreen() {
   const router = useRouter();
   const { appData, updateSettings } = useAppContext() as any;
+  
+  // Gestion du responsive desktop
+  const { width: screenWidth } = useWindowDimensions();
+  const isDesktop = screenWidth >= 900;
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -81,7 +85,7 @@ export default function SettingsScreen() {
         >
           {authBg && <BlurView intensity={blurVal} tint="dark" style={styles.absoluteFull} />}
           <View style={styles.authOverlay}>
-            <View style={styles.authModalContent}>
+            <View style={[styles.authModalContent, isDesktop && styles.authModalContentDesktop]}>
               <MaterialCommunityIcons name="shield-lock" size={60} color="white" style={{ marginBottom: 15 }} />
               <Text style={[styles.authTitleFull, styles.boldSerif]}>ADMINISTRATEUR</Text>
               <View style={styles.haloWrapper}>
@@ -119,151 +123,152 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={isDesktop && styles.scrollContentDesktop}>
+        <View style={[styles.settingsWrapper, isDesktop && styles.settingsWrapperDesktop]}>
 
-        {/* Sécurité */}
-        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('security')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Sécurité & Design Auth</Text>
-          <Feather name={openSections.security ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
-        </TouchableOpacity>
-        {openSections.security && (
-          <View style={styles.accordionContent}>
-            <SettingRow label="Fond d'écran Authentification" field="authBgImage" />
-            <View style={{ marginTop: 15 }}>
-              <Text style={[styles.rowLabel, styles.boldSerif]}>
-                Intensité du flou : {Math.round(((appData && appData.settings && appData.settings.authBlur) || 0))}%
-              </Text>
-              <Slider
-                style={{ width: '100%', height: 40 }}
-                minimumValue={0} maximumValue={100}
-                value={(appData && appData.settings && appData.settings.authBlur) || 0}
-                onSlidingComplete={(val) => updateSettings({ authBlur: val })}
-                minimumTrackTintColor="#FF0000" maximumTrackTintColor="#ddd" thumbTintColor="#1D3583"
-              />
+          {/* Sécurité */}
+          <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('security')}>
+            <Text style={[styles.accordionTitle, styles.boldSerif]}>Sécurité & Design Auth</Text>
+            <Feather name={openSections.security ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+          {openSections.security && (
+            <View style={styles.accordionContent}>
+              <SettingRow label="Fond d'écran Authentification" field="authBgImage" />
+              <View style={{ marginTop: 15 }}>
+                <Text style={[styles.rowLabel, styles.boldSerif]}>
+                  Intensité du flou : {Math.round(((appData && appData.settings && appData.settings.authBlur) || 0))}%
+                </Text>
+                <Slider
+                  style={{ width: '100%', height: 40 }}
+                  minimumValue={0} maximumValue={100}
+                  value={(appData && appData.settings && appData.settings.authBlur) || 0}
+                  onSlidingComplete={(val) => updateSettings({ authBlur: val })}
+                  minimumTrackTintColor="#FF0000" maximumTrackTintColor="#ddd" thumbTintColor="#1D3583"
+                />
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
-        {/* Interface Accueil */}
-        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('general')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Interface Accueil</Text>
-          <Feather name={openSections.general ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
-        </TouchableOpacity>
-        {openSections.general && (
-          <View style={styles.accordionContent}>
-            <SettingRow label="Image de l'Université" field="univImage" />
-            <SettingRow label="Arrière-plan Accueil" field="bgImage" />
-          </View>
-        )}
+          {/* Interface Accueil */}
+          <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('general')}>
+            <Text style={[styles.accordionTitle, styles.boldSerif]}>Interface Accueil</Text>
+            <Feather name={openSections.general ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+          {openSections.general && (
+            <View style={styles.accordionContent}>
+              <SettingRow label="Image de l'Université" field="univImage" />
+              <SettingRow label="Arrière-plan Accueil" field="bgImage" />
+            </View>
+          )}
 
-        {/* Menu Latéral */}
-        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('menu')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Menu Latéral</Text>
-          <Feather name={openSections.menu ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
-        </TouchableOpacity>
-        {openSections.menu && (
-          <View style={styles.accordionContent}>
-            <SettingRow label="Arrière-plan du Menu" field="menuBg" />
-            <SettingRow label="Logo du Menu" field="menuLogo" />
-          </View>
-        )}
+          {/* Menu Latéral */}
+          <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('menu')}>
+            <Text style={[styles.accordionTitle, styles.boldSerif]}>Menu Latéral</Text>
+            <Feather name={openSections.menu ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+          {openSections.menu && (
+            <View style={styles.accordionContent}>
+              <SettingRow label="Arrière-plan du Menu" field="menuBg" />
+              <SettingRow label="Logo du Menu" field="menuLogo" />
+            </View>
+          )}
 
-        {/* Blocs — avec arrière-plan de l'écran bloc */}
-        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('blocs')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Personnalisation des Blocs</Text>
-          <Feather name={openSections.blocs ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
-        </TouchableOpacity>
-        {openSections.blocs && (
-          <View style={styles.accordionContent}>
-            <SettingRow label="Arrière-plan Écran Bloc Details (commun à A, B, C...)" field="blocDetailsBg" />
-            {['A', 'B', 'C', 'D', 'E', 'F'].map((b) => (
-              <View key={b} style={styles.blockSection}>
-                <Text style={[styles.blockLabel, styles.boldSerif]}>BLOC {b}</Text>
-                <SettingRow label={'Vue Aérienne ' + b} field={'bloc' + b + '_aerial'} />
-              </View>
-            ))}
-          </View>
-        )}
+          {/* Blocs */}
+          <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('blocs')}>
+            <Text style={[styles.accordionTitle, styles.boldSerif]}>Personnalisation des Blocs</Text>
+            <Feather name={openSections.blocs ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+          {openSections.blocs && (
+            <View style={styles.accordionContent}>
+              <SettingRow label="Arrière-plan Écran Bloc Details (commun à A, B, C...)" field="blocDetailsBg" />
+              {['A', 'B', 'C', 'D', 'E', 'F'].map((b) => (
+                <View key={b} style={styles.blockSection}>
+                  <Text style={[styles.blockLabel, styles.boldSerif]}>BLOC {b}</Text>
+                  <SettingRow label={'Vue Aérienne ' + b} field={'bloc' + b + '_aerial'} />
+                </View>
+              ))}
+            </View>
+          )}
 
-        {/* Arrière-plans des autres écrans (chacun indépendant, pas de regroupement) */}
-        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('ecrans')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Arrière-plans des Écrans</Text>
-          <Feather name={openSections.ecrans ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
-        </TouchableOpacity>
-        {openSections.ecrans && (
-          <View style={styles.accordionContent}>
-            <SettingRow label="Contenu de Salle (liste + détail matériel)" field="roomContentsBg" />
-            <SettingRow label="Ajout de Salle"         field="addRoomBg" />
-            <SettingRow label="Détails de la Salle"  field="roomDetailsBg" />
-            <SettingRow label="Éditeur de Note"       field="noteEditorBg" />
-            <SettingRow label="Ajout de Matériel"     field="addMaterialBg" />
-            <SettingRow label="Alertes"               field="alertsBg" />
-            <SettingRow label="Paramètres"            field="settingsBg" />
-            <SettingRow label="Catégories"            field="categoriesBg" />
-          </View>
-        )}
+          {/* Arrière-plans des autres écrans */}
+          <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('ecrans')}>
+            <Text style={[styles.accordionTitle, styles.boldSerif]}>Arrière-plans des Écrans</Text>
+            <Feather name={openSections.ecrans ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+          {openSections.ecrans && (
+            <View style={styles.accordionContent}>
+              <SettingRow label="Contenu de Salle (liste + détail matériel)" field="roomContentsBg" />
+              <SettingRow label="Ajout de Salle"         field="addRoomBg" />
+              <SettingRow label="Détails de la Salle"  field="roomDetailsBg" />
+              <SettingRow label="Éditeur de Note"       field="noteEditorBg" />
+              <SettingRow label="Ajout de Matériel"     field="addMaterialBg" />
+              <SettingRow label="Alertes"               field="alertsBg" />
+              <SettingRow label="Paramètres"            field="settingsBg" />
+              <SettingRow label="Catégories"            field="categoriesBg" />
+            </View>
+          )}
 
-        {/* Document PDF */}
-        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('pdf')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Document PDF</Text>
-          <Feather name={openSections.pdf ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
-        </TouchableOpacity>
-        {openSections.pdf && (
-          <View style={styles.accordionContent}>
-            <SettingRow label="Logo (en haut à gauche du PDF)" field="pdfLogo" />
-          </View>
-        )}
+          {/* Document PDF */}
+          <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('pdf')}>
+            <Text style={[styles.accordionTitle, styles.boldSerif]}>Document PDF</Text>
+            <Feather name={openSections.pdf ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+          {openSections.pdf && (
+            <View style={styles.accordionContent}>
+              <SettingRow label="Logo (en haut à gauche du PDF)" field="pdfLogo" />
+            </View>
+          )}
 
-        {/* Affiches */}
-        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('affiches')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Affiches d'Information</Text>
-          <Feather name={openSections.affiches ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
-        </TouchableOpacity>
-        {openSections.affiches && (
-          <View style={styles.accordionContent}>
-            <SettingRow label="Image Guide d'utilisation"      field="guidePoster" />
-            <SettingRow label="Image À propos du développeur"  field="aboutPoster" />
-          </View>
-        )}
+          {/* Affiches */}
+          <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('affiches')}>
+            <Text style={[styles.accordionTitle, styles.boldSerif]}>Affiches d'Information</Text>
+            <Feather name={openSections.affiches ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+          {openSections.affiches && (
+            <View style={styles.accordionContent}>
+              <SettingRow label="Image Guide d'utilisation"      field="guidePoster" />
+              <SettingRow label="Image À propos du développeur"  field="aboutPoster" />
+            </View>
+          )}
 
-        {/* Chat Aube */}
-        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('chat')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Assistant Aube — Chat</Text>
-          <Feather name={openSections.chat ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
-        </TouchableOpacity>
-        {openSections.chat && (
-          <View style={styles.accordionContent}>
-            <SettingRow label="Avatar d'Aube (image de profil)" field="assistantAvatar" />
-            <SettingRow label="Votre image de profil"           field="userAvatar" />
-            <SettingRow label="Fond d'écran du chat"            field="chatBgImage" />
-          </View>
-        )}
+          {/* Chat Aube */}
+          <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('chat')}>
+            <Text style={[styles.accordionTitle, styles.boldSerif]}>Assistant Aube — Chat</Text>
+            <Feather name={openSections.chat ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+          {openSections.chat && (
+            <View style={styles.accordionContent}>
+              <SettingRow label="Avatar d'Aube (image de profil)" field="assistantAvatar" />
+              <SettingRow label="Votre image de profil"           field="userAvatar" />
+              <SettingRow label="Fond d'écran du chat"            field="chatBgImage" />
+            </View>
+          )}
 
-        {/* Intelligence Aube */}
-        <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('ia')}>
-          <Text style={[styles.accordionTitle, styles.boldSerif]}>Intelligence Aube</Text>
-          <Feather name={openSections.ia ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
-        </TouchableOpacity>
-        {openSections.ia && (
-          <View style={styles.accordionContent}>
-            <Text style={[styles.boldSerif, { fontSize: 12, color: '#888' }]}>
-              Aube fonctionne entièrement en local, sur cet appareil — aucune donnée n'est envoyée à l'extérieur.
-            </Text>
+          {/* Intelligence Aube */}
+          <TouchableOpacity style={styles.accordionHeader} onPress={() => toggleSection('ia')}>
+            <Text style={[styles.accordionTitle, styles.boldSerif]}>Intelligence Aube</Text>
+            <Feather name={openSections.ia ? "chevron-up" : "chevron-down"} size={20} color="#8B1A1A" />
+          </TouchableOpacity>
+          {openSections.ia && (
+            <View style={styles.accordionContent}>
+              <Text style={[styles.boldSerif, { fontSize: 12, color: '#888' }]}>
+                Aube fonctionne entièrement en local, sur cet appareil — aucune donnée n'est envoyée à l'extérieur.
+              </Text>
 
-            {/* Apprentissage local */}
-            {apprentissageStats && (
-              <View style={{ marginTop: 16, padding: 12, backgroundColor: '#f0f4ff', borderRadius: 12 }}>
-                <Text style={[styles.boldSerif, { fontSize: 13, color: '#1D3583', marginBottom: 6 }]}>
-                  🧠 Ce qu'Aube a appris (100% local)
-                </Text>
-                <Text style={[styles.boldSerif, { fontSize: 12, color: '#555' }]}>
-                  {(apprentissageStats.connaissances || 0) + ' connaissance(s) enseignée(s) · ' + (apprentissageStats.lacunes || 0) + ' question(s) encore sans réponse'}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
+              {apprentissageStats && (
+                <View style={{ marginTop: 16, padding: 12, backgroundColor: '#f0f4ff', borderRadius: 12 }}>
+                  <Text style={[styles.boldSerif, { fontSize: 13, color: '#1D3583', marginBottom: 6 }]}>
+                    🧠 Ce qu'Aube a appris (100% local)
+                  </Text>
+                  <Text style={[styles.boldSerif, { fontSize: 12, color: '#555' }]}>
+                    {(apprentissageStats.connaissances || 0) + ' connaissance(s) enseignée(s) · ' + (apprentissageStats.lacunes || 0) + ' question(s) encore sans réponse'}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
 
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -278,6 +283,7 @@ const styles = StyleSheet.create({
   absoluteFull:     { position: 'absolute', width: width, height: height },
   authOverlay:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   authModalContent: { width: '80%', alignItems: 'center' },
+  authModalContentDesktop: { width: 450, maxWidth: '90%' },
   authTitleFull:    { color: 'white', fontSize: 18, letterSpacing: 6, marginBottom: 40 },
   haloWrapper:      { width: '100%', shadowColor: "#FF0000", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 15, elevation: 25, marginBottom: 25 },
   authInputHalo:    { backgroundColor: 'rgba(0,0,0,0.8)', borderWidth: 2, borderColor: '#FF0000', borderRadius: 15, padding: 20, color: 'white', textAlign: 'center', fontSize: 24 },
@@ -285,6 +291,11 @@ const styles = StyleSheet.create({
   authBtnTextFull:  { color: 'white', letterSpacing: 2 },
   header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#eee', backgroundColor: 'white' },
   headerTitle:      { fontSize: 16, color: '#1D3583' },
+  
+  scrollContentDesktop: { alignItems: 'center' },
+  settingsWrapper: { width: '100%' },
+  settingsWrapperDesktop: { width: 800, maxWidth: '100%', marginVertical: 20 },
+
   accordionHeader:  { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#f9f9f9', borderBottomWidth: 1, borderBottomColor: '#eee' },
   accordionTitle:   { color: '#333', fontSize: 14 },
   accordionContent: { padding: 20, backgroundColor: 'white' },
@@ -301,4 +312,3 @@ const styles = StyleSheet.create({
   testBtn:          { backgroundColor: '#1D3583', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4, marginBottom: 8 },
   statusBox:        { backgroundColor: '#f8f8f8', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#eee' },
 });
-          
