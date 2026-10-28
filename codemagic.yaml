@@ -1,7 +1,8 @@
 workflows:
-  android-workflow:
-    name: U-Auben Inventory App - Production Build
+  full-cross-platform-workflow:
+    name: U-Auben Inventory App - Build Complet (Android APK & Windows EXE)
     max_build_duration: 60
+    instance_type: windows_x2
     environment:
       node: 20.11.0
       java: 17
@@ -11,28 +12,34 @@ workflows:
         GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m'
 
     scripts:
-      - name: Install dependencies
+      - name: Installation des dépendances
         script: |
           npm install --legacy-peer-deps
-          npx expo install --check || echo "Ignored warnings"
 
-      - name: Verify Assets & Clean
-        script: |
-          echo "--- Nettoyage ---"
-          rm -rf android
-          rm -rf .expo
-
-      - name: Generate Native Android Folder
+      # ── 1. GENERATION DU FICHIER APK (ANDROID) ────────────────────────────
+      - name: Préparation du projet Android
         script: |
           npx expo prebuild --platform android --clean --no-install
 
-      - name: Build APK Release
+      - name: Compilation de l'APK Release
         script: |
           cd android
-          chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleRelease -x lint -x test --no-daemon
+          gradlew.bat clean
+          gradlew.bat assembleRelease -x lint -x test --no-daemon
+          cd ..
 
+      # ── 2. GENERATION DU FICHIER EXE (WINDOWS) ────────────────────────────
+      - name: Export Web Expo pour Electron
+        script: |
+          npx expo export --platform web
+
+      - name: Encapsulation & Build de l'exécutable Windows (.exe)
+        script: |
+          npm install --save-dev electron electron-packager
+          npx electron-packager . "UAubenInventoryApp" --platform=win32 --arch=x64 --out=dist-win --overwrite
+
+    # ── ARTEFACTS GENERES A LA FIN DU BUILD ────────────────────────────────
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
-      - android/app/build/outputs/apk/release/*.aab
+      - dist-win/**/*.exe
+      - dist-win/**/*.zip
