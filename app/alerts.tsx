@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, SafeAreaView, Platform, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, SafeAreaView, Platform, ImageBackground, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, MapPin, AlertTriangle, CheckCircle, Clock, Calendar } from 'lucide-react-native';
 import { useAppContext } from '@/lib/app-context';
@@ -22,6 +22,10 @@ type AlertItem = {
 export default function AlertsScreen() {
   const router = useRouter();
   const { appData } = useAppContext() as any;
+
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
 
   const materiels = (appData && appData.materiels) || [];
   const salles    = (appData && appData.salles)    || [];
@@ -72,8 +76,6 @@ export default function AlertsScreen() {
       }
     });
 
-    // Dédoublonnage : un matériel peut apparaître une seule fois max
-    // (on garde la priorité : depasse > etat > proche)
     const seen = new Map<string, AlertItem>();
     const priority = { depasse: 0, etat: 1, proche: 2 };
     result.forEach(item => {
@@ -84,12 +86,10 @@ export default function AlertsScreen() {
     });
 
     return Array.from(seen.values()).sort((a, b) => {
-      // Tri : dépassé → état → proche
       return priority[a.alertType] - priority[b.alertType];
     });
   }, [materiels, salles]);
 
-  // ── Couleurs et labels selon le type ─────────────────────────────────────
   const alertConfig = (item: AlertItem) => {
     switch (item.alertType) {
       case 'depasse':
@@ -129,7 +129,6 @@ export default function AlertsScreen() {
     } catch { return iso; }
   };
 
-  // ── Rendu d'une carte ─────────────────────────────────────────────────────
   const renderAlertItem = ({ item }: { item: AlertItem }) => {
     const cfg = alertConfig(item);
     return (
@@ -179,7 +178,6 @@ export default function AlertsScreen() {
     );
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
@@ -188,7 +186,7 @@ export default function AlertsScreen() {
       )}
 
       <View style={styles.container}>
-        <View style={styles.headerPadding}>
+        <View style={[styles.headerPadding, isDesktop && styles.headerPaddingDesktop]}>
           <View style={[styles.redHeaderPill, styles.glow]}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
               <ChevronLeft size={28} color="white" />
@@ -199,7 +197,6 @@ export default function AlertsScreen() {
             </View>
           </View>
 
-          {/* Légende */}
           {alerts.length > 0 && (
             <View style={styles.legendRow}>
               <View style={styles.legendItem}>
@@ -218,7 +215,7 @@ export default function AlertsScreen() {
           )}
         </View>
 
-        <View style={styles.content}>
+        <View style={[styles.content, isDesktop && styles.contentDesktop]}>
           {alerts.length > 0 ? (
             <FlatList
               data={alerts}
@@ -251,6 +248,8 @@ const styles = StyleSheet.create({
   },
 
   headerPadding: { paddingHorizontal: 20, paddingTop: 20, marginBottom: 10 },
+  headerPaddingDesktop: { width: 850, alignSelf: 'center', width: '100%', maxWidth: 850 },
+
   redHeaderPill: {
     backgroundColor: '#8B0000',
     paddingVertical: 12, paddingHorizontal: 15,
@@ -268,6 +267,7 @@ const styles = StyleSheet.create({
   legendText: { fontSize: 11, color: '#555' },
 
   content:     { flex: 1 },
+  contentDesktop: { width: 850, alignSelf: 'center', width: '100%', maxWidth: 850 },
   listPadding: { padding: 20, paddingBottom: 40 },
 
   alertCard: {
@@ -297,4 +297,3 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 5 },
   },
 });
-                                      
