@@ -2,18 +2,14 @@ import React, { useMemo, useState } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, Image,
   StyleSheet, SafeAreaView, StatusBar, Platform,
-  Dimensions, Alert, TextInput, Modal, ImageBackground,
+  Dimensions, Alert, TextInput, Modal, ImageBackground, useWindowDimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Plus, X, Check } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppContext } from '@/lib/app-context';
 
-const { width } = Dimensions.get('window');
-// 4 icones par ligne, meme espacement qu'avant
-const MARGIN_H    = 4;
-const PADDING_H   = 16;
-const COLUMN_WIDTH = (width - PADDING_H * 2 - MARGIN_H * 8) / 4;
+const { width: screenWidth } = Dimensions.get('window');
 
 const BSI = {
   fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
@@ -21,13 +17,11 @@ const BSI = {
   fontStyle: 'italic' as const,
 };
 
-// Conserve la casse originale (respecte les majuscules saisies)
 function formatName(name: string) {
   if (!name) return '';
   return name.trim();
 }
 
-// Niveaux connus dans l'ordre d'affichage
 const NIVEAUX_ORDRE = [
   'Rez-de-chaussée', 'Niveau 0', 'Niveau 1', 'Niveau 2', 'Niveau 3',
   'Niveau 4', 'Niveau 5',
@@ -44,7 +38,6 @@ function sortNiveaux(niveaux: string[]) {
   });
 }
 
-// Label lisible du niveau
 function labelNiveau(level: string) {
   var map: Record<string, string> = {
     'Niveau 0':         'Rez-de-chaussée',
@@ -61,22 +54,30 @@ function labelNiveau(level: string) {
 export default function BlocDetailsScreen() {
   const router  = useRouter();
   const { blockId } = useLocalSearchParams<{ blockId: string }>();
-  const { appData, deleteRoom, updateSalle, addSalle } = useAppContext() as any;
+  const { appData, deleteRoom, updateSalle } = useAppContext() as any;
 
-  // ── Modal modification salle ──
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
+
+  // Calcul dynamique de la largeur des colonnes de salles
+  const containerMaxWidth = isDesktop ? 900 : width;
+  const marginH = 6;
+  const paddingH = 16;
+  const numColumns = isDesktop ? 6 : 4;
+  const columnWidth = (containerMaxWidth - (paddingH * 2) - (marginH * (numColumns * 2))) / numColumns;
+
   const [editVisible,  setEditVisible]  = useState(false);
   const [editingRoom,  setEditingRoom]  = useState<any>(null);
   const [editName,     setEditName]     = useState('');
   const [editImage,    setEditImage]    = useState<string | null>(null);
 
-  // ── Données ──
   const settings   = (appData && appData.settings) || {};
   const blocData   = (appData && appData.blocs && appData.blocs[blockId as string]) || {};
   const aerialImg  = settings['bloc' + blockId + '_aerial'] || blocData.mainImage ||
     'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80';
   const bgImage    = settings['blocDetailsBg'] || null;
 
-  // Toutes les salles de ce bloc, groupées par niveau
   const sallesParNiveau = useMemo(() => {
     var toutes = (appData && appData.salles || []).filter(
       (s: any) => String(s.blockId) === String(blockId)
@@ -92,7 +93,6 @@ export default function BlocDetailsScreen() {
 
   const niveaux = sortNiveaux(Object.keys(sallesParNiveau));
 
-  // ── Handlers ──
   const handleLongPress = (room: any) => {
     Alert.alert(
       formatName(room.name),
@@ -143,7 +143,6 @@ export default function BlocDetailsScreen() {
     setEditingRoom(null);
   };
 
-  // FAB → ajouter une salle (niveau par défaut : Niveau 1)
   const handleAddRoom = () => {
     router.push({
       pathname: '/add-room',
@@ -151,22 +150,16 @@ export default function BlocDetailsScreen() {
     });
   };
 
-  // ── Render ──
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
 
-      {/* Fond — image pure sans voile */}
       {bgImage
-        ? <ImageBackground
-            source={{ uri: bgImage }}
-            style={StyleSheet.absoluteFill}
-            resizeMode="cover"
-          />
+        ? <ImageBackground source={{ uri: bgImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
         : <View style={[StyleSheet.absoluteFill, { backgroundColor: '#FFE4E8' }]} />
       }
 
-      <View style={styles.root}>
+      <View style={[styles.root, isDesktop && styles.rootDesktop]}>
 
         {/* ── HEADER FIXE ── */}
         <View style={[styles.headerPill, styles.glow]}>
@@ -182,7 +175,7 @@ export default function BlocDetailsScreen() {
         {/* ── VUE AÉRIENNE FIXE ── */}
         <View style={styles.aerialSection}>
           <TouchableOpacity
-            style={[styles.aerialCard, styles.glow]}
+            style={[styles.aerialCard, styles.glow, isDesktop && styles.aerialCardDesktop]}
             activeOpacity={0.9}
             onPress={() => router.push({
               pathname: '/fullscreen-view',
@@ -201,7 +194,7 @@ export default function BlocDetailsScreen() {
         {/* ── SALLES SCROLLABLES ── */}
         <ScrollView
           style={styles.scrollZone}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]}
           showsVerticalScrollIndicator={false}
         >
           {niveaux.length === 0 && (
@@ -219,8 +212,6 @@ export default function BlocDetailsScreen() {
             var salles = sallesParNiveau[niveau];
             return (
               <View key={niveau} style={styles.niveauSection}>
-
-                {/* Pill titre niveau */}
                 <View style={styles.niveauPillWrap}>
                   <View style={[styles.niveauPill, styles.glow]}>
                     <Text style={[styles.niveauPillText, BSI]}>
@@ -229,13 +220,12 @@ export default function BlocDetailsScreen() {
                   </View>
                 </View>
 
-                {/* Grille salles */}
                 <View style={styles.grid}>
                   {salles.map(function(room: any) {
                     return (
                       <TouchableOpacity
                         key={room.id}
-                        style={styles.roomItem}
+                        style={[styles.roomItem, { width: columnWidth, marginHorizontal: marginH }]}
                         onPress={() => router.push({
                           pathname: '/room-details',
                           params: { roomId: room.id, roomName: room.name },
@@ -243,7 +233,7 @@ export default function BlocDetailsScreen() {
                         onLongPress={() => handleLongPress(room)}
                         delayLongPress={500}
                       >
-                        <View style={[styles.avatarWrap, styles.glow]}>
+                        <View style={[styles.avatarWrap, styles.glow, { width: columnWidth, height: columnWidth }]}>
                           {room.image
                             ? <Image source={{ uri: room.image }} style={styles.avatarImg} />
                             : <View style={styles.avatarInitial}>
@@ -260,7 +250,6 @@ export default function BlocDetailsScreen() {
                     );
                   })}
                 </View>
-
               </View>
             );
           })}
@@ -322,8 +311,8 @@ export default function BlocDetailsScreen() {
 const styles = StyleSheet.create({
   safeArea:    { flex: 1, backgroundColor: 'transparent' },
   root:        { flex: 1 },
+  rootDesktop: { width: 900, alignSelf: 'center' },
 
-  // Header
   headerPill: {
     backgroundColor: '#8B0000', marginHorizontal: 16, marginTop: 20, marginBottom: 24,
     paddingVertical: 14, paddingHorizontal: 16, borderRadius: 50,
@@ -332,12 +321,12 @@ const styles = StyleSheet.create({
   backBtn:     { width: 36 },
   headerTitle: { color: 'white', fontSize: 18, letterSpacing: 2 },
 
-  // Vue aérienne (fixe)
   aerialSection: { marginHorizontal: 16, marginBottom: 0, alignItems: 'center' },
   aerialCard: {
     width: '100%', height: 180, borderRadius: 36,
     overflow: 'hidden', borderWidth: 2, borderColor: 'white',
   },
+  aerialCardDesktop: { height: 280 },
   aerialImg:    { width: '100%', height: '100%' },
   aerialPill: {
     backgroundColor: '#263d7e', paddingHorizontal: 28, paddingVertical: 10,
@@ -346,11 +335,10 @@ const styles = StyleSheet.create({
   },
   aerialPillText: { color: 'white', fontSize: 14, letterSpacing: 2 },
 
-  // Zone scrollable
   scrollZone:    { flex: 1, marginTop: 28 },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 20 },
+  scrollContentDesktop: { paddingHorizontal: 0 },
 
-  // Section par niveau
   niveauSection:  { marginBottom: 28 },
   niveauPillWrap: { alignItems: 'center', marginBottom: 18 },
   niveauPill: {
@@ -359,11 +347,9 @@ const styles = StyleSheet.create({
   },
   niveauPillText: { color: 'white', fontSize: 14, letterSpacing: 2 },
 
-  // Grille salles
-  grid:      { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -MARGIN_H },
-  roomItem:  { width: COLUMN_WIDTH, alignItems: 'center', marginBottom: 18, marginHorizontal: MARGIN_H },
+  grid:      { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
+  roomItem:  { alignItems: 'center', marginBottom: 18 },
   avatarWrap: {
-    width: COLUMN_WIDTH - MARGIN_H * 2, aspectRatio: 1,
     borderRadius: 22, overflow: 'hidden', backgroundColor: 'white',
   },
   avatarImg:         { width: '100%', height: '100%' },
@@ -374,25 +360,21 @@ const styles = StyleSheet.create({
     textAlign: 'center', lineHeight: 18,
   },
 
-  // Empty state
   emptyWrap: { alignItems: 'center', paddingTop: 40, paddingBottom: 20 },
   emptyText: { color: '#8B0000', fontSize: 16, textAlign: 'center' },
   emptyHint: { color: '#888', fontSize: 13, marginTop: 8, textAlign: 'center' },
 
-  // FAB
   fab: {
     position: 'absolute', bottom: 30, right: 25,
     width: 60, height: 60, borderRadius: 30,
     backgroundColor: '#8B0000', justifyContent: 'center', alignItems: 'center',
   },
 
-  // Glow
   glow: {
     elevation: 10, shadowColor: '#000',
     shadowOpacity: 0.35, shadowRadius: 8, shadowOffset: { width: 0, height: 5 },
   },
 
-  // Modal
   modalOverlay:  { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   modalBox:      { backgroundColor: 'white', borderRadius: 24, padding: 24, width: '100%', maxWidth: 480, elevation: 20 },
   modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
