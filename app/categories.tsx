@@ -9,7 +9,8 @@ import {
   StatusBar,
   Alert,
   Platform,
-  ImageBackground
+  ImageBackground,
+  useWindowDimensions
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Plus, X, Search, Check } from 'lucide-react-native';
@@ -21,6 +22,10 @@ export default function CategoriesScreen() {
   
   const { appData, setAppData } = useAppContext() as any;
   const categoriesBg = (appData && appData.settings && appData.settings.categoriesBg) || null;
+
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddInput, setShowAddInput] = useState(false);
@@ -68,73 +73,75 @@ export default function CategoriesScreen() {
         <ImageBackground source={{ uri: categoriesBg }} style={StyleSheet.absoluteFill} resizeMode="cover" />
       )}
       
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
-        {/* HEADER ROUGE PILL (Style Sidebar) */}
-        <View style={[styles.redHeaderPill, styles.glowBlack]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <ChevronLeft size={28} color="white" />
-          </TouchableOpacity>
+      <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]} showsVerticalScrollIndicator={false}>
+        <View style={[styles.contentWrapper, isDesktop && styles.contentWrapperDesktop]}>
           
-          <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>CATÉGORIES</Text>
-          
-          <TouchableOpacity onPress={() => setShowAddInput(!showAddInput)} style={styles.backBtn}>
-            {showAddInput ? <X size={26} color="white" /> : <Plus size={26} color="white" />}
-          </TouchableOpacity>
-        </View>
-
-        {/* INPUT D'AJOUT DYNAMIQUE (TOUT EN GRAS) */}
-        {showAddInput && (
-          <View style={styles.addContainer}>
-            <TextInput
-              autoFocus
-              placeholder="NOUVELLE CATÉGORIE..."
-              value={newCategoryName}
-              onChangeText={setNewCategoryName}
-              placeholderTextColor="#94A3B8"
-              style={[styles.addInput, styles.glowBlack, styles.boldSerifItalic]}
-            />
-            <TouchableOpacity 
-              onPress={handleAddCategory}
-              style={[styles.checkBtn, styles.glowBlack]}
-            >
-              <Check size={24} color="white" />
+          {/* HEADER ROUGE PILL (Style Sidebar) */}
+          <View style={[styles.redHeaderPill, styles.glowBlack]}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <ChevronLeft size={28} color="white" />
+            </TouchableOpacity>
+            
+            <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>CATÉGORIES</Text>
+            
+            <TouchableOpacity onPress={() => setShowAddInput(!showAddInput)} style={styles.backBtn}>
+              {showAddInput ? <X size={26} color="white" /> : <Plus size={26} color="white" />}
             </TouchableOpacity>
           </View>
-        )}
 
-        {/* BARRE DE RECHERCHE */}
-        <View style={styles.searchBar}>
-          <Search size={20} color="#94A3B8" style={{ marginRight: 10 }} />
-          <TextInput
-            placeholder="RECHERCHER..."
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-            placeholderTextColor="#94A3B8"
-            style={[styles.searchInput, styles.boldSerifItalic]}
-          />
-        </View>
-
-        {/* LISTE DES BOUTONS (GRAS MAXIMUM) */}
-        <View style={styles.listContainer}>
-          {filteredCategories.length > 0 ? (
-            filteredCategories.map((category, index) => (
+          {/* INPUT D'AJOUT DYNAMIQUE */}
+          {showAddInput && (
+            <View style={styles.addContainer}>
+              <TextInput
+                autoFocus
+                placeholder="NOUVELLE CATÉGORIE..."
+                value={newCategoryName}
+                onChangeText={setNewCategoryName}
+                placeholderTextColor="#94A3B8"
+                style={[styles.addInput, styles.glowBlack, styles.boldSerifItalic]}
+              />
               <TouchableOpacity 
-                key={index}
-                style={[styles.catBtn, styles.glowBlack]}
-                onPress={() => router.push({
-                  pathname: '/add-material',
-                  params: { roomId, roomName, category }
-                })}
+                onPress={handleAddCategory}
+                style={[styles.checkBtn, styles.glowBlack]}
               >
-                <Text style={[styles.catBtnText, styles.boldSerifItalic]}>{category}</Text>
+                <Check size={24} color="white" />
               </TouchableOpacity>
-            ))
-          ) : (
-            <Text style={[styles.emptyText, styles.boldSerifItalic]}>AUCUNE CATÉGORIE TROUVÉE</Text>
+            </View>
           )}
-        </View>
 
+          {/* BARRE DE RECHERCHE */}
+          <View style={styles.searchBar}>
+            <Search size={20} color="#94A3B8" style={{ marginRight: 10 }} />
+            <TextInput
+              placeholder="RECHERCHER..."
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+              placeholderTextColor="#94A3B8"
+              style={[styles.searchInput, styles.boldSerifItalic]}
+            />
+          </View>
+
+          {/* LISTE DES BOUTONS */}
+          <View style={styles.listContainer}>
+            {filteredCategories.length > 0 ? (
+              filteredCategories.map((category, index) => (
+                <TouchableOpacity 
+                  key={index}
+                  style={[styles.catBtn, styles.glowBlack]}
+                  onPress={() => router.push({
+                    pathname: '/add-material',
+                    params: { roomId, roomName, category }
+                  })}
+                >
+                  <Text style={[styles.catBtnText, styles.boldSerifItalic]}>{category}</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={[styles.emptyText, styles.boldSerifItalic]}>AUCUNE CATÉGORIE TROUVÉE</Text>
+            )}
+          </View>
+
+        </View>
       </ScrollView>
     </View>
   );
@@ -143,8 +150,11 @@ export default function CategoriesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFE4E8' },
   scrollContent: { padding: 25, paddingTop: 55, paddingBottom: 40 },
+  scrollContentDesktop: { alignItems: 'center' },
+
+  contentWrapper: { width: '100%' },
+  contentWrapperDesktop: { width: 750, maxWidth: '100%' },
   
-  // STYLE CENTRALISÉ : SERIF + GRAS MAXIMUM
   boldSerifItalic: {
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
     fontWeight: '900',
@@ -233,4 +243,3 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 }
   }
 });
-    
