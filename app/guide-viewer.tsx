@@ -5,33 +5,35 @@ import {
   Image, 
   StyleSheet, 
   StatusBar, 
-  Dimensions,
-  Text
+  Text,
+  useWindowDimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAppContext } from '@/lib/app-context';
 
-const { width, height } = Dimensions.get('window');
-
 export default function GuideViewerScreen() {
   const router = useRouter();
   const { appData } = useAppContext() as any;
   
-  // On récupère l'URI de l'image (affiche) définie dans les paramètres
+  // Gestion du responsive desktop
+  const { width, height } = useWindowDimensions();
+  const isDesktop = width >= 900;
+  
   const guidePosterUri = appData.settings?.guidePoster;
 
   return (
     <View style={styles.container}>
-      {/* Immersion totale : on cache la barre d'état ou on la rend transparente */}
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
 
       {guidePosterUri ? (
-        <Image 
-          source={{ uri: guidePosterUri }} 
-          style={styles.fullScreenImage}
-          resizeMode="contain" // "contain" est préférable pour un guide pour ne pas couper le texte sur les bords
-        />
+        <View style={[styles.imageWrapper, isDesktop && styles.imageWrapperDesktop]}>
+          <Image 
+            source={{ uri: guidePosterUri }} 
+            style={[styles.fullScreenImage, isDesktop && styles.fullScreenImageDesktop]}
+            resizeMode="contain"
+          />
+        </View>
       ) : (
         <View style={styles.placeholderContainer}>
           <Feather name="book-open" size={80} color="rgba(255,255,255,0.2)" />
@@ -47,7 +49,7 @@ export default function GuideViewerScreen() {
 
       {/* Bouton Retour Flottant translucide */}
       <TouchableOpacity 
-        style={styles.floatingBack} 
+        style={[styles.floatingBack, isDesktop && styles.floatingBackDesktop]} 
         onPress={() => router.back()}
       >
         <Ionicons name="arrow-back" size={24} color="white" />
@@ -59,14 +61,29 @@ export default function GuideViewerScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: 'white' // Fond blanc pour le guide
+    backgroundColor: 'white'
+  },
+  imageWrapper: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  imageWrapperDesktop: {
+    backgroundColor: '#0a0f2e',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   fullScreenImage: { 
-    width: width, 
-    height: height,
+    width: '100%', 
+    height: '100%',
     position: 'absolute',
     top: 0,
     left: 0
+  },
+  fullScreenImageDesktop: {
+    width: '80%',
+    height: '90%',
+    position: 'relative',
   },
   placeholderContainer: {
     flex: 1,
@@ -100,10 +117,14 @@ const styles = StyleSheet.create({
     width: 45, 
     height: 45, 
     borderRadius: 22.5, 
-    backgroundColor: 'rgba(29, 53, 131, 0.6)', // Bleu translucide pour le guide
+    backgroundColor: 'rgba(29, 53, 131, 0.6)',
     justifyContent: 'center', 
     alignItems: 'center',
     zIndex: 10,
     elevation: 5
+  },
+  floatingBackDesktop: {
+    top: 25,
+    left: 25,
   }
 });
