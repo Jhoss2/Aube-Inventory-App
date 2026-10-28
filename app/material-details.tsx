@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   ImageBackground,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Pencil, Trash2 } from 'lucide-react-native';
@@ -49,6 +50,10 @@ export default function MaterialDetailsScreen() {
   const { materialId } = useLocalSearchParams<{ materialId: string }>();
   const { appData, deleteMateriel } = useAppContext() as any;
 
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
+
   const item = (appData.materiels || []).find((m: any) => String(m.id) === String(materialId));
   const roomContentsBg = (appData && appData.settings && appData.settings.roomContentsBg) || null;
 
@@ -66,90 +71,92 @@ export default function MaterialDetailsScreen() {
         <ImageBackground source={{ uri: roomContentsBg }} style={StyleSheet.absoluteFill} resizeMode="cover" />
       )}
       
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
-        {/* HEADER — titre = nom du matériel */}
-        <View style={[styles.redHeaderPill, styles.glowBlack]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <ChevronLeft size={28} color="white" />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitleText, styles.SBI]} numberOfLines={1}>
-            {(item && item.nom) || 'Matériel'}
-          </Text>
-          <View style={{ width: 40 }} /> 
-        </View>
-
-        {!item ? (
-          <View style={styles.emptyBox}>
-            <Text style={[styles.emptyText, styles.SBI]}>Matériel introuvable.</Text>
+      <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]} showsVerticalScrollIndicator={false}>
+        <View style={[styles.contentWrapper, isDesktop && styles.contentWrapperDesktop]}>
+          
+          {/* HEADER — titre = nom du matériel */}
+          <View style={[styles.redHeaderPill, styles.glowBlack]}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <ChevronLeft size={28} color="white" />
+            </TouchableOpacity>
+            <Text style={[styles.headerTitleText, styles.SBI]} numberOfLines={1}>
+              {(item && item.nom) || 'Matériel'}
+            </Text>
+            <View style={{ width: 40 }} /> 
           </View>
-        ) : (
-          <View style={[styles.materialCard, styles.glowBlack]}>
-            
-            {/* IMAGE */}
-            <View style={styles.imageBox}>
-              {item.image
-                ? <Image source={{ uri: item.image }} style={styles.materialImg} resizeMode="contain" />
-                : <View style={[styles.materialImg, styles.imagePlaceholder]}>
-                    <Text style={[styles.placeholderLetter, styles.SBI]}>
-                      {item.nom ? item.nom[0].toUpperCase() : '?'}
+
+          {!item ? (
+            <View style={styles.emptyBox}>
+              <Text style={[styles.emptyText, styles.SBI]}>Matériel introuvable.</Text>
+            </View>
+          ) : (
+            <View style={[styles.materialCard, styles.glowBlack]}>
+              
+              {/* IMAGE */}
+              <View style={styles.imageBox}>
+                {item.image
+                  ? <Image source={{ uri: item.image }} style={styles.materialImg} resizeMode="contain" />
+                  : <View style={[styles.materialImg, styles.imagePlaceholder]}>
+                      <Text style={[styles.placeholderLetter, styles.SBI]}>
+                        {item.nom ? item.nom[0].toUpperCase() : '?'}
+                      </Text>
+                    </View>
+                }
+              </View>
+
+              <View style={styles.detailsRow}>
+                <View style={styles.infoCol}>
+
+                  {/* NOM */}
+                  <Text style={[styles.mainTitle, styles.SBI]}>{item.nom || '—'}</Text>
+
+                  {/* CHAMPS PRINCIPAUX */}
+                  <InfoLine label="Catégorie"  value={item.category} />
+                  <InfoLine label="Marque"     value={item.marque} />
+                  <InfoLine label="Couleur"    value={item.couleur} />
+                  <InfoLine label="Quantité"   value={item.quantite} />
+
+                  {/* ÉTAT avec couleur dynamique */}
+                  <View style={styles.infoLine}>
+                    <Text style={[styles.labelBlue, styles.SBI]}>État :</Text>
+                    <Text style={[styles.statusVal, styles.SBI, { color: etatColor(item.etat) }]}>
+                      {item.etat || '—'}
                     </Text>
                   </View>
-              }
-            </View>
 
-            <View style={styles.detailsRow}>
-              <View style={styles.infoCol}>
+                  {/* SÉPARATEUR */}
+                  <View style={styles.divider} />
 
-                {/* NOM */}
-                <Text style={[styles.mainTitle, styles.SBI]}>{item.nom || '—'}</Text>
+                  {/* DATES */}
+                  <InfoLine label="Acquisition"    value={fmtDate(item.dateAcquisition)} />
+                  <InfoLine label="Vérification"   value={fmtDate(item.dateVerification)} />
+                  <InfoLine label="Renouvellement" value={fmtDate(item.dateRenouvellement)} />
 
-                {/* CHAMPS PRINCIPAUX */}
-                <InfoLine label="Catégorie"  value={item.category} />
-                <InfoLine label="Marque"     value={item.marque} />
-                <InfoLine label="Couleur"    value={item.couleur} />
-                <InfoLine label="Quantité"   value={item.quantite} />
+                  {/* NOTES */}
+                  {!!item.infos && (
+                    <View style={styles.notesBox}>
+                      <Text style={[styles.labelBlue, styles.SBI]}>Notes :</Text>
+                      <Text style={[styles.notesText, styles.SBI]}>{item.infos}</Text>
+                    </View>
+                  )}
 
-                {/* ÉTAT avec couleur dynamique */}
-                <View style={styles.infoLine}>
-                  <Text style={[styles.labelBlue, styles.SBI]}>État :</Text>
-                  <Text style={[styles.statusVal, styles.SBI, { color: etatColor(item.etat) }]}>
-                    {item.etat || '—'}
-                  </Text>
                 </View>
 
-                {/* SÉPARATEUR */}
-                <View style={styles.divider} />
-
-                {/* DATES */}
-                <InfoLine label="Acquisition"    value={fmtDate(item.dateAcquisition)} />
-                <InfoLine label="Vérification"   value={fmtDate(item.dateVerification)} />
-                <InfoLine label="Renouvellement" value={fmtDate(item.dateRenouvellement)} />
-
-                {/* NOTES */}
-                {!!item.infos && (
-                  <View style={styles.notesBox}>
-                    <Text style={[styles.labelBlue, styles.SBI]}>Notes :</Text>
-                    <Text style={[styles.notesText, styles.SBI]}>{item.infos}</Text>
-                  </View>
-                )}
-
+                {/* BOUTONS ACTION */}
+                <View style={styles.actionCol}>
+                  <TouchableOpacity style={styles.editBtn}>
+                    <Pencil size={20} color="#1A237E" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+                    <Trash2 size={20} color="#8B0000" />
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              {/* BOUTONS ACTION */}
-              <View style={styles.actionCol}>
-                <TouchableOpacity style={styles.editBtn}>
-                  <Pencil size={20} color="#1A237E" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-                  <Trash2 size={20} color="#8B0000" />
-                </TouchableOpacity>
-              </View>
             </View>
+          )}
 
-          </View>
-        )}
-
+        </View>
       </ScrollView>
     </View>
   );
@@ -165,6 +172,10 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: { padding: 25, paddingTop: 55, paddingBottom: 40 },
+  scrollContentDesktop: { alignItems: 'center' },
+
+  contentWrapper: { width: '100%' },
+  contentWrapperDesktop: { width: 750, maxWidth: '100%' },
 
   redHeaderPill: {
     backgroundColor: '#8B0000',
