@@ -6,7 +6,14 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AppProvider>
-        <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+        <Stack 
+          screenOptions={{ 
+            headerShown: false, 
+            animation: 'slide_from_right',
+            // Empêche un fond blanc clignotant lors des transitions sous Windows/Web
+            contentStyle: { backgroundColor: '#fceef5' } 
+          }}
+        >
           <Stack.Screen name="index" />
           <Stack.Screen name="screens/chat-aube" options={{ animation: 'slide_from_bottom' }} />
           <Stack.Screen name="screens/guide-viewer" />
