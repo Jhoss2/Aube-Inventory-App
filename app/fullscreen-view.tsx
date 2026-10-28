@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, StatusBar, Dimensions } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet, StatusBar, Platform, useWindowDimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
-// Tentative d'importation sécurisée
 let ScreenOrientation: any = null;
 try {
   ScreenOrientation = require('expo-screen-orientation');
@@ -15,15 +14,23 @@ export default function FullscreenViewScreen() {
   const router = useRouter();
   const { imageUri } = useLocalSearchParams<{ imageUri: string }>();
 
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
+
   useEffect(() => {
-    // Force le paysage uniquement si le module est présent
-    if (ScreenOrientation && ScreenOrientation.lockAsync) {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    // Le verrouillage paysage ne concerne que les mobiles/tablettes
+    if (Platform.OS !== 'web' && ScreenOrientation && ScreenOrientation.lockAsync) {
+      try {
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      } catch (err) {}
     }
     
     return () => {
-      if (ScreenOrientation && ScreenOrientation.unlockAsync) {
-        ScreenOrientation.unlockAsync();
+      if (Platform.OS !== 'web' && ScreenOrientation && ScreenOrientation.unlockAsync) {
+        try {
+          ScreenOrientation.unlockAsync();
+        } catch (err) {}
       }
     };
   }, []);
@@ -31,14 +38,14 @@ export default function FullscreenViewScreen() {
   return (
     <View style={styles.container}>
       <StatusBar hidden />
-      <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
+      <TouchableOpacity style={[styles.closeBtn, isDesktop && styles.closeBtnDesktop]} onPress={() => router.back()}>
         <Feather name="x" size={32} color="white" />
       </TouchableOpacity>
       
       {imageUri && (
         <Image 
           source={{ uri: imageUri }} 
-          style={styles.img} 
+          style={[styles.img, isDesktop && styles.imgDesktop]} 
           resizeMode="contain" 
         />
       )}
@@ -49,6 +56,7 @@ export default function FullscreenViewScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center' },
   img: { width: '100%', height: '100%' },
+  imgDesktop: { width: '90%', height: '90%' },
   closeBtn: { 
     position: 'absolute', 
     top: 40, 
@@ -57,5 +65,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)', 
     padding: 12, 
     borderRadius: 35 
+  },
+  closeBtnDesktop: {
+    top: 25,
+    right: 25,
   }
 });
