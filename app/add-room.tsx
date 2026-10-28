@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   View, Text, TouchableOpacity, TextInput, ScrollView, 
-  StyleSheet, StatusBar, Alert, Image, Platform, Modal, ImageBackground 
+  StyleSheet, StatusBar, Alert, Image, Platform, Modal, ImageBackground, useWindowDimensions 
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Camera, ChevronDown, X, Check } from 'lucide-react-native';
@@ -16,6 +16,10 @@ export default function AddRoomScreen() {
   const { blockId, type, level } = useLocalSearchParams<{ blockId: string, type: string, level: string }>();
   const { appData, addSalle } = useAppContext() as any;
   const addRoomBg = (appData && appData.settings && appData.settings.addRoomBg) || null;
+
+  // Gestion du responsive desktop
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
   
   const [nom, setNom] = useState('');
   const [emplacement, setEmplacement] = useState('');
@@ -61,58 +65,62 @@ export default function AddRoomScreen() {
       {addRoomBg && (
         <ImageBackground source={{ uri: addRoomBg }} style={StyleSheet.absoluteFill} resizeMode="cover" />
       )}
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.redHeaderPill, styles.blackGlow]}>
-          <TouchableOpacity onPress={() => router.back()}><ChevronLeft size={28} color="white" /></TouchableOpacity>
-          <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>{(type + " - BLOC " + blockId).toUpperCase()}</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]}>
+        <View style={[styles.formWrapper, isDesktop && styles.formWrapperDesktop]}>
 
-        <TouchableOpacity style={[styles.photoZone, styles.blackGlow]} onPress={pickImage}>
-          {image ? <Image source={{ uri: image }} style={styles.imagePreview} /> : (
-            <View style={styles.photoPlaceholder}>
-              <Camera size={40} color="white" />
-              <Text style={[styles.photoText, styles.boldSerifItalic]}>{formatLabel("Ajouter une image")}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.formContainer}>
-          <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Nom")}</Text>
-          <View style={[styles.inputWrapper, styles.blackGlow]}>
-            <TextInput style={[styles.input, styles.boldSerifItalic]} value={nom} onChangeText={setNom} placeholder="Ex: Salle 05" />
+          <View style={[styles.redHeaderPill, styles.blackGlow]}>
+            <TouchableOpacity onPress={() => router.back()}><ChevronLeft size={28} color="white" /></TouchableOpacity>
+            <Text style={[styles.headerTitleText, styles.boldSerifItalic]}>{(type + " - BLOC " + blockId).toUpperCase()}</Text>
+            <View style={{ width: 40 }} />
           </View>
 
-          <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Emplacement")}</Text>
-          <View style={[styles.inputWrapper, styles.blackGlow]}>
-            <TextInput style={[styles.input, styles.boldSerifItalic]} value={emplacement} onChangeText={setEmplacement} placeholder="Ex: Bloc C" />
-          </View>
-
-          <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Niveau")}</Text>
-          <TouchableOpacity
-            style={[styles.inputWrapper, styles.blackGlow, styles.selectRow]}
-            onPress={() => setNiveauPickerVisible(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.input, styles.boldSerifItalic]}>{niveau}</Text>
-            <ChevronDown size={20} color="#1A237E" style={styles.selectIcon} />
+          <TouchableOpacity style={[styles.photoZone, styles.blackGlow]} onPress={pickImage}>
+            {image ? <Image source={{ uri: image }} style={styles.imagePreview} /> : (
+              <View style={styles.photoPlaceholder}>
+                <Camera size={40} color="white" />
+                <Text style={[styles.photoText, styles.boldSerifItalic]}>{formatLabel("Ajouter une image")}</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
-          <View style={styles.row}>
-            <View style={styles.flex1}>
-              <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Capacité")}</Text>
-              <View style={[styles.inputWrapper, styles.blackGlow]}><TextInput style={[styles.input, styles.boldSerifItalic]} value={capacity} onChangeText={setCapacity} keyboardType="numeric" /></View>
+          <View style={styles.formContainer}>
+            <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Nom")}</Text>
+            <View style={[styles.inputWrapper, styles.blackGlow]}>
+              <TextInput style={[styles.input, styles.boldSerifItalic]} value={nom} onChangeText={setNom} placeholder="Ex: Salle 05" />
             </View>
-            <View style={[styles.flex1, { marginLeft: 15 }]}>
-              <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Superficie")}</Text>
-              <View style={[styles.inputWrapper, styles.blackGlow]}><TextInput style={[styles.input, styles.boldSerifItalic]} value={area} onChangeText={setArea} keyboardType="numeric" /></View>
+
+            <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Emplacement")}</Text>
+            <View style={[styles.inputWrapper, styles.blackGlow]}>
+              <TextInput style={[styles.input, styles.boldSerifItalic]} value={emplacement} onChangeText={setEmplacement} placeholder="Ex: Bloc C" />
+            </View>
+
+            <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Niveau")}</Text>
+            <TouchableOpacity
+              style={[styles.inputWrapper, styles.blackGlow, styles.selectRow]}
+              onPress={() => setNiveauPickerVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.input, styles.boldSerifItalic]}>{niveau}</Text>
+              <ChevronDown size={20} color="#1A237E" style={styles.selectIcon} />
+            </TouchableOpacity>
+
+            <View style={styles.row}>
+              <View style={styles.flex1}>
+                <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Capacité")}</Text>
+                <View style={[styles.inputWrapper, styles.blackGlow]}><TextInput style={[styles.input, styles.boldSerifItalic]} value={capacity} onChangeText={setCapacity} keyboardType="numeric" /></View>
+              </View>
+              <View style={[styles.flex1, { marginLeft: 15 }]}>
+                <Text style={[styles.label, styles.boldSerifItalic]}>{formatLabel("Superficie")}</Text>
+                <View style={[styles.inputWrapper, styles.blackGlow]}><TextInput style={[styles.input, styles.boldSerifItalic]} value={area} onChangeText={setArea} keyboardType="numeric" /></View>
+              </View>
             </View>
           </View>
-        </View>
 
-        <TouchableOpacity style={[styles.saveBtn, styles.blackGlow]} onPress={handleSave}>
-          <Text style={[styles.saveBtnText, styles.boldSerifItalic]}>{formatLabel("Enregistrer la salle")}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.saveBtn, styles.blackGlow]} onPress={handleSave}>
+            <Text style={[styles.saveBtnText, styles.boldSerifItalic]}>{formatLabel("Enregistrer la salle")}</Text>
+          </TouchableOpacity>
+
+        </View>
       </ScrollView>
 
       <Modal
@@ -152,6 +160,11 @@ const styles = StyleSheet.create({
   boldSerifItalic: { fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', fontWeight: '900', fontStyle: 'italic' },
   container: { flex: 1, backgroundColor: '#FFE4E8' },
   scrollContent: { padding: 25, paddingTop: 50, paddingBottom: 60 },
+  scrollContentDesktop: { alignItems: 'center' },
+
+  formWrapper: { width: '100%' },
+  formWrapperDesktop: { width: 750, maxWidth: '100%' },
+
   redHeaderPill: { backgroundColor: '#8B0000', paddingVertical: 12, paddingHorizontal: 15, borderRadius: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 25 },
   blackGlow: { shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 12 },
   headerTitleText: { color: 'white', fontSize: 20 },
@@ -179,4 +192,3 @@ const styles = StyleSheet.create({
   pickerOptionText: { fontSize: 15, color: '#374151' },
   pickerOptionTextActive: { color: '#8B0000' },
 });
-          
