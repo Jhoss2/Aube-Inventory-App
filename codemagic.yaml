@@ -1,8 +1,7 @@
 workflows:
-  full-cross-platform-workflow:
-    name: U-Auben Inventory App - Build Complet (Android APK & Windows EXE)
+  android-workflow:
+    name: U-Auben Inventory App - Production Build
     max_build_duration: 60
-    instance_type: windows_x2
     environment:
       node: 20.11.0
       java: 17
@@ -12,37 +11,28 @@ workflows:
         GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m'
 
     scripts:
-      - name: Installation des dépendances
+      - name: Install dependencies
         script: |
           npm install --legacy-peer-deps
+          npx expo install --check || echo "Ignored warnings"
 
-      # ── 1. GENERATION DU FICHIER APK (ANDROID) ────────────────────────────
-      - name: Préparation du projet Android
+      - name: Verify Assets & Clean
+        script: |
+          echo "--- Nettoyage ---"
+          rm -rf android
+          rm -rf .expo
+
+      - name: Generate Native Android Folder
         script: |
           npx expo prebuild --platform android --clean --no-install
 
-      - name: Compilation de l'APK Release
+      - name: Build APK Release
         script: |
           cd android
-          gradlew.bat clean
-          gradlew.bat assembleRelease -x lint -x test --no-daemon
-          cd ..
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew assembleRelease -x lint -x test --no-daemon
 
-      # ── 2. GENERATION DU FICHIER EXE & ZIP (WINDOWS) ──────────────────────
-      - name: Export Web Expo pour Electron
-        script: |
-          npx expo export --platform web
-
-      - name: Encapsulation & Compression en ZIP de l'exécutable Windows
-        script: |
-          npm install --save-dev electron electron-packager
-          npx electron-packager . "UAubenInventoryApp" --platform=win32 --arch=x64 --out=dist-win --overwrite
-          
-          # Compression automatique du dossier généré pour correspondre à l'artefact .zip
-          powershell Compress-Archive -Path "dist-win/UAubenInventoryApp-win32-x64" -DestinationPath "dist-win/UAubenInventoryApp-Windows.zip" -Force
-
-    # ── ARTEFACTS GENERES A LA FIN DU BUILD ────────────────────────────────
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
-      - dist-win/**/*.exe
-      - dist-win/**/*.zip
+      - android/app/build/outputs/apk/release/*.aab
