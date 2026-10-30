@@ -17,10 +17,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          # Cache désactivé car il n'y a pas de package-lock.json
 
       - name: Installation des dépendances
         run: npm install --legacy-peer-deps
+
+      - name: Installation des dépendances Web requises pour l'export
+        run: npx expo install react-dom react-native-web
 
       - name: Export Web Expo pour Electron
         run: npx expo export --platform web
