@@ -3,7 +3,7 @@ name: Build Windows Native Executable (.exe)
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Permet de lancer le build manuellement depuis GitHub
+  workflow_dispatch:
 
 jobs:
   build-windows:
@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          # Cache désactivé car il n'y a pas de package-lock.json
 
       - name: Installation des dépendances
         run: npm install --legacy-peer-deps
@@ -40,4 +40,3 @@ jobs:
         with:
           name: UAubenInventoryApp-Windows-EXE
           path: UAubenInventoryApp-Windows.zip
-          
