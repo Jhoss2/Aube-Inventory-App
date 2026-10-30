@@ -1,0 +1,43 @@
+name: Build Windows Native Executable (.exe)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Permet de lancer le build manuellement depuis GitHub
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Configuration de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Installation des dépendances
+        run: npm install --legacy-peer-deps
+
+      - name: Export Web Expo pour Electron
+        run: npx expo export --platform web
+
+      - name: Packaging de l'application Windows (.exe)
+        run: |
+          npm install --save-dev electron electron-packager
+          npx electron-packager . "UAubenInventoryApp" --platform=win32 --arch=x64 --out=dist-win --overwrite
+
+      - name: Compression du dossier Windows en ZIP
+        shell: powershell
+        run: |
+          Compress-Archive -Path "dist-win/UAubenInventoryApp-win32-x64" -DestinationPath "UAubenInventoryApp-Windows.zip" -Force
+
+      - name: Publication de l'artefact (Téléchargement)
+        uses: actions/upload-artifact@v4
+        with:
+          name: UAubenInventoryApp-Windows-EXE
+          path: UAubenInventoryApp-Windows.zip
+          
