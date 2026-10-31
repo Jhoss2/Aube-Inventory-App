@@ -48,7 +48,7 @@ jobs:
       - name: Packaging de l'application Windows (.exe)
         run: |
           npm install --save-dev electron electron-packager
-          npx electron-packager . "UAubenInventoryApp" --platform=win32 --arch=x64 --out=dist-win --overwrite
+          npx electron-packager . "UAubenInventoryApp" --platform=win32 --arch=x64 --out=dist-win --overwrite --ignore="dist-win" --ignore="node_modules"
 
       - name: Compression du dossier Windows en ZIP
         shell: powershell
