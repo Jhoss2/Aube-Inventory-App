@@ -1,4 +1,4 @@
-name: Build Offline Native Windows App
+name: Build Native Windows App
 
 on:
   push:
@@ -18,38 +18,34 @@ jobs:
         with:
           node-version: 18
 
-      - name: Configuration de l'environnement MSBuild / C++
+      - name: Configuration de MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Installation des dépendances
+      - name: Installation des dépendances du projet
         run: npm install --legacy-peer-deps
 
-      - name: Ajout des packages natifs React Native Windows
-        run: |
-          npm install --save-dev react-native-windows @react-native-community/cli
+      - name: Installation de la dépendance React Native Windows
+        run: npm install --save-dev react-native-windows
+
+      - name: Initialisation de la plateforme Windows
+        run: npx react-native windows --overwrite --silent
         shell: cmd
 
-      - name: Génération des fichiers natifs C++ / Windows
-        run: |
-          npx react-native-windows-init --overwrite --language cpp
+      - name: Compilation de l'application native Windows
+        run: npx react-native run-windows --arch x64 --no-launch --release
         shell: cmd
 
-      - name: Compilation de l'exécutable natif (.exe / .msix)
-        run: |
-          npx react-native run-windows --arch x64 --logging --no-launch --release
-        shell: cmd
-
-      - name: Préparation du fichier natif hors-ligne (.zip)
+      - name: Compression de l'artefact natif
         shell: powershell
         run: |
-          $buildFolder = Get-ChildItem -Recurse -Filter "AppPackages" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1
-          if (-not $buildFolder) {
-            $buildFolder = "windows/x64/Release"
+          $buildPath = Get-ChildItem -Recurse -Filter "AppPackages" | Select-Object -ExpandProperty FullName -First 1
+          if (-not $buildPath) {
+            $buildPath = "windows/U-AubenInventoryApp/AppPackages"
           }
-          Compress-Archive -Path "$buildFolder" -DestinationPath "U-Auben-Inventory-Native-Offline.zip" -Force
+          Compress-Archive -Path "$buildPath" -DestinationPath "UAubenInventoryApp-Native-Windows.zip" -Force
 
-      - name: Publication de l'application native Windows
+      - name: Publication de l'artefact Windows natif
         uses: actions/upload-artifact@v4
         with:
-          name: U-Auben-Inventory-Native-Offline
-          path: U-Auben-Inventory-Native-Offline.zip
+          name: UAubenInventoryApp-Native-Windows
+          path: UAubenInventoryApp-Native-Windows.zip
