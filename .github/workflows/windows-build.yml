@@ -1,4 +1,4 @@
-name: Build Windows Native Executable (.exe)
+name: Build Native Windows App (React Native Windows)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
+  build-native-windows:
     runs-on: windows-latest
 
     steps:
@@ -16,47 +16,33 @@ jobs:
       - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
-      - name: Installation des dépendances
+      - name: Installation des dépendances du projet
         run: npm install --legacy-peer-deps
 
-      - name: Installation des dépendances Web requises pour l'export
-        run: npx expo install react-dom react-native-web
-
-      - name: Export Web Expo pour Electron
-        run: npx expo export --platform web
-
-      - name: Création du fichier de démarrage Electron (main.js)
+      - name: Ajout et configuration de React Native Windows
+        run: |
+          npx react-native init-windows --overwrite --silent
         shell: cmd
-        run: |
-          echo const { app, BrowserWindow } = require('electron'); > main.js
-          echo const path = require('path'); >> main.js
-          echo function createWindow() { >> main.js
-          echo   const win = new BrowserWindow({ width: 1200, height: 800 }); >> main.js
-          echo   win.loadURL(`file://${path.join(__dirname, 'dist/index.html')}`); >> main.js
-          echo } >> main.js
-          echo app.whenReady().then(createWindow); >> main.js
 
-      - name: Ajout du point d'entrée main dans package.json
+      - name: Compilation de l'application native Windows (.exe / MSIX)
+        run: |
+          npx react-native run-windows --arch x64 --no-launch --release
+        shell: cmd
+
+      - name: Compression et préparation de l'artefact natif
         shell: powershell
         run: |
-          $content = Get-Content package.json -Raw | ConvertFrom-Json
-          $content | Add-Member -Type NoteProperty -Name "main" -Value "main.js" -Force
-          $content | ConvertTo-Json -Depth 10 | Set-Content package.json
+          # Recherche et compression du dossier de build natif généré
+          $buildPath = Get-ChildItem -Recurse -Filter "AppPackages" | Select-Object -ExpandProperty FullName
+          if (-not $buildPath) {
+            $buildPath = "windows/U-AubenInventoryApp/AppPackages"
+          }
+          Compress-Archive -Path "$buildPath" -DestinationPath "UAubenInventoryApp-Native-Windows.zip" -Force
 
-      - name: Packaging de l'application Windows (.exe)
-        run: |
-          npm install --save-dev electron electron-packager
-          npx electron-packager . "UAubenInventoryApp" --platform=win32 --arch=x64 --out=dist-win --overwrite --ignore="dist-win" --ignore="node_modules"
-
-      - name: Compression du dossier Windows en ZIP
-        shell: powershell
-        run: |
-          Compress-Archive -Path "dist-win/UAubenInventoryApp-win32-x64" -DestinationPath "UAubenInventoryApp-Windows.zip" -Force
-
-      - name: Publication de l'artefact (Téléchargement)
+      - name: Publication de l'artefact Windows natif
         uses: actions/upload-artifact@v4
         with:
-          name: UAubenInventoryApp-Windows-EXE
-          path: UAubenInventoryApp-Windows.zip
+          name: UAubenInventoryApp-Native-Windows
+          path: UAubenInventoryApp-Native-Windows.zip
