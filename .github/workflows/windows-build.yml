@@ -21,8 +21,8 @@ jobs:
       - name: Installation des dépendances du projet
         run: npm install --legacy-peer-deps
 
-      - name: Installation de la CLI React Native requise
-        run: npm install --save-dev @react-native-community/cli
+      - name: Installation de la CLI et du package React Native Windows
+        run: npm install --save-dev @react-native-community/cli react-native-windows
 
       - name: Ajout et configuration de React Native Windows
         run: |
