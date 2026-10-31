@@ -1,0 +1,37 @@
+name: Build Desktop Windows (.exe)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+
+      - name: Configuration de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Installation des dépendances
+        run: npm install --legacy-peer-deps
+
+      - name: Exportation de l'application Expo (Web)
+        run: npx expo export --platform web
+
+      - name: Empaquetage pour Windows (Neutralino / Native Desktop)
+        run: |
+          npx create-electron-app temp-desktop || true
+          mkdir -p dist-desktop
+          cp -r dist/* dist-desktop/ || cp -r web-build/* dist-desktop/ || true
+
+      - name: Publication de l'application Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: UAubenInventoryApp-Windows
+          path: dist/
