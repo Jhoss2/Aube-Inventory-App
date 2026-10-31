@@ -1,4 +1,4 @@
-name: Build Desktop Windows (.exe)
+name: Build Offline Native Windows App
 
 on:
   push:
@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    runs-on: ubuntu-latest
+  build-native-windows:
+    runs-on: windows-2022
 
     steps:
-      - name: Récupération du code
+      - name: Récupération du code source
         uses: actions/checkout@v4
 
       - name: Configuration de Node.js
@@ -18,20 +18,38 @@ jobs:
         with:
           node-version: 18
 
+      - name: Configuration de l'environnement MSBuild / C++
+        uses: microsoft/setup-msbuild@v2
+
       - name: Installation des dépendances
         run: npm install --legacy-peer-deps
 
-      - name: Exportation de l'application Expo (Web)
-        run: npx expo export --platform web
-
-      - name: Empaquetage pour Windows (Neutralino / Native Desktop)
+      - name: Ajout des packages natifs React Native Windows
         run: |
-          npx create-electron-app temp-desktop || true
-          mkdir -p dist-desktop
-          cp -r dist/* dist-desktop/ || cp -r web-build/* dist-desktop/ || true
+          npm install --save-dev react-native-windows @react-native-community/cli
+        shell: cmd
 
-      - name: Publication de l'application Windows
+      - name: Génération des fichiers natifs C++ / Windows
+        run: |
+          npx react-native-windows-init --overwrite --language cpp
+        shell: cmd
+
+      - name: Compilation de l'exécutable natif (.exe / .msix)
+        run: |
+          npx react-native run-windows --arch x64 --logging --no-launch --release
+        shell: cmd
+
+      - name: Préparation du fichier natif hors-ligne (.zip)
+        shell: powershell
+        run: |
+          $buildFolder = Get-ChildItem -Recurse -Filter "AppPackages" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1
+          if (-not $buildFolder) {
+            $buildFolder = "windows/x64/Release"
+          }
+          Compress-Archive -Path "$buildFolder" -DestinationPath "U-Auben-Inventory-Native-Offline.zip" -Force
+
+      - name: Publication de l'application native Windows
         uses: actions/upload-artifact@v4
         with:
-          name: UAubenInventoryApp-Windows
-          path: dist/
+          name: U-Auben-Inventory-Native-Offline
+          path: U-Auben-Inventory-Native-Offline.zip
