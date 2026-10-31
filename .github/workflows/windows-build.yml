@@ -27,6 +27,24 @@ jobs:
       - name: Export Web Expo pour Electron
         run: npx expo export --platform web
 
+      - name: Création du fichier de démarrage Electron (main.js)
+        shell: cmd
+        run: |
+          echo const { app, BrowserWindow } = require('electron'); > main.js
+          echo const path = require('path'); >> main.js
+          echo function createWindow() { >> main.js
+          echo   const win = new BrowserWindow({ width: 1200, height: 800 }); >> main.js
+          echo   win.loadURL(`file://${path.join(__dirname, 'dist/index.html')}`); >> main.js
+          echo } >> main.js
+          echo app.whenReady().then(createWindow); >> main.js
+
+      - name: Ajout du point d'entrée main dans package.json
+        shell: powershell
+        run: |
+          $content = Get-Content package.json -Raw | ConvertFrom-Json
+          $content | Add-Member -Type NoteProperty -Name "main" -Value "main.js" -Force
+          $content | ConvertTo-Json -Depth 10 | Set-Content package.json
+
       - name: Packaging de l'application Windows (.exe)
         run: |
           npm install --save-dev electron electron-packager
