@@ -21,6 +21,9 @@ jobs:
       - name: Installation des dépendances du projet
         run: npm install --legacy-peer-deps
 
+      - name: Installation de la CLI React Native requise
+        run: npm install --save-dev @react-native-community/cli
+
       - name: Ajout et configuration de React Native Windows
         run: |
           npx react-native init-windows --overwrite --silent
@@ -34,7 +37,6 @@ jobs:
       - name: Compression et préparation de l'artefact natif
         shell: powershell
         run: |
-          # Recherche et compression du dossier de build natif généré
           $buildPath = Get-ChildItem -Recurse -Filter "AppPackages" | Select-Object -ExpandProperty FullName
           if (-not $buildPath) {
             $buildPath = "windows/U-AubenInventoryApp/AppPackages"
