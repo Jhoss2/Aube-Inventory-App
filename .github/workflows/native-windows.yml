@@ -22,12 +22,12 @@ jobs:
       - name: Installer les dépendances du projet
         run: npm install --legacy-peer-deps
 
-      - name: Installer directement React Native Windows compatible (v0.76)
+      - name: Installer directement React Native Windows v0.76.17
         run: npm install react-native-windows@0.76.17 --save-dev --legacy-peer-deps
         shell: cmd
 
-      - name: Générer les fichiers natifs Windows via le paquet installé
-        run: npx react-native-windows-generate --overwrite
+      - name: Initialiser le projet Windows natif
+        run: npx rnw-init --overwrite --no-telemetry
         shell: cmd
 
       - name: Compiler l'application native en mode Release
