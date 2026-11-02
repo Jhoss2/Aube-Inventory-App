@@ -14,7 +14,7 @@ jobs:
       - name: Installer Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Installer MSBuild (Outils natifs Windows)
         uses: microsoft/setup-msbuild@v2
@@ -22,14 +22,12 @@ jobs:
       - name: Installer les dépendances du projet
         run: npm install --legacy-peer-deps
 
-      - name: Installer la CLI React Native et le paquet Windows compatible
-        run: |
-          npm install -g react-native-cli
-          npm install react-native-windows@0.74.0 --save-dev --legacy-peer-deps
+      - name: Installer le paquet React Native Windows compatible
+        run: npm install react-native-windows@0.74.0 --save-dev --legacy-peer-deps
         shell: cmd
 
       - name: Initialiser l'environnement Windows natif
-        run: npx react-native-windows-init --overwrite --no-telemetry --force --separator=-
+        run: npx react-native-windows-init --overwrite --no-telenergy
         shell: cmd
 
       - name: Compiler l'application native en mode Release
@@ -40,7 +38,10 @@ jobs:
         shell: powershell
         run: |
           $target = Get-ChildItem -Recurse -Filter "AppPackages" | Select-Object -ExpandProperty FullName -First 1
-          if (-not $target) { $target = "windows/U-AubenInventoryApp/AppPackages" }
+          if (-not $target) { 
+            $target = Get-ChildItem -Path "windows" -Directory | Select-Object -ExpandProperty FullName -First 1
+          }
+          Write-Host "Dossier cible trouvé: $target"
           Compress-Archive -Path "$target" -DestinationPath "U-Auben-Inventory-App-Windows.zip" -Force
 
       - name: Télécharger l'artefact exécutable
