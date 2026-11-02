@@ -26,8 +26,8 @@ jobs:
         run: npm install react-native-windows@0.76.17 --save-dev --legacy-peer-deps
         shell: cmd
 
-      - name: Initialiser le projet Windows natif
-        run: npx react-native-windows-init --overwrite --no-telemetry
+      - name: Initialiser le projet Windows natif via le script interne
+        run: node ./node_modules/react-native-windows/cli.js init --overwrite --no-telemetry
         shell: cmd
 
       - name: Compiler l'application native en mode Release
