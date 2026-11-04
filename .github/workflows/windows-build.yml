@@ -1,0 +1,48 @@
+name: Build Windows App (.exe)
+
+on:
+  push:
+    branches: [ main ] # Déclenche le build à chaque push sur la branche principale
+  workflow_dispatch: # Permet de lancer le build manuellement depuis l'interface GitHub
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Récupérer le code du dépôt
+      uses: actions/checkout@v4
+
+    - name: Configurer Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+
+    - name: Installer les dépendances globales et projet
+      run: |
+        npm install
+        # Force l'installation propre de l'extension Windows alignée sur la version 0.76 de React Native
+        npm install react-native-windows@0.76.0 --save-dev
+
+    - name: Configurer les outils de build Microsoft
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Créer le répertoire pour le bundle Windows
+      run: |
+        mkdir -p windows/uaubeninventoryapp/Bundle
+      continue-on-error: true
+
+    - name: Compiler le Bundle JavaScript autonome (Sans Expo Router)
+      run: |
+        npx react-native bundle --platform windows --dev false --entry-file index.windows.js --bundle-output windows/uaubeninventoryapp/Bundle/index.windows.bundle --assets-dest windows/uaubeninventoryapp/Bundle
+
+    - name: Compiler le binaire Windows (.exe / MSIX)
+      run: |
+        npx react-native run-windows --logging --release --arch x64 --no-launch --no-packager
+
+    - name: Archiver et publier l'application
+      uses: actions/upload-artifact@v4
+      with:
+        name: UAuben-Inventory-Windows-X64
+        path: windows/AppPackages/
