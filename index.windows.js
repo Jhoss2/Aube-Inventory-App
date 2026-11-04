@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AppRegistry, View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Keyboard, Alert } from 'react-native';
-import { useAppContext } from './lib/app-context'; // Ajustez le chemin selon votre structure
+import { useAppContext } from './lib/app-context'; 
 
 // Mocks globaux pour neutraliser l'écosystème Expo absent sous Windows
 global.expo = global.expo || {};
@@ -9,8 +9,6 @@ global.expo = global.expo || {};
 const useWindowsRouter = () => {
   return {
     push: (target) => {
-      // Sur PC, au lieu de crasher sur un changement de page Expo Router,
-      // on intercepte l'action de manière applicative.
       const destination = typeof target === 'string' ? target : target.pathname;
       const params = target.params ? JSON.stringify(target.params) : '';
       Alert.alert("Navigation Desktop", `Redirection vers : ${destination} ${params}`);
@@ -31,10 +29,7 @@ function WindowsHomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
 
-  // Récupération sécurisée des designs depuis votre contexte global
-  const aubeAvatar = appData.settings?.assistantAvatar || null;
-
-  // --- VOTRE VÉRITABLE ALGORITHME DE RECHERCHE PARTAGÉ ---
+  // --- ALGORITHME DE RECHERCHE PARTAGÉ ---
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (!query.trim()) { setSearchResults([]); return; }
@@ -44,7 +39,7 @@ function WindowsHomeScreen() {
     const materiels = appData.materiels || [];
     const results = [];
 
-    // Filtrage des salles (Identique à votre code mobile)
+    // Filtrage des salles
     for (let i = 0; i < salles.length; i++) {
       if ((salles[i].name || '').toLowerCase().indexOf(q) !== -1) {
         results.push({ 
@@ -56,7 +51,7 @@ function WindowsHomeScreen() {
       }
     }
 
-    // Filtrage des matériels et équipements (Identique à votre code mobile)
+    // Filtrage des matériels et équipements
     for (let j = 0; j < materiels.length; j++) {
       const m = materiels[j];
       if ((m.nom || '').toLowerCase().indexOf(q) !== -1 || (m.category || '').toLowerCase().indexOf(q) !== -1) {
@@ -186,7 +181,7 @@ const styles = StyleSheet.create({
   botButton: { backgroundColor: '#e0e7ff', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   botButtonText: { color: '#3169e6', fontWeight: 'bold', fontSize: 13 },
 
-  // Résultats de Recherche Intellectuels
+  // Résultats de Recherche
   searchResultsBox: { backgroundColor: 'white', borderRadius: 20, marginTop: 5, paddingVertical: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 5, marginBottom: 25 },
   searchResultItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   resultIcon: { fontSize: 18, marginRight: 15 },
