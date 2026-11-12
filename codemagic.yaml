@@ -1,8 +1,11 @@
 workflows:
-  android-workflow:
+  full-cross-platform-workflow:
     name: U-Auben Inventory App - Production Build
+    instance_type: linux_x2
     max_build_duration: 60
     environment:
+      android_signing:
+        - keystore_reference # Nom de votre keystore configuré dans Codemagic (à supprimer si vous ne signez pas encore)
       node: 20.11.0
       java: 17
       groups:
@@ -26,13 +29,13 @@ workflows:
         script: |
           npx expo prebuild --platform android --clean --no-install
 
-      - name: Build APK Release
+      - name: Build APK & AAB Release
         script: |
           cd android
           chmod +x gradlew
           ./gradlew clean
-          ./gradlew assembleRelease -x lint -x test --no-daemon
+          ./gradlew assembleRelease bundleRelease -x lint -x test --no-daemon
 
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
-      - android/app/build/outputs/apk/release/*.aab
+      - android/app/build/outputs/bundle/release/*.aab
